@@ -31,7 +31,10 @@
           <i class="fa-solid fa-cart-shopping"></i>
           <span class="cart-count">0</span>
         </a>
-        <a href="#"><i class="fa-regular fa-user"></i></a>
+        <a href="#" class="user-status" id="userStatusBtn">
+          <i class="fa-regular fa-user"></i>
+          <span>Đăng nhập</span>
+        </a>
       </div>
     </div>
   </header>
@@ -216,6 +219,24 @@
       <p>&copy; 2026 AeroTech. All rights reserved.</p>
     </div>
   </footer>
+
+  <!-- Authentication Overlay -->
+  <div class="auth-overlay" id="authOverlay">
+    <div class="auth-card">
+      <h2>Chào mừng đến với AeroTech</h2>
+      <p>Đăng nhập để đặt hàng nhanh chóng hoặc chọn "Chỉ tham khảo" để xem sản phẩm.</p>
+      <form id="loginForm">
+        <label for="authEmail">Email</label>
+        <input type="email" id="authEmail" placeholder="Email của bạn" required>
+        <label for="authPassword">Mật khẩu</label>
+        <input type="password" id="authPassword" placeholder="Mật khẩu" required>
+        <button type="submit" class="btn btn-primary">Đăng nhập</button>
+      </form>
+      <button class="btn btn-outline" id="skipBrowseBtn">Chỉ tham khảo</button>
+      <p class="auth-note">Bạn có thể xem sản phẩm mà không cần đặt hàng.</p>
+      <div id="authError" class="auth-error"></div>
+    </div>
+  </div>
 
   <!-- Toast Notification -->
   <div id="toast" class="toast">
