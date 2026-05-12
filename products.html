@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sản Phẩm | AeroTech</title>
+  <meta name="description" content="Danh mục sản phẩm Laptop và PC cao cấp.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header>
+    <div class="container nav-container">
+      <a href="index.html" class="logo">
+        <i class="fa-solid fa-microchip"></i> Aero<span>Tech</span>
+      </a>
+      <nav class="nav-links">
+        <a href="index.html">Trang Chủ</a>
+        <a href="products.html" class="active">Sản Phẩm</a>
+        <a href="#">Dịch Vụ</a>
+        <a href="#">Liên Hệ</a>
+      </nav>
+      <div class="nav-icons">
+        <a href="#"><i class="fa-solid fa-magnifying-glass"></i></a>
+        <a href="#" class="cart-icon">
+          <i class="fa-solid fa-cart-shopping"></i>
+          <span class="cart-count">0</span>
+        </a>
+        <a href="#"><i class="fa-regular fa-user"></i></a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="container">
+      <h1>Khám Phá Sản Phẩm</h1>
+      <p>Hàng ngàn thiết bị công nghệ đỉnh cao đang chờ đón bạn.</p>
+    </div>
+  </div>
+
+  <!-- Shop Section -->
+  <section class="products-page">
+    <div class="container shop-layout">
+      
+      <!-- Sidebar Filters -->
+      <aside class="sidebar">
+        <div class="filter-group">
+          <h3>Danh Mục <i class="fa-solid fa-chevron-down" style="font-size: 0.8rem;"></i></h3>
+          <label class="filter-label">
+            <input type="checkbox" checked>
+            Tất Cả
+            <span class="filter-count">124</span>
+          </label>
+          <label class="filter-label">
+            <input type="checkbox">
+            Laptop Gaming
+            <span class="filter-count">45</span>
+          </label>
+          <label class="filter-label">
+            <input type="checkbox">
+            Ultrabook
+            <span class="filter-count">32</span>
+          </label>
+          <label class="filter-label">
+            <input type="checkbox">
+            PC Lắp Ráp
+            <span class="filter-count">28</span>
+          </label>
+          <label class="filter-label">
+            <input type="checkbox">
+            Màn Hình
+            <span class="filter-count">19</span>
+          </label>
+        </div>
+
+        <div class="filter-group">
+          <h3>Thương Hiệu <i class="fa-solid fa-chevron-down" style="font-size: 0.8rem;"></i></h3>
+          <label class="filter-label"><input type="checkbox"> Asus <span class="filter-count">34</span></label>
+          <label class="filter-label"><input type="checkbox"> Dell <span class="filter-count">21</span></label>
+          <label class="filter-label"><input type="checkbox"> Apple <span class="filter-count">15</span></label>
+          <label class="filter-label"><input type="checkbox"> Lenovo <span class="filter-count">25</span></label>
+          <label class="filter-label"><input type="checkbox"> MSI <span class="filter-count">12</span></label>
+        </div>
+
+        <div class="filter-group">
+          <h3>Mức Giá <i class="fa-solid fa-chevron-down" style="font-size: 0.8rem;"></i></h3>
+          <label class="filter-label"><input type="radio" name="price"> Dưới 15 Triệu</label>
+          <label class="filter-label"><input type="radio" name="price"> 15 - 25 Triệu</label>
+          <label class="filter-label"><input type="radio" name="price"> 25 - 40 Triệu</label>
+          <label class="filter-label"><input type="radio" name="price"> Trên 40 Triệu</label>
+        </div>
+      </aside>
+
+      <!-- Product List -->
+      <div class="product-grid">
+        
+        <!-- Dynamic generation simulation -->
+        <div class="product-card">
+          <div class="img-wrapper">
+            <img src="https://images.unsplash.com/photo-1593640408182-31c70c8268f5?q=80&w=1000&auto=format&fit=crop" alt="Laptop" class="product-img">
+          </div>
+          <div class="product-info">
+            <h3>Dell XPS 15 9530</h3>
+            <p class="product-desc">Core i7-13700H, 16GB RAM, RTX 4050, Màn hình 3.5K OLED.</p>
+            <div class="product-footer">
+              <span class="price">45.990.000đ</span>
+              <button class="btn-icon add-to-cart"><i class="fa-solid fa-plus"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="product-card">
+          <div class="img-wrapper">
+            <span class="product-tag">Bán chạy</span>
+            <img src="https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?q=80&w=1000&auto=format&fit=crop" alt="Laptop" class="product-img">
+          </div>
+          <div class="product-info">
+            <h3>Legion 5 Pro 2023</h3>
+            <p class="product-desc">Ryzen 7 7745HX, RTX 4070, 16GB RAM, Màn 2K 165Hz.</p>
+            <div class="product-footer">
+              <span class="price">38.490.000đ</span>
+              <button class="btn-icon add-to-cart"><i class="fa-solid fa-plus"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="product-card">
+          <div class="img-wrapper">
+            <img src="https://images.unsplash.com/photo-1626218174358-7769486c4b79?q=80&w=1000&auto=format&fit=crop" alt="Macbook" class="product-img">
+          </div>
+          <div class="product-info">
+            <h3>MacBook Air M2 15"</h3>
+            <p class="product-desc">Apple M2, 8GB RAM, 256GB SSD, Thiết kế siêu mỏng nhẹ.</p>
+            <div class="product-footer">
+              <span class="price">29.990.000đ</span>
+              <button class="btn-icon add-to-cart"><i class="fa-solid fa-plus"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="product-card">
+          <div class="img-wrapper">
+            <span class="product-tag">-10%</span>
+            <img src="https://images.unsplash.com/photo-1555680202-c86f0e12f086?q=80&w=1000&auto=format&fit=crop" alt="Gaming PC" class="product-img">
+          </div>
+          <div class="product-info">
+            <h3>Phantom Gaming PC</h3>
+            <p class="product-desc">Core i5-13400F, RTX 4060, 16GB RAM, 500GB NVMe.</p>
+            <div class="product-footer">
+              <span class="price">21.500.000đ</span>
+              <button class="btn-icon add-to-cart"><i class="fa-solid fa-plus"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="product-card">
+          <div class="img-wrapper">
+            <img src="https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?q=80&w=1000&auto=format&fit=crop" alt="Monitor" class="product-img">
+          </div>
+          <div class="product-info">
+            <h3>Asus ProArt Display</h3>
+            <p class="product-desc">Màn hình 27" 4K HDR, Độ chuẩn màu 100% sRGB & Rec. 709.</p>
+            <div class="product-footer">
+              <span class="price">12.990.000đ</span>
+              <button class="btn-icon add-to-cart"><i class="fa-solid fa-plus"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="product-card">
+          <div class="img-wrapper">
+            <span class="product-tag">Mới</span>
+            <img src="https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?q=80&w=1000&auto=format&fit=crop" alt="Laptop" class="product-img">
+          </div>
+          <div class="product-info">
+            <h3>ROG Zephyrus G14</h3>
+            <p class="product-desc">Ryzen 9 8945HS, RTX 4070, Màn hình OLED Nebula 3K 120Hz.</p>
+            <div class="product-footer">
+              <span class="price">52.990.000đ</span>
+              <button class="btn-icon add-to-cart"><i class="fa-solid fa-plus"></i></button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-content">
+      <div class="footer-col">
+        <a href="index.html" class="logo" style="margin-bottom: 20px;">
+          <i class="fa-solid fa-microchip"></i> Aero<span>Tech</span>
+        </a>
+        <p>Chúng tôi cung cấp những giải pháp công nghệ tối ưu và cao cấp nhất dành cho game thủ, người sáng tạo và chuyên gia.</p>
+        <div class="social-links">
+          <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+          <a href="#"><i class="fa-brands fa-twitter"></i></a>
+          <a href="#"><i class="fa-brands fa-instagram"></i></a>
+          <a href="#"><i class="fa-brands fa-youtube"></i></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Sản Phẩm</h4>
+        <ul>
+          <li><a href="#">Laptop Gaming</a></li>
+          <li><a href="#">Ultrabook</a></li>
+          <li><a href="#">PC Lắp Ráp</a></li>
+          <li><a href="#">Linh Kiện</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Hỗ Trợ</h4>
+        <ul>
+          <li><a href="#">Chính Sách Bảo Hành</a></li>
+          <li><a href="#">Hướng Dẫn Mua Trả Góp</a></li>
+          <li><a href="#">Vận Chuyển</a></li>
+          <li><a href="#">Đổi Trả</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Đăng ký nhận tin</h4>
+        <p>Nhận ngay thông tin về sản phẩm mới và khuyến mãi đặc biệt.</p>
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+          <input type="email" placeholder="Email của bạn" style="padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: white; width: 100%;">
+          <button class="btn btn-primary" style="padding: 10px 15px;"><i class="fa-regular fa-paper-plane"></i></button>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 AeroTech. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast">
+    <i class="fa-solid fa-circle-check"></i>
+    <span>Đã thêm vào giỏ hàng!</span>
+  </div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
