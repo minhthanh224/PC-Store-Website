@@ -10,11 +10,192 @@ window.addEventListener('scroll', () => {
     }
 });
 
+const authOverlay = document.getElementById('authOverlay');
+const loginForm = document.getElementById('loginForm');
+const skipBrowseBtn = document.getElementById('skipBrowseBtn');
+const authError = document.getElementById('authError');
+const userStatusBtn = document.getElementById('userStatusBtn');
+
+function getAuthState() {
+    try {
+        return JSON.parse(localStorage.getItem('aeroTechAuth')) || null;
+    } catch (error) {
+        return null;
+    }
+}
+
+function setAuthState(state) {
+    localStorage.setItem('aeroTechAuth', JSON.stringify(state));
+}
+
+function updateAuthUI() {
+    const state = getAuthState();
+    if (!authOverlay) return;
+
+    // Reset userStatusBtn click listener logic
+    const oldUserStatusBtn = document.getElementById('userStatusBtn');
+    const newUserStatusBtn = oldUserStatusBtn ? oldUserStatusBtn.cloneNode(true) : null;
+    if (oldUserStatusBtn && newUserStatusBtn) {
+        oldUserStatusBtn.parentNode.replaceChild(newUserStatusBtn, oldUserStatusBtn);
+    }
+    const userStatusBtn = document.getElementById('userStatusBtn');
+
+    // Remove existing admin link if any
+    const existingAdminLink = document.getElementById('adminDashboardLink');
+    if (existingAdminLink) existingAdminLink.remove();
+
+    if (state?.loggedIn) {
+        authOverlay.style.display = 'none';
+        if (userStatusBtn) {
+            userStatusBtn.classList.add('logged-in');
+            const name = state.email ? state.email.split('@')[0] : 'Người dùng';
+            
+            if (state.role === 'admin') {
+                userStatusBtn.innerHTML = `<i class="fa-solid fa-user-shield"></i><span>Admin: ${name} (Đăng xuất)</span>`;
+                
+                // Add Admin Dashboard link to nav
+                const navLinks = document.querySelector('.nav-links');
+                if (navLinks) {
+                    const adminLink = document.createElement('a');
+                    adminLink.href = 'admin.html';
+                    adminLink.id = 'adminDashboardLink';
+                    adminLink.style.color = 'var(--primary)';
+                    adminLink.style.fontWeight = 'bold';
+                    adminLink.textContent = 'Quản trị (Admin)';
+                    navLinks.appendChild(adminLink);
+                }
+            } else {
+                userStatusBtn.innerHTML = `<i class="fa-regular fa-user"></i><span>Xin chào ${name} (Đăng xuất)</span>`;
+            }
+
+            // Logout listener
+            userStatusBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                setAuthState(null);
+                updateAuthUI();
+                location.reload(); // Reload to reset state fully
+            });
+        }
+        setCartActionsEnabled(true);
+    } else if (state?.browseOnly) {
+        authOverlay.style.display = 'none';
+        if (userStatusBtn) {
+            userStatusBtn.classList.remove('logged-in');
+            userStatusBtn.innerHTML = `<i class="fa-regular fa-user"></i><span>Chỉ tham khảo</span>`;
+            
+            // Login listener
+            userStatusBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                authOverlay.style.display = 'flex';
+                const err = document.getElementById('authError');
+                if (err) err.textContent = '';
+            });
+        }
+        setCartActionsEnabled(false);
+    } else {
+        authOverlay.style.display = 'flex';
+        if (userStatusBtn) {
+            userStatusBtn.classList.remove('logged-in');
+            userStatusBtn.innerHTML = `<i class="fa-regular fa-user"></i><span>Đăng nhập</span>`;
+            
+            // Login listener
+            userStatusBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                authOverlay.style.display = 'flex';
+            });
+        }
+        setCartActionsEnabled(false);
+    }
+}
+
+function setCartActionsEnabled(enabled) {
+    addButtons.forEach(button => {
+        if (enabled) {
+            button.classList.remove('action-disabled');
+            button.disabled = false;
+        } else {
+            button.classList.add('action-disabled');
+            button.disabled = true;
+        }
+    });
+    const cartIcons = document.querySelectorAll('.cart-icon');
+    cartIcons.forEach(icon => {
+        icon.style.pointerEvents = enabled ? 'auto' : 'none';
+        icon.style.opacity = enabled ? '1' : '0.5';
+    });
+}
+
+if (loginForm) {
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = document.getElementById('authEmail').value.trim();
+        const password = document.getElementById('authPassword').value.trim();
+        authError.textContent = '';
+
+        if (!email || !password) {
+            authError.textContent = 'Vui lòng nhập email và mật khẩu để tiếp tục.';
+            return;
+        }
+
+        if (password.length < 8) {
+            authError.textContent = 'Mật khẩu phải có độ dài tối thiểu 8 ký tự (theo QD 1.1).';
+            return;
+        }
+
+        const btn = loginForm.querySelector('button[type="submit"]');
+        const oldText = btn.textContent;
+        btn.textContent = 'Đang xử lý...';
+        btn.disabled = true;
+
+        fetch('http://localhost:5000/api/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        })
+        .then(res => res.json().then(data => ({ status: res.status, body: data })))
+        .then(({ status, body }) => {
+            btn.textContent = oldText;
+            btn.disabled = false;
+
+            if (status === 200) {
+                setAuthState({ 
+                    loggedIn: true, 
+                    email: body.user.email, 
+                    role: body.user.role,
+                    token: body.token 
+                });
+                updateAuthUI();
+            } else {
+                authError.textContent = body.message || 'Đăng nhập thất bại.';
+            }
+        })
+        .catch(err => {
+            btn.textContent = oldText;
+            btn.disabled = false;
+            authError.textContent = 'Lỗi kết nối Server! Vui lòng bật Backend ở port 5000.';
+            console.error(err);
+        });
+    });
+}
+
+if (skipBrowseBtn) {
+    skipBrowseBtn.addEventListener('click', () => {
+        setAuthState({ browseOnly: true });
+        updateAuthUI();
+    });
+}
+
+// Removed redundant userStatusBtn listener
+
 // Cart counter and Toast Notification
 let cartCount = 0;
 const cartCountElements = document.querySelectorAll('.cart-count');
 const addButtons = document.querySelectorAll('.add-to-cart');
 const toast = document.getElementById('toast');
+
+updateAuthUI();
 
 addButtons.forEach(button => {
     button.addEventListener('click', (e) => {
@@ -54,17 +235,85 @@ function showToast() {
     }, 3000);
 }
 
-// Simple Filter Interaction (Visual only)
-const filterLabels = document.querySelectorAll('.filter-label input[type="checkbox"]');
-filterLabels.forEach(filter => {
-    filter.addEventListener('change', () => {
-        const productGrid = document.querySelector('.product-grid');
+// Actual Filtering Logic
+const categoryFilters = document.querySelectorAll('.category-filter');
+const brandFilters = document.querySelectorAll('.brand-filter');
+const priceFilters = document.querySelectorAll('.price-filter');
+const productCards = document.querySelectorAll('.product-card');
+
+function filterProducts() {
+    const productGrid = document.querySelector('.product-grid');
+    if(productGrid) {
+        productGrid.style.opacity = '0.3';
+    }
+
+    // Get selected categories
+    const selectedCategories = Array.from(categoryFilters)
+        .filter(cb => cb.checked && cb.value !== 'all')
+        .map(cb => cb.value);
+    
+    // Check if 'all' is selected for categories
+    const isAllCategories = document.querySelector('.category-filter[value="all"]').checked || selectedCategories.length === 0;
+
+    // Get selected brands
+    const selectedBrands = Array.from(brandFilters)
+        .filter(cb => cb.checked)
+        .map(cb => cb.value);
+
+    // Get selected price
+    const selectedPriceNode = document.querySelector('.price-filter:checked');
+    const selectedPrice = selectedPriceNode ? selectedPriceNode.value : 'all';
+
+    setTimeout(() => {
+        productCards.forEach(card => {
+            const category = card.dataset.category;
+            const brand = card.dataset.brand;
+            const price = parseInt(card.dataset.price);
+
+            let categoryMatch = isAllCategories || selectedCategories.includes(category);
+            let brandMatch = selectedBrands.length === 0 || selectedBrands.includes(brand);
+            
+            let priceMatch = true;
+            if (selectedPrice === 'under-15') {
+                priceMatch = price < 15000000;
+            } else if (selectedPrice === '15-25') {
+                priceMatch = price >= 15000000 && price <= 25000000;
+            } else if (selectedPrice === '25-40') {
+                priceMatch = price > 25000000 && price <= 40000000;
+            } else if (selectedPrice === 'over-40') {
+                priceMatch = price > 40000000;
+            }
+
+            if (categoryMatch && brandMatch && priceMatch) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
         if(productGrid) {
-            productGrid.style.opacity = '0.3';
-            setTimeout(() => {
-                productGrid.style.opacity = '1';
-            }, 300);
+            productGrid.style.opacity = '1';
         }
+    }, 300);
+}
+
+// Add event listeners
+[...categoryFilters, ...brandFilters, ...priceFilters].forEach(filter => {
+    filter.addEventListener('change', (e) => {
+        // Special handling for 'All' category
+        if (e.target.classList.contains('category-filter')) {
+            if (e.target.value === 'all' && e.target.checked) {
+                // Uncheck others
+                categoryFilters.forEach(cb => {
+                    if (cb.value !== 'all') cb.checked = false;
+                });
+            } else if (e.target.value !== 'all' && e.target.checked) {
+                // Uncheck 'all'
+                const allCheckbox = document.querySelector('.category-filter[value="all"]');
+                if (allCheckbox) allCheckbox.checked = false;
+            }
+        }
+        filterProducts();
     });
 });
 
