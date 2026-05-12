@@ -12,17 +12,21 @@
   <!-- Navbar -->
   <header>
     <div class="container nav-container">
-      <a href="index.html" class="logo">
-        <i class="fa-solid fa-microchip"></i> Aero<span>Tech</span>
-      </a>
-      <nav class="nav-links">
-        <a href="index.html" class="active">Trang Chủ</a>
-        <a href="products.html">Sản Phẩm</a>
-        <a href="#">Dịch Vụ</a>
-        <a href="#">Liên Hệ</a>
-      </nav>
+      <div class="nav-left">
+        <button class="menu-btn" id="menuBtn">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <a href="index.html" class="logo">
+          <i class="fa-solid fa-microchip"></i> Aero<span>Tech</span>
+        </a>
+      </div>
+      
+      <div class="nav-search">
+        <input type="text" placeholder="Tìm kiếm sản phẩm, thương hiệu, v.v...">
+        <button><i class="fa-solid fa-magnifying-glass"></i></button>
+      </div>
+
       <div class="nav-icons">
-        <a href="#"><i class="fa-solid fa-magnifying-glass"></i></a>
         <a href="#" class="cart-icon">
           <i class="fa-solid fa-cart-shopping"></i>
           <span class="cart-count">0</span>
@@ -32,20 +36,64 @@
     </div>
   </header>
 
-  <!-- Hero Section -->
-  <section class="hero">
-    <div class="container hero-content">
-      <div class="hero-text">
-        <h1>Nâng Tầm Trải Nghiệm <span>Công Nghệ</span></h1>
-        <p>Khám phá bộ sưu tập máy tính xách tay và PC cao cấp thế hệ mới. Hiệu năng đỉnh cao, thiết kế đột phá dành riêng cho bạn.</p>
-        <div class="hero-actions">
-          <a href="products.html" class="btn btn-primary">Mua Ngay <i class="fa-solid fa-arrow-right"></i></a>
-          <a href="#featured" class="btn btn-outline">Xem Thêm</a>
+  <!-- Category Drawer -->
+  <aside class="category-drawer" id="categoryDrawer">
+    <div class="drawer-header">
+      <h3><i class="fa-solid fa-list-ul"></i> Danh Mục</h3>
+      <button class="close-drawer-btn" id="closeDrawerBtn"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <ul class="drawer-list">
+      <li><a href="#"><i class="fa-solid fa-laptop"></i> Laptop Gaming</a></li>
+      <li><a href="#"><i class="fa-solid fa-desktop"></i> PC Build Sẵn</a></li>
+      <li><a href="#"><i class="fa-solid fa-keyboard"></i> Phụ Kiện & Gaming Gear</a></li>
+      <li><a href="#"><i class="fa-solid fa-headphones"></i> Tai Nghe & Loa</a></li>
+      <li><a href="#"><i class="fa-solid fa-tv"></i> Màn Hình</a></li>
+      <li><a href="#"><i class="fa-solid fa-microchip"></i> Linh Kiện Máy Tính</a></li>
+    </ul>
+  </aside>
+
+  <!-- Hero Section (Bento Grid) -->
+  <section class="hero-bento">
+    <div class="container bento-container">
+      
+      <div class="bento-item bento-main">
+        <div class="bento-content">
+          <span class="bento-badge">Sự Kiện Lớn</span>
+          <h1>Lễ Hội Công Nghệ <span>Mùa Hè</span></h1>
+          <p>Giảm giá cực sốc lên tới 50% cho tất cả các dòng Laptop Gaming và Linh kiện PC. Số lượng có hạn, nhanh tay lên!</p>
+          <a href="products.html" class="btn btn-primary">Săn Sale Ngay <i class="fa-solid fa-bolt"></i></a>
         </div>
+        <div class="bento-overlay"></div>
+        <img src="https://images.unsplash.com/photo-1593640408182-31c70c8268f5?q=80&w=1200&auto=format&fit=crop" alt="Summer Tech Fest" class="bento-bg">
       </div>
-      <div class="hero-image">
-        <img src="https://images.unsplash.com/photo-1593642632823-8f785ba67e45?q=80&w=2000&auto=format&fit=crop" alt="Premium Laptop Workspace">
+      
+      <div class="bento-item bento-sub bento-1">
+        <div class="bento-content">
+          <h3>Build PC <br> Siêu Tốc</h3>
+          <a href="#" class="bento-link">Khám phá <i class="fa-solid fa-chevron-right"></i></a>
+        </div>
+        <div class="bento-overlay"></div>
+        <img src="https://images.unsplash.com/photo-1587202372634-32705e3bf49c?q=80&w=800&auto=format&fit=crop" alt="PC Build" class="bento-bg">
       </div>
+
+      <div class="bento-item bento-sub bento-2">
+        <div class="bento-content">
+          <h3>Phụ Kiện <br> Đồng Giá 99k</h3>
+          <a href="#" class="bento-link">Mua Ngay <i class="fa-solid fa-chevron-right"></i></a>
+        </div>
+        <div class="bento-overlay"></div>
+        <img src="https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?q=80&w=800&auto=format&fit=crop" alt="Accessories" class="bento-bg">
+      </div>
+
+      <div class="bento-item bento-sub bento-3">
+        <div class="bento-content">
+          <h3>Laptop <br> Sinh Viên</h3>
+          <span class="discount-tag">-20%</span>
+        </div>
+        <div class="bento-overlay"></div>
+        <img src="https://images.unsplash.com/photo-1603302576837-37561b2e2302?q=80&w=800&auto=format&fit=crop" alt="Student Laptops" class="bento-bg">
+      </div>
+
     </div>
   </section>
 

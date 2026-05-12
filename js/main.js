@@ -67,3 +67,25 @@ filterLabels.forEach(filter => {
         }
     });
 });
+
+// Category Drawer Toggle
+const menuBtn = document.getElementById('menuBtn');
+const closeDrawerBtn = document.getElementById('closeDrawerBtn');
+const categoryDrawer = document.getElementById('categoryDrawer');
+
+if (menuBtn && closeDrawerBtn && categoryDrawer) {
+    menuBtn.addEventListener('click', () => {
+        categoryDrawer.classList.add('open');
+    });
+
+    closeDrawerBtn.addEventListener('click', () => {
+        categoryDrawer.classList.remove('open');
+    });
+
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!categoryDrawer.contains(e.target) && !menuBtn.contains(e.target) && categoryDrawer.classList.contains('open')) {
+            categoryDrawer.classList.remove('open');
+        }
+    });
+}
