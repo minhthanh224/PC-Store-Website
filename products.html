@@ -27,7 +27,10 @@
           <i class="fa-solid fa-cart-shopping"></i>
           <span class="cart-count">0</span>
         </a>
-        <a href="#"><i class="fa-regular fa-user"></i></a>
+        <a href="#" class="user-status" id="userStatusBtn">
+          <i class="fa-regular fa-user"></i>
+          <span>Đăng nhập</span>
+        </a>
       </div>
     </div>
   </header>
@@ -49,47 +52,48 @@
         <div class="filter-group">
           <h3>Danh Mục <i class="fa-solid fa-chevron-down" style="font-size: 0.8rem;"></i></h3>
           <label class="filter-label">
-            <input type="checkbox" checked>
+            <input type="checkbox" value="all" class="category-filter" checked>
             Tất Cả
-            <span class="filter-count">124</span>
+            <span class="filter-count">6</span>
           </label>
           <label class="filter-label">
-            <input type="checkbox">
+            <input type="checkbox" value="laptop-gaming" class="category-filter">
             Laptop Gaming
-            <span class="filter-count">45</span>
+            <span class="filter-count">2</span>
           </label>
           <label class="filter-label">
-            <input type="checkbox">
+            <input type="checkbox" value="ultrabook" class="category-filter">
             Ultrabook
-            <span class="filter-count">32</span>
+            <span class="filter-count">2</span>
           </label>
           <label class="filter-label">
-            <input type="checkbox">
+            <input type="checkbox" value="pc-lap-rap" class="category-filter">
             PC Lắp Ráp
-            <span class="filter-count">28</span>
+            <span class="filter-count">1</span>
           </label>
           <label class="filter-label">
-            <input type="checkbox">
+            <input type="checkbox" value="man-hinh" class="category-filter">
             Màn Hình
-            <span class="filter-count">19</span>
+            <span class="filter-count">1</span>
           </label>
         </div>
 
         <div class="filter-group">
           <h3>Thương Hiệu <i class="fa-solid fa-chevron-down" style="font-size: 0.8rem;"></i></h3>
-          <label class="filter-label"><input type="checkbox"> Asus <span class="filter-count">34</span></label>
-          <label class="filter-label"><input type="checkbox"> Dell <span class="filter-count">21</span></label>
-          <label class="filter-label"><input type="checkbox"> Apple <span class="filter-count">15</span></label>
-          <label class="filter-label"><input type="checkbox"> Lenovo <span class="filter-count">25</span></label>
-          <label class="filter-label"><input type="checkbox"> MSI <span class="filter-count">12</span></label>
+          <label class="filter-label"><input type="checkbox" value="asus" class="brand-filter"> Asus <span class="filter-count">2</span></label>
+          <label class="filter-label"><input type="checkbox" value="dell" class="brand-filter"> Dell <span class="filter-count">1</span></label>
+          <label class="filter-label"><input type="checkbox" value="apple" class="brand-filter"> Apple <span class="filter-count">1</span></label>
+          <label class="filter-label"><input type="checkbox" value="lenovo" class="brand-filter"> Lenovo <span class="filter-count">1</span></label>
+          <label class="filter-label"><input type="checkbox" value="msi" class="brand-filter"> MSI <span class="filter-count">0</span></label>
         </div>
 
         <div class="filter-group">
           <h3>Mức Giá <i class="fa-solid fa-chevron-down" style="font-size: 0.8rem;"></i></h3>
-          <label class="filter-label"><input type="radio" name="price"> Dưới 15 Triệu</label>
-          <label class="filter-label"><input type="radio" name="price"> 15 - 25 Triệu</label>
-          <label class="filter-label"><input type="radio" name="price"> 25 - 40 Triệu</label>
-          <label class="filter-label"><input type="radio" name="price"> Trên 40 Triệu</label>
+          <label class="filter-label"><input type="radio" name="price" value="all" class="price-filter" checked> Tất Cả Giá</label>
+          <label class="filter-label"><input type="radio" name="price" value="under-15" class="price-filter"> Dưới 15 Triệu</label>
+          <label class="filter-label"><input type="radio" name="price" value="15-25" class="price-filter"> 15 - 25 Triệu</label>
+          <label class="filter-label"><input type="radio" name="price" value="25-40" class="price-filter"> 25 - 40 Triệu</label>
+          <label class="filter-label"><input type="radio" name="price" value="over-40" class="price-filter"> Trên 40 Triệu</label>
         </div>
       </aside>
 
@@ -97,7 +101,7 @@
       <div class="product-grid">
         
         <!-- Dynamic generation simulation -->
-        <div class="product-card">
+        <div class="product-card" data-category="ultrabook" data-brand="dell" data-price="45990000">
           <div class="img-wrapper">
             <img src="https://images.unsplash.com/photo-1593640408182-31c70c8268f5?q=80&w=1000&auto=format&fit=crop" alt="Laptop" class="product-img">
           </div>
@@ -111,7 +115,7 @@
           </div>
         </div>
 
-        <div class="product-card">
+        <div class="product-card" data-category="laptop-gaming" data-brand="lenovo" data-price="38490000">
           <div class="img-wrapper">
             <span class="product-tag">Bán chạy</span>
             <img src="https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?q=80&w=1000&auto=format&fit=crop" alt="Laptop" class="product-img">
@@ -126,7 +130,7 @@
           </div>
         </div>
 
-        <div class="product-card">
+        <div class="product-card" data-category="ultrabook" data-brand="apple" data-price="29990000">
           <div class="img-wrapper">
             <img src="https://images.unsplash.com/photo-1626218174358-7769486c4b79?q=80&w=1000&auto=format&fit=crop" alt="Macbook" class="product-img">
           </div>
@@ -140,7 +144,7 @@
           </div>
         </div>
 
-        <div class="product-card">
+        <div class="product-card" data-category="pc-lap-rap" data-brand="" data-price="21500000">
           <div class="img-wrapper">
             <span class="product-tag">-10%</span>
             <img src="https://images.unsplash.com/photo-1555680202-c86f0e12f086?q=80&w=1000&auto=format&fit=crop" alt="Gaming PC" class="product-img">
@@ -155,7 +159,7 @@
           </div>
         </div>
 
-        <div class="product-card">
+        <div class="product-card" data-category="man-hinh" data-brand="asus" data-price="12990000">
           <div class="img-wrapper">
             <img src="https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?q=80&w=1000&auto=format&fit=crop" alt="Monitor" class="product-img">
           </div>
@@ -169,7 +173,7 @@
           </div>
         </div>
 
-        <div class="product-card">
+        <div class="product-card" data-category="laptop-gaming" data-brand="asus" data-price="52990000">
           <div class="img-wrapper">
             <span class="product-tag">Mới</span>
             <img src="https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?q=80&w=1000&auto=format&fit=crop" alt="Laptop" class="product-img">
@@ -234,6 +238,24 @@
       <p>&copy; 2026 AeroTech. All rights reserved.</p>
     </div>
   </footer>
+
+  <!-- Authentication Overlay -->
+  <div class="auth-overlay" id="authOverlay">
+    <div class="auth-card">
+      <h2>Chào mừng đến với AeroTech</h2>
+      <p>Đăng nhập để đặt hàng nhanh chóng hoặc chọn "Chỉ tham khảo" để xem sản phẩm.</p>
+      <form id="loginForm">
+        <label for="authEmail">Email</label>
+        <input type="email" id="authEmail" placeholder="Email của bạn" required>
+        <label for="authPassword">Mật khẩu</label>
+        <input type="password" id="authPassword" placeholder="Mật khẩu" required>
+        <button type="submit" class="btn btn-primary">Đăng nhập</button>
+      </form>
+      <button class="btn btn-outline" id="skipBrowseBtn">Chỉ tham khảo</button>
+      <p class="auth-note">Bạn có thể xem sản phẩm mà không cần đặt hàng.</p>
+      <div id="authError" class="auth-error"></div>
+    </div>
+  </div>
 
   <!-- Toast Notification -->
   <div id="toast" class="toast">
