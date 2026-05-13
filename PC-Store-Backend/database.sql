@@ -39,8 +39,12 @@ CREATE TABLE Products (
     ram_storage VARCHAR(150),
     price DECIMAL(15, 2) NOT NULL,
     warranty_months INT NOT NULL,
+    image_url TEXT,
     description TEXT,
+
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+
     FOREIGN KEY (brand_id) REFERENCES Brands(id) ON DELETE SET NULL,
     FOREIGN KEY (category_id) REFERENCES Categories(id) ON DELETE SET NULL
 );

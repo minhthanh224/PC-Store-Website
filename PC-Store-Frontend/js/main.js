@@ -48,21 +48,20 @@ function updateAuthUI() {
         authOverlay.style.display = 'none';
         if (userStatusBtn) {
             userStatusBtn.classList.add('logged-in');
-            const name = state.email ? state.email.split('@')[0] : 'Người dùng';
+            const name = state.full_name || state.email.split('@')[0];
             
             if (state.role === 'admin') {
                 userStatusBtn.innerHTML = `<i class="fa-solid fa-user-shield"></i><span>Admin: ${name} (Đăng xuất)</span>`;
                 
                 // Add Admin Dashboard link to nav
-                const navLinks = document.querySelector('.nav-links');
-                if (navLinks) {
+                const navLeft = document.querySelector('.nav-left');
+                if (navLeft && !document.getElementById('adminDashboardLink')) {
                     const adminLink = document.createElement('a');
                     adminLink.href = 'admin.html';
                     adminLink.id = 'adminDashboardLink';
-                    adminLink.style.color = 'var(--primary)';
-                    adminLink.style.fontWeight = 'bold';
-                    adminLink.textContent = 'Quản trị (Admin)';
-                    navLinks.appendChild(adminLink);
+                    adminLink.className = 'admin-badge';
+                    adminLink.innerHTML = '<i class="fa-solid fa-gauge-high"></i> Admin';
+                    navLeft.appendChild(adminLink);
                 }
             } else {
                 userStatusBtn.innerHTML = `<i class="fa-regular fa-user"></i><span>Xin chào ${name} (Đăng xuất)</span>`;
@@ -73,40 +72,45 @@ function updateAuthUI() {
                 e.preventDefault();
                 setAuthState(null);
                 updateAuthUI();
-                location.reload(); // Reload to reset state fully
+                location.reload(); 
             });
         }
         setCartActionsEnabled(true);
-    } else if (state?.browseOnly) {
-        authOverlay.style.display = 'none';
-        if (userStatusBtn) {
-            userStatusBtn.classList.remove('logged-in');
-            userStatusBtn.innerHTML = `<i class="fa-regular fa-user"></i><span>Chỉ tham khảo</span>`;
-            
-            // Login listener
-            userStatusBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                authOverlay.style.display = 'flex';
-                const err = document.getElementById('authError');
-                if (err) err.textContent = '';
-            });
-        }
-        setCartActionsEnabled(false);
     } else {
-        authOverlay.style.display = 'flex';
+        // MẶC ĐỊNH ẨN POPUP KHI MỞ WEB (Yêu cầu của người dùng)
+        authOverlay.style.display = 'none';
+        
         if (userStatusBtn) {
             userStatusBtn.classList.remove('logged-in');
             userStatusBtn.innerHTML = `<i class="fa-regular fa-user"></i><span>Đăng nhập</span>`;
             
-            // Login listener
+            // Hiện popup khi người dùng chủ động nhấn vào nút Đăng nhập
             userStatusBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 authOverlay.style.display = 'flex';
+                showView('login');
             });
         }
         setCartActionsEnabled(false);
     }
 }
+
+function showView(view) {
+    const loginView = document.getElementById('loginView');
+    const registerView = document.getElementById('registerView');
+    const authError = document.getElementById('authError');
+    
+    if (authError) authError.textContent = '';
+    
+    if (view === 'login') {
+        loginView.style.display = 'block';
+        registerView.style.display = 'none';
+    } else {
+        loginView.style.display = 'none';
+        registerView.style.display = 'block';
+    }
+}
+
 
 function setCartActionsEnabled(enabled) {
     addButtons.forEach(button => {
@@ -182,10 +186,80 @@ if (loginForm) {
 
 if (skipBrowseBtn) {
     skipBrowseBtn.addEventListener('click', () => {
-        setAuthState({ browseOnly: true });
-        updateAuthUI();
+        authOverlay.style.display = 'none';
     });
 }
+
+// Chuyển đổi giữa Đăng nhập và Đăng ký
+const showRegisterBtn = document.getElementById('showRegisterBtn');
+const showLoginBtn = document.getElementById('showLoginBtn');
+
+if (showRegisterBtn) {
+    showRegisterBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        showView('register');
+    });
+}
+
+if (showLoginBtn) {
+    showLoginBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        showView('login');
+    });
+}
+
+// Xử lý Đăng ký
+const registerForm = document.getElementById('registerForm');
+if (registerForm) {
+    registerForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const full_name = document.getElementById('regName').value;
+        const phone = document.getElementById('regPhone').value;
+        const email = document.getElementById('regEmail').value;
+        const password = document.getElementById('regPassword').value;
+        
+        if (password.length < 8) {
+            authError.textContent = 'Mật khẩu phải có ít nhất 8 ký tự.';
+            return;
+        }
+
+        const btn = registerForm.querySelector('button');
+        btn.disabled = true;
+        btn.textContent = 'Đang xử lý...';
+
+        fetch('http://localhost:5000/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ full_name, phone, email, password })
+        })
+        .then(res => res.json().then(data => ({ status: res.status, body: data })))
+        .then(({ status, body }) => {
+            btn.disabled = false;
+            btn.textContent = 'Tạo tài khoản';
+            if (status === 201) {
+                alert('Đăng ký thành công! Hãy đăng nhập.');
+                showView('login');
+            } else {
+                authError.textContent = body.message;
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btn.textContent = 'Tạo tài khoản';
+            authError.textContent = 'Lỗi kết nối server.';
+        });
+    });
+}
+
+// Đóng popup khi click ra ngoài
+if (authOverlay) {
+    authOverlay.addEventListener('click', (e) => {
+        if (e.target === authOverlay) {
+            authOverlay.style.display = 'none';
+        }
+    });
+}
+
 
 // Removed redundant userStatusBtn listener
 

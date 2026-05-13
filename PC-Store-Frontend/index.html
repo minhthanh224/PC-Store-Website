@@ -225,14 +225,35 @@
     <div class="auth-card">
       <h2>Chào mừng đến với AeroTech</h2>
       <p>Đăng nhập để đặt hàng nhanh chóng hoặc chọn "Chỉ tham khảo" để xem sản phẩm.</p>
-      <form id="loginForm">
-        <label for="authEmail">Email</label>
-        <input type="email" id="authEmail" placeholder="Email của bạn" required>
-        <label for="authPassword">Mật khẩu</label>
-        <input type="password" id="authPassword" placeholder="Mật khẩu" required>
-        <button type="submit" class="btn btn-primary">Đăng nhập</button>
-      </form>
-      <button class="btn btn-outline" id="skipBrowseBtn">Chỉ tham khảo</button>
+      <!-- Login View -->
+      <div id="loginView">
+        <form id="loginForm">
+          <label for="authEmail">Email</label>
+          <input type="email" id="authEmail" placeholder="Email của bạn" required>
+          <label for="authPassword">Mật khẩu</label>
+          <input type="password" id="authPassword" placeholder="Mật khẩu" required>
+          <button type="submit" class="btn btn-primary">Đăng nhập</button>
+        </form>
+        <button class="btn btn-outline" id="skipBrowseBtn">Chỉ tham khảo</button>
+        <p class="auth-toggle">Chưa có tài khoản? <a href="#" id="showRegisterBtn">Đăng ký ngay</a></p>
+      </div>
+
+      <!-- Register View (Hidden by default) -->
+      <div id="registerView" style="display: none;">
+        <form id="registerForm">
+          <label for="regName">Họ và tên</label>
+          <input type="text" id="regName" placeholder="Họ và tên của bạn" required>
+          <label for="regPhone">Số điện thoại</label>
+          <input type="tel" id="regPhone" placeholder="Số điện thoại" required>
+          <label for="regEmail">Email</label>
+          <input type="email" id="regEmail" placeholder="Email của bạn" required>
+          <label for="regPassword">Mật khẩu</label>
+          <input type="password" id="regPassword" placeholder="Mật khẩu (tối thiểu 8 ký tự)" required>
+          <button type="submit" class="btn btn-primary">Tạo tài khoản</button>
+        </form>
+        <p class="auth-toggle">Đã có tài khoản? <a href="#" id="showLoginBtn">Đăng nhập</a></p>
+      </div>
+
       <p class="auth-note">Bạn có thể xem sản phẩm mà không cần đặt hàng.</p>
       <div id="authError" class="auth-error"></div>
     </div>

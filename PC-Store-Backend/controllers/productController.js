@@ -16,13 +16,21 @@ exports.createProduct = async (req, res) => {
     try {
         const { name, brand_id, category_id, cpu, ram_storage, price, warranty_months, description } = req.body;
         
+        // Lấy đường dẫn file nếu có upload thành công
+        let image_url = null;
+        if (req.file) {
+            image_url = `http://localhost:5000/uploads/products/${req.file.filename}`;
+        }
+        
         const [result] = await db.query(
-            'INSERT INTO Products (name, brand_id, category_id, cpu, ram_storage, price, warranty_months, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            [name, brand_id || null, category_id || null, cpu, ram_storage, price, warranty_months, description]
+            'INSERT INTO Products (name, brand_id, category_id, cpu, ram_storage, price, warranty_months, description, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [name, brand_id || null, category_id || null, cpu, ram_storage, price, warranty_months, description, image_url]
         );
         
         res.status(201).json({ message: 'Thêm sản phẩm thành công', productId: result.insertId });
     } catch (error) {
+
+
         console.error(error);
         res.status(500).json({ message: 'Lỗi khi thêm sản phẩm' });
     }

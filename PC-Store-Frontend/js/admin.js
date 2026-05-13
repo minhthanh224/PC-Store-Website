@@ -24,8 +24,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 tbody.innerHTML = '';
                 products.forEach(p => {
                     const tr = document.createElement('tr');
+                    const imgHtml = p.image_url ? `<img src="${p.image_url}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">` : '<span style="color:var(--text-muted)">No img</span>';
                     tr.innerHTML = `
                         <td>${p.id}</td>
+                        <td>${imgHtml}</td>
                         <td>${p.name}</td>
                         <td>${p.cpu || '-'}</td>
                         <td>${p.ram_storage || '-'}</td>
@@ -33,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td>${p.warranty_months}T</td>
                     `;
                     tbody.appendChild(tr);
+
                 });
             })
             .catch(err => console.error('Lỗi tải sản phẩm:', err));
@@ -44,20 +47,24 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('addProductForm').addEventListener('submit', (e) => {
         e.preventDefault();
         
-        const payload = {
-            name: document.getElementById('pName').value,
-            brand_id: document.getElementById('pBrand').value || null,
-            cpu: document.getElementById('pCpu').value,
-            ram_storage: document.getElementById('pRam').value,
-            price: document.getElementById('pPrice').value,
-            warranty_months: document.getElementById('pWarranty').value,
-        };
+        const formData = new FormData();
+        formData.append('name', document.getElementById('pName').value);
+        formData.append('brand_id', document.getElementById('pBrand').value || '');
+        formData.append('cpu', document.getElementById('pCpu').value);
+        formData.append('ram_storage', document.getElementById('pRam').value);
+        formData.append('price', document.getElementById('pPrice').value);
+        formData.append('warranty_months', document.getElementById('pWarranty').value);
+        
+        const imageFile = document.getElementById('pImage').files[0];
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
 
         fetch('http://localhost:5000/api/products', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: formData // Khi gửi FormData, không cần set Content-Type header
         })
+
         .then(res => res.json())
         .then(data => {
             document.getElementById('productMsg').textContent = data.message;
