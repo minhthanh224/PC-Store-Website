@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chi Tiết Sản Phẩm | AeroTech</title>
+  <meta name="description" content="Thông tin chi tiết sản phẩm tại AeroTech.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header>
+    <div class="container nav-container">
+      <div class="nav-left">
+        <a href="index.html" class="logo">
+          <i class="fa-solid fa-microchip"></i> Aero<span>Tech</span>
+        </a>
+      </div>
+      <div class="nav-search">
+        <input type="text" id="searchInput" placeholder="Tìm kiếm sản phẩm, thương hiệu, v.v...">
+        <button id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i></button>
+      </div>
+      <div class="nav-icons">
+        <a href="#" class="cart-icon" id="cartIconBtn">
+          <i class="fa-solid fa-cart-shopping"></i>
+          <span class="cart-count">0</span>
+        </a>
+        <a href="#" class="user-status" id="userStatusBtn">
+          <i class="fa-regular fa-user"></i>
+          <span>Đăng nhập</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Category Navigation -->
+  <nav class="category-bar">
+    <div class="container" style="display:flex;gap:10px;overflow-x:auto;padding:10px 0">
+      <a href="products.html" class="cat-link"><i class="fa-solid fa-border-all"></i> Tất cả</a>
+      <a href="products.html?category=laptop-gaming" class="cat-link"><i class="fa-solid fa-gamepad"></i> Laptop Gaming</a>
+      <a href="products.html?category=ultrabook" class="cat-link"><i class="fa-solid fa-feather"></i> Ultrabook</a>
+      <a href="products.html?category=pc-lap-rap" class="cat-link"><i class="fa-solid fa-computer"></i> PC Lắp Ráp</a>
+      <a href="products.html?category=man-hinh" class="cat-link"><i class="fa-solid fa-display"></i> Màn Hình</a>
+      <a href="products.html?category=phu-kien" class="cat-link"><i class="fa-solid fa-keyboard"></i> Phụ Kiện</a>
+    </div>
+  </nav>
+
+  <!-- Breadcrumb -->
+  <div class="detail-breadcrumb">
+    <div class="container">
+      <a href="index.html">Trang Chủ</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <a href="products.html">Sản Phẩm</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span id="breadcrumbName">...</span>
+    </div>
+  </div>
+
+  <!-- Product Detail -->
+  <section class="product-detail-section">
+    <div class="container">
+      <div class="detail-layout" id="detailContent">
+        <div class="product-loading" id="detailLoading">
+          <div class="loading-spinner"></div>
+          <p>Đang tải thông tin sản phẩm...</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-content">
+      <div class="footer-col">
+        <a href="index.html" class="logo" style="margin-bottom: 20px;">
+          <i class="fa-solid fa-microchip"></i> Aero<span>Tech</span>
+        </a>
+        <p>Chúng tôi cung cấp những giải pháp công nghệ tối ưu và cao cấp nhất.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Sản Phẩm</h4>
+        <ul>
+          <li><a href="products.html?category=laptop-gaming">Laptop Gaming</a></li>
+          <li><a href="products.html?category=ultrabook">Ultrabook</a></li>
+          <li><a href="products.html?category=pc-lap-rap">PC Lắp Ráp</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Hỗ Trợ</h4>
+        <ul>
+          <li><a href="#">Chính Sách Bảo Hành</a></li>
+          <li><a href="#">Vận Chuyển</a></li>
+          <li><a href="#">Đổi Trả</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 AeroTech. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Auth Overlay -->
+  <div class="auth-overlay" id="authOverlay">
+    <div class="auth-card">
+      <h2>Chào mừng đến với AeroTech</h2>
+      <p>Đăng nhập để đặt hàng nhanh chóng.</p>
+      <div id="loginView">
+        <form id="loginForm">
+          <label for="authEmail">Email</label>
+          <input type="email" id="authEmail" placeholder="Email của bạn" required>
+          <label for="authPassword">Mật khẩu</label>
+          <input type="password" id="authPassword" placeholder="Mật khẩu" required>
+          <button type="submit" class="btn btn-primary">Đăng nhập</button>
+        </form>
+        <button class="btn btn-outline" id="skipBrowseBtn">Chỉ tham khảo</button>
+        <p class="auth-toggle">Chưa có tài khoản? <a href="#" id="showRegisterBtn">Đăng ký ngay</a></p>
+      </div>
+      <div id="registerView" style="display: none;">
+        <form id="registerForm">
+          <label for="regName">Họ và tên</label>
+          <input type="text" id="regName" required>
+          <label for="regPhone">Số điện thoại</label>
+          <input type="tel" id="regPhone" required>
+          <label for="regEmail">Email</label>
+          <input type="email" id="regEmail" required>
+          <label for="regPassword">Mật khẩu</label>
+          <input type="password" id="regPassword" required>
+          <button type="submit" class="btn btn-primary">Tạo tài khoản</button>
+        </form>
+        <p class="auth-toggle">Đã có tài khoản? <a href="#" id="showLoginBtn">Đăng nhập</a></p>
+      </div>
+      <p class="auth-note">Bạn có thể xem sản phẩm mà không cần đặt hàng.</p>
+      <div id="authError" class="auth-error"></div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast">
+    <i class="fa-solid fa-circle-check"></i>
+    <span>Đã thêm vào giỏ hàng!</span>
+  </div>
+
+  <script src="js/main.js"></script>
+  <script src="js/product-detail.js"></script>
+</body>
+</html>

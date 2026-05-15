@@ -22,9 +22,10 @@
       </div>
       
       <div class="nav-search">
-        <input type="text" placeholder="Tìm kiếm sản phẩm, thương hiệu, v.v...">
-        <button><i class="fa-solid fa-magnifying-glass"></i></button>
+        <input type="text" id="searchInput" placeholder="Tìm kiếm sản phẩm, thương hiệu, v.v...">
+        <button id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i></button>
       </div>
+
 
       <div class="nav-icons">
         <a href="#" class="cart-icon">
@@ -46,13 +47,13 @@
       <button class="close-drawer-btn" id="closeDrawerBtn"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <ul class="drawer-list">
-      <li><a href="#"><i class="fa-solid fa-laptop"></i> Laptop Gaming</a></li>
-      <li><a href="#"><i class="fa-solid fa-desktop"></i> PC Build Sẵn</a></li>
-      <li><a href="#"><i class="fa-solid fa-keyboard"></i> Phụ Kiện & Gaming Gear</a></li>
-      <li><a href="#"><i class="fa-solid fa-headphones"></i> Tai Nghe & Loa</a></li>
-      <li><a href="#"><i class="fa-solid fa-tv"></i> Màn Hình</a></li>
-      <li><a href="#"><i class="fa-solid fa-microchip"></i> Linh Kiện Máy Tính</a></li>
+      <li><a href="products.html?category=laptop-gaming"><i class="fa-solid fa-laptop"></i> Laptop Gaming</a></li>
+      <li><a href="products.html?category=pc-lap-rap"><i class="fa-solid fa-desktop"></i> PC Build Sẵn</a></li>
+      <li><a href="products.html?category=ultrabook"><i class="fa-solid fa-keyboard"></i> Phụ Kiện & Gaming Gear</a></li>
+      <li><a href="products.html?category=man-hinh"><i class="fa-solid fa-tv"></i> Màn Hình</a></li>
+      <li><a href="products.html"><i class="fa-solid fa-list"></i> Tất Cả Sản Phẩm</a></li>
     </ul>
+
   </aside>
 
   <!-- Hero Section (Bento Grid) -->
@@ -100,78 +101,56 @@
     </div>
   </section>
 
-  <!-- Featured Products -->
-  <section id="featured" class="featured">
-    <div class="container">
-      <h2 class="section-title">Sản Phẩm <span>Nổi Bật</span></h2>
-      <div class="product-grid">
-        
-        <!-- Product 1 -->
-        <div class="product-card">
-          <div class="img-wrapper">
-            <span class="product-tag">Mới</span>
-            <img src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=1000&auto=format&fit=crop" alt="MacBook Pro" class="product-img">
-          </div>
-          <div class="product-info">
-            <h3>AeroBook Pro 16"</h3>
-            <p class="product-desc">Chip M3 Max, RAM 32GB, SSD 1TB. Hiệu năng mạnh mẽ cho dân sáng tạo.</p>
-            <div class="product-footer">
-              <span class="price">59.990.000đ</span>
-              <button class="btn-icon add-to-cart"><i class="fa-solid fa-plus"></i></button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Product 2 -->
-        <div class="product-card">
-          <div class="img-wrapper">
-            <span class="product-tag">Bán chạy</span>
-            <img src="https://images.unsplash.com/photo-1587202372634-32705e3bf49c?q=80&w=1000&auto=format&fit=crop" alt="Gaming PC" class="product-img">
-          </div>
-          <div class="product-info">
-            <h3>Titan Gaming PC</h3>
-            <p class="product-desc">Intel Core i9, RTX 4090, Tản nhiệt nước tùy chỉnh.</p>
-            <div class="product-footer">
-              <span class="price">85.500.000đ</span>
-              <button class="btn-icon add-to-cart"><i class="fa-solid fa-plus"></i></button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Product 3 -->
-        <div class="product-card">
-          <div class="img-wrapper">
-            <span class="product-tag">-15%</span>
-            <img src="https://images.unsplash.com/photo-1527814050087-179337edc927?q=80&w=1000&auto=format&fit=crop" alt="Ultrabook" class="product-img">
-          </div>
-          <div class="product-info">
-            <h3>ZenLite Ultrabook</h3>
-            <p class="product-desc">Trọng lượng 1.1kg, Pin 18 tiếng, Màn hình OLED 2K siêu nét.</p>
-            <div class="product-footer">
-              <span class="price">24.990.000đ</span>
-              <button class="btn-icon add-to-cart"><i class="fa-solid fa-plus"></i></button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Product 4 -->
-        <div class="product-card">
-          <div class="img-wrapper">
-            <img src="https://images.unsplash.com/photo-1603302576837-37561b2e2302?q=80&w=1000&auto=format&fit=crop" alt="Studio Laptop" class="product-img">
-          </div>
-          <div class="product-info">
-            <h3>Creator Studio 15</h3>
-            <p class="product-desc">RTX 4060, Màn hình 100% DCI-P3, RAM 16GB DDR5.</p>
-            <div class="product-footer">
-              <span class="price">32.490.000đ</span>
-              <button class="btn-icon add-to-cart"><i class="fa-solid fa-plus"></i></button>
-            </div>
-          </div>
-        </div>
-
+  <!-- Trust Badges -->
+  <section class="trust-strip">
+    <div class="container trust-grid">
+      <div class="trust-item" data-animate>
+        <div class="trust-icon"><i class="fa-solid fa-truck-fast"></i></div>
+        <div><h4>Giao Hàng Miễn Phí</h4><p>Đơn hàng từ 500k</p></div>
+      </div>
+      <div class="trust-item" data-animate>
+        <div class="trust-icon"><i class="fa-solid fa-shield-halved"></i></div>
+        <div><h4>Bảo Hành 36 Tháng</h4><p>1 đổi 1 trong 30 ngày</p></div>
+      </div>
+      <div class="trust-item" data-animate>
+        <div class="trust-icon"><i class="fa-solid fa-headset"></i></div>
+        <div><h4>Hỗ Trợ 24/7</h4><p>Hotline: 1900 xxxx</p></div>
+      </div>
+      <div class="trust-item" data-animate>
+        <div class="trust-icon"><i class="fa-solid fa-rotate-left"></i></div>
+        <div><h4>Đổi Trả Dễ Dàng</h4><p>Trong vòng 7 ngày</p></div>
       </div>
     </div>
   </section>
+
+  <!-- Brand Partners -->
+  <section class="brands-section">
+    <div class="container">
+      <p class="brands-label">Đối tác thương hiệu</p>
+      <div class="brands-track">
+        <div class="brand-logo">ASUS</div>
+        <div class="brand-logo">DELL</div>
+        <div class="brand-logo">APPLE</div>
+        <div class="brand-logo">LENOVO</div>
+        <div class="brand-logo">MSI</div>
+        <div class="brand-logo">CORSAIR</div>
+        <div class="brand-logo">SAMSUNG</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Category Product Sections (loaded from API) -->
+  <section class="home-categories">
+    <div class="container" id="homeCategorySections">
+      <div class="product-loading">
+        <div class="loading-spinner"></div>
+        <p>Đang tải danh mục sản phẩm...</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Scroll to Top -->
+  <button class="scroll-top" id="scrollTopBtn"><i class="fa-solid fa-chevron-up"></i></button>
 
   <!-- Footer -->
   <footer>

@@ -12,17 +12,18 @@
   <!-- Navbar -->
   <header>
     <div class="container nav-container">
-      <a href="index.html" class="logo">
-        <i class="fa-solid fa-microchip"></i> Aero<span>Tech</span>
-      </a>
-      <nav class="nav-links">
-        <a href="index.html">Trang Chủ</a>
-        <a href="products.html" class="active">Sản Phẩm</a>
-        <a href="#">Dịch Vụ</a>
-        <a href="#">Liên Hệ</a>
-      </nav>
+      <div class="nav-left">
+        <a href="index.html" class="logo">
+          <i class="fa-solid fa-microchip"></i> Aero<span>Tech</span>
+        </a>
+      </div>
+
+      <div class="nav-search">
+        <input type="text" id="searchInput" placeholder="Tìm kiếm sản phẩm, thương hiệu, v.v...">
+        <button id="searchBtn"><i class="fa-solid fa-magnifying-glass"></i></button>
+      </div>
+
       <div class="nav-icons">
-        <a href="#"><i class="fa-solid fa-magnifying-glass"></i></a>
         <a href="#" class="cart-icon">
           <i class="fa-solid fa-cart-shopping"></i>
           <span class="cart-count">0</span>
@@ -34,6 +35,7 @@
       </div>
     </div>
   </header>
+
 
   <!-- Page Header -->
   <div class="page-header">
@@ -97,95 +99,13 @@
         </div>
       </aside>
 
-      <!-- Product List -->
-      <div class="product-grid">
+      <!-- Product List (Rendered dynamically from API) -->
+      <div class="product-grid" id="productGrid">
         
-        <!-- Dynamic generation simulation -->
-        <div class="product-card" data-category="ultrabook" data-brand="dell" data-price="45990000">
-          <div class="img-wrapper">
-            <img src="https://images.unsplash.com/photo-1593640408182-31c70c8268f5?q=80&w=1000&auto=format&fit=crop" alt="Laptop" class="product-img">
-          </div>
-          <div class="product-info">
-            <h3>Dell XPS 15 9530</h3>
-            <p class="product-desc">Core i7-13700H, 16GB RAM, RTX 4050, Màn hình 3.5K OLED.</p>
-            <div class="product-footer">
-              <span class="price">45.990.000đ</span>
-              <button class="btn-icon add-to-cart"><i class="fa-solid fa-plus"></i></button>
-            </div>
-          </div>
-        </div>
-
-        <div class="product-card" data-category="laptop-gaming" data-brand="lenovo" data-price="38490000">
-          <div class="img-wrapper">
-            <span class="product-tag">Bán chạy</span>
-            <img src="https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?q=80&w=1000&auto=format&fit=crop" alt="Laptop" class="product-img">
-          </div>
-          <div class="product-info">
-            <h3>Legion 5 Pro 2023</h3>
-            <p class="product-desc">Ryzen 7 7745HX, RTX 4070, 16GB RAM, Màn 2K 165Hz.</p>
-            <div class="product-footer">
-              <span class="price">38.490.000đ</span>
-              <button class="btn-icon add-to-cart"><i class="fa-solid fa-plus"></i></button>
-            </div>
-          </div>
-        </div>
-
-        <div class="product-card" data-category="ultrabook" data-brand="apple" data-price="29990000">
-          <div class="img-wrapper">
-            <img src="https://images.unsplash.com/photo-1626218174358-7769486c4b79?q=80&w=1000&auto=format&fit=crop" alt="Macbook" class="product-img">
-          </div>
-          <div class="product-info">
-            <h3>MacBook Air M2 15"</h3>
-            <p class="product-desc">Apple M2, 8GB RAM, 256GB SSD, Thiết kế siêu mỏng nhẹ.</p>
-            <div class="product-footer">
-              <span class="price">29.990.000đ</span>
-              <button class="btn-icon add-to-cart"><i class="fa-solid fa-plus"></i></button>
-            </div>
-          </div>
-        </div>
-
-        <div class="product-card" data-category="pc-lap-rap" data-brand="" data-price="21500000">
-          <div class="img-wrapper">
-            <span class="product-tag">-10%</span>
-            <img src="https://images.unsplash.com/photo-1555680202-c86f0e12f086?q=80&w=1000&auto=format&fit=crop" alt="Gaming PC" class="product-img">
-          </div>
-          <div class="product-info">
-            <h3>Phantom Gaming PC</h3>
-            <p class="product-desc">Core i5-13400F, RTX 4060, 16GB RAM, 500GB NVMe.</p>
-            <div class="product-footer">
-              <span class="price">21.500.000đ</span>
-              <button class="btn-icon add-to-cart"><i class="fa-solid fa-plus"></i></button>
-            </div>
-          </div>
-        </div>
-
-        <div class="product-card" data-category="man-hinh" data-brand="asus" data-price="12990000">
-          <div class="img-wrapper">
-            <img src="https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?q=80&w=1000&auto=format&fit=crop" alt="Monitor" class="product-img">
-          </div>
-          <div class="product-info">
-            <h3>Asus ProArt Display</h3>
-            <p class="product-desc">Màn hình 27" 4K HDR, Độ chuẩn màu 100% sRGB & Rec. 709.</p>
-            <div class="product-footer">
-              <span class="price">12.990.000đ</span>
-              <button class="btn-icon add-to-cart"><i class="fa-solid fa-plus"></i></button>
-            </div>
-          </div>
-        </div>
-
-        <div class="product-card" data-category="laptop-gaming" data-brand="asus" data-price="52990000">
-          <div class="img-wrapper">
-            <span class="product-tag">Mới</span>
-            <img src="https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?q=80&w=1000&auto=format&fit=crop" alt="Laptop" class="product-img">
-          </div>
-          <div class="product-info">
-            <h3>ROG Zephyrus G14</h3>
-            <p class="product-desc">Ryzen 9 8945HS, RTX 4070, Màn hình OLED Nebula 3K 120Hz.</p>
-            <div class="product-footer">
-              <span class="price">52.990.000đ</span>
-              <button class="btn-icon add-to-cart"><i class="fa-solid fa-plus"></i></button>
-            </div>
-          </div>
+        <!-- Loading State -->
+        <div class="product-loading" id="productLoading">
+          <div class="loading-spinner"></div>
+          <p>Đang tải sản phẩm...</p>
         </div>
 
       </div>
@@ -244,18 +164,40 @@
     <div class="auth-card">
       <h2>Chào mừng đến với AeroTech</h2>
       <p>Đăng nhập để đặt hàng nhanh chóng hoặc chọn "Chỉ tham khảo" để xem sản phẩm.</p>
-      <form id="loginForm">
-        <label for="authEmail">Email</label>
-        <input type="email" id="authEmail" placeholder="Email của bạn" required>
-        <label for="authPassword">Mật khẩu</label>
-        <input type="password" id="authPassword" placeholder="Mật khẩu" required>
-        <button type="submit" class="btn btn-primary">Đăng nhập</button>
-      </form>
-      <button class="btn btn-outline" id="skipBrowseBtn">Chỉ tham khảo</button>
+      <!-- Login View -->
+      <div id="loginView">
+        <form id="loginForm">
+          <label for="authEmail">Email</label>
+          <input type="email" id="authEmail" placeholder="Email của bạn" required>
+          <label for="authPassword">Mật khẩu</label>
+          <input type="password" id="authPassword" placeholder="Mật khẩu" required>
+          <button type="submit" class="btn btn-primary">Đăng nhập</button>
+        </form>
+        <button class="btn btn-outline" id="skipBrowseBtn">Chỉ tham khảo</button>
+        <p class="auth-toggle">Chưa có tài khoản? <a href="#" id="showRegisterBtn">Đăng ký ngay</a></p>
+      </div>
+
+      <!-- Register View (Hidden by default) -->
+      <div id="registerView" style="display: none;">
+        <form id="registerForm">
+          <label for="regName">Họ và tên</label>
+          <input type="text" id="regName" placeholder="Họ và tên của bạn" required>
+          <label for="regPhone">Số điện thoại</label>
+          <input type="tel" id="regPhone" placeholder="Số điện thoại" required>
+          <label for="regEmail">Email</label>
+          <input type="email" id="regEmail" placeholder="Email của bạn" required>
+          <label for="regPassword">Mật khẩu</label>
+          <input type="password" id="regPassword" placeholder="Mật khẩu (tối thiểu 8 ký tự)" required>
+          <button type="submit" class="btn btn-primary">Tạo tài khoản</button>
+        </form>
+        <p class="auth-toggle">Đã có tài khoản? <a href="#" id="showLoginBtn">Đăng nhập</a></p>
+      </div>
+
       <p class="auth-note">Bạn có thể xem sản phẩm mà không cần đặt hàng.</p>
       <div id="authError" class="auth-error"></div>
     </div>
   </div>
+
 
   <!-- Toast Notification -->
   <div id="toast" class="toast">
