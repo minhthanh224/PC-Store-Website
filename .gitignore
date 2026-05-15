@@ -58,3 +58,29 @@ coverage/
 
 # Yarn Integrity file
 .yarn-integrity
+
+# ==========================================
+# REPORT & DOCUMENTATION FILES
+# ==========================================
+# Draw.io files
+*.drawio
+*.drawio.bkp
+*.drawio.dtmp
+
+# LaTeX source and build files
+*.tex
+*.aux
+*.bbl
+*.blg
+*.brf
+*.idx
+*.ilg
+*.ind
+*.lof
+*.lot
+*.out
+*.toc
+*.synctex.gz
+*.pdf
+*.fdb_latexmk
+*.fls
