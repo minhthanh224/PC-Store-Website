@@ -34,6 +34,15 @@
     table th, table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
     table th { color: var(--text-muted); font-weight: 500; }
     table tr:hover { background: rgba(255,255,255,0.02); }
+    
+    .admin-section { display: none; animation: fadeIn 0.3s ease; }
+    .admin-section.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .dashboard-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+    .stat-card { background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; text-align: center; }
+    .stat-card h3 { color: var(--text-muted); font-size: 1rem; margin-bottom: 10px; }
+    .stat-card .value { font-size: 2rem; color: var(--primary); font-weight: bold; }
   </style>
 </head>
 <body>
@@ -44,11 +53,11 @@
       <i class="fa-solid fa-microchip"></i> Aero<span>Admin</span>
     </a>
     <nav class="admin-nav">
-      <a href="#" class="active"><i class="fa-solid fa-chart-line"></i> Bảng điều khiển</a>
-      <a href="#"><i class="fa-solid fa-laptop"></i> Quản lý Sản phẩm</a>
-      <a href="#"><i class="fa-solid fa-barcode"></i> Nhập Serial (S/N)</a>
-      <a href="#"><i class="fa-solid fa-cart-flatbed"></i> Quản lý Đơn hàng</a>
-      <a href="#"><i class="fa-solid fa-screwdriver-wrench"></i> Quản lý Bảo hành</a>
+      <a href="#" class="active" data-section="dashboard"><i class="fa-solid fa-chart-line"></i> Bảng điều khiển</a>
+      <a href="#" data-section="products"><i class="fa-solid fa-laptop"></i> Quản lý Sản phẩm</a>
+      <a href="#" data-section="serials"><i class="fa-solid fa-barcode"></i> Nhập Serial (S/N)</a>
+      <a href="#" data-section="orders"><i class="fa-solid fa-cart-flatbed"></i> Quản lý Đơn hàng</a>
+      <a href="#" data-section="warranty"><i class="fa-solid fa-screwdriver-wrench"></i> Quản lý Bảo hành</a>
     </nav>
     <div class="admin-logout" id="adminLogoutBtn">
       <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
@@ -58,11 +67,53 @@
   <!-- Main Content -->
   <main class="admin-main">
     <div class="admin-header">
-      <h1>Quản lý Sản phẩm & Kho</h1>
+      <h1 id="adminTitle">Bảng điều khiển</h1>
       <div id="adminGreeting">Xin chào, Admin</div>
     </div>
 
-    <!-- Product Form -->
+    <!-- Dashboard Section -->
+    <div id="dashboard" class="admin-section active">
+      <div class="dashboard-stats">
+        <div class="stat-card">
+          <h3><i class="fa-solid fa-coins" style="color:#f0ad4e"></i> Doanh Thu</h3>
+          <div class="value" id="statRevenue">--</div>
+        </div>
+        <div class="stat-card">
+          <h3><i class="fa-solid fa-clock" style="color:#5bc0de"></i> Chờ Duyệt</h3>
+          <div class="value" id="statPending">--</div>
+        </div>
+        <div class="stat-card">
+          <h3><i class="fa-solid fa-receipt" style="color:#4ecdc4"></i> Tổng Đơn</h3>
+          <div class="value" id="statOrders">--</div>
+        </div>
+        <div class="stat-card">
+          <h3><i class="fa-solid fa-users" style="color:#a78bfa"></i> Khách Hàng</h3>
+          <div class="value" id="statCustomers">--</div>
+        </div>
+        <div class="stat-card">
+          <h3><i class="fa-solid fa-laptop" style="color:#ff6b9d"></i> Model SP</h3>
+          <div class="value" id="statProducts">--</div>
+        </div>
+        <div class="stat-card">
+          <h3><i class="fa-solid fa-warehouse" style="color:#00e1ff"></i> Tồn Kho (S/N)</h3>
+          <div class="value" id="statStock">--</div>
+        </div>
+      </div>
+      <div class="admin-card">
+        <h3>Đơn hàng gần đây</h3>
+        <div class="table-wrapper">
+          <table>
+            <thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Tổng tiền</th><th>Trạng thái</th><th>Ngày</th></tr></thead>
+            <tbody id="recentOrdersBody">
+              <tr><td colspan="5" style="text-align:center;color:var(--text-muted)">Đang tải...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Products Section -->
+    <div id="products" class="admin-section">
     <div class="admin-card">
       <h3>Thêm Sản Phẩm Mới (UC-13)</h3>
       <form id="addProductForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
@@ -71,16 +122,27 @@
           <input type="text" id="pName" required placeholder="VD: Asus ROG Strix G15">
         </div>
         <div class="form-group">
-          <label>Hãng (Brand ID)</label>
-          <input type="number" id="pBrand" placeholder="1 = Asus, 2 = Dell...">
+          <label>Hãng (Brand)</label>
+          <select id="pBrand" required>
+            <option value="">-- Chọn Hãng --</option>
+            <option value="1">1 - Asus</option>
+            <option value="2">2 - Dell</option>
+            <option value="3">3 - Apple</option>
+            <option value="4">4 - Lenovo</option>
+            <option value="5">5 - MSI</option>
+          </select>
         </div>
         <div class="form-group">
           <label>CPU</label>
           <input type="text" id="pCpu" placeholder="VD: Intel Core i7 12700H">
         </div>
         <div class="form-group">
-          <label>RAM & Ổ cứng</label>
-          <input type="text" id="pRam" placeholder="VD: 16GB DDR5, 512GB SSD">
+          <label>RAM, Ổ cứng & VGA</label>
+          <input type="text" id="pRam" placeholder="VD: 16GB DDR5, 512GB NVMe, RTX 3060">
+        </div>
+        <div class="form-group">
+          <label>Màn hình</label>
+          <input type="text" id="pDisplay" placeholder="VD: 15.6 inch FHD IPS 144Hz">
         </div>
         <div class="form-group">
           <label>Giá bán (VND)</label>
@@ -103,6 +165,90 @@
       <div id="productMsg" style="margin-top: 15px; color: var(--primary);"></div>
     </div>
 
+    <!-- Products List (Moved here so it's under Products section) -->
+    <div class="admin-card">
+      <h3>Danh sách Sản phẩm hiện tại</h3>
+      <div class="table-wrapper">
+        <table id="productsTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Ảnh</th>
+              <th>Tên SP</th>
+              <th>CPU</th>
+              <th>RAM & VGA</th>
+              <th>Màn hình</th>
+              <th>Giá</th>
+              <th>Bảo hành</th>
+              <th>Hành động</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Dữ liệu render từ API -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Edit Product Modal -->
+    <div id="editProductModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center">
+      <div style="background:var(--bg-color);border:1px solid var(--border-color);border-radius:16px;padding:30px;max-width:700px;width:90%;max-height:90vh;overflow-y:auto">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+          <h3 style="color:var(--primary)">Sửa Sản Phẩm</h3>
+          <button onclick="document.getElementById('editProductModal').style.display='none'" style="background:none;border:none;color:var(--text-muted);font-size:1.3rem;cursor:pointer"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="editProductForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <input type="hidden" id="eProductId">
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label>Tên Sản Phẩm *</label>
+            <input type="text" id="eName" required>
+          </div>
+          <div class="form-group">
+            <label>Hãng (Brand ID)</label>
+            <select id="eBrand" required>
+              <option value="" disabled selected>-- Chọn hãng --</option>
+              <option value="1">1 - ASUS</option>
+              <option value="2">2 - MSI</option>
+              <option value="3">3 - GIGABYTE</option>
+              <option value="4">4 - ACER</option>
+              <option value="5">5 - LENOVO</option>
+              <option value="6">6 - DELL</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>CPU</label>
+            <input type="text" id="eCpu">
+          </div>
+          <div class="form-group">
+            <label>RAM, Ổ cứng & VGA</label>
+            <input type="text" id="eRam">
+          </div>
+          <div class="form-group">
+            <label>Màn hình</label>
+            <input type="text" id="eDisplay">
+          </div>
+          <div class="form-group">
+            <label>Giá bán (VND)</label>
+            <input type="number" id="ePrice" required>
+          </div>
+          <div class="form-group">
+            <label>Bảo hành (tháng)</label>
+            <input type="number" id="eWarranty" required>
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label>Hình ảnh sản phẩm (chọn file mới nếu muốn thay đổi, nếu không sẽ giữ ảnh cũ)</label>
+            <input type="file" id="eImage" accept="image/*">
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <button type="submit" class="btn btn-primary" id="btnSaveProduct">Lưu Thay Đổi</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    </div> <!-- End Products Section -->
+
+    <!-- Serials Section -->
+    <div id="serials" class="admin-section">
     <!-- Serial Import Form -->
     <div class="admin-card">
       <h3>Nhập Kho Serial (UC-15)</h3>
@@ -121,27 +267,51 @@
       </form>
       <div id="serialMsg" style="margin-top: 15px; color: var(--primary);"></div>
     </div>
+    </div> <!-- End Serials Section -->
 
-    <!-- Products List -->
-    <div class="admin-card">
-      <h3>Danh sách Sản phẩm hiện tại</h3>
-      <div class="table-wrapper">
-        <table id="productsTable">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Ảnh</th>
-              <th>Tên SP</th>
-              <th>CPU</th>
-              <th>RAM & SSD</th>
-              <th>Giá</th>
-              <th>Bảo hành</th>
-            </tr>
-          </thead>
-          <tbody>
-            <!-- Dữ liệu render từ API -->
-          </tbody>
-        </table>
+    <!-- Orders Section -->
+    <div id="orders" class="admin-section">
+      <div class="admin-card">
+        <h3>Quản lý Đơn hàng (UC-18 ~ UC-20)</h3>
+        <div class="table-wrapper">
+          <table id="ordersTable">
+            <thead>
+              <tr>
+                <th>Mã đơn</th>
+                <th>Khách hàng</th>
+                <th>SĐT</th>
+                <th>Tổng tiền</th>
+                <th>Thanh toán</th>
+                <th>Trạng thái</th>
+                <th>Ngày đặt</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="ordersBody">
+              <!-- Render từ API -->
+            </tbody>
+          </table>
+        </div>
+        <p id="ordersEmpty" style="color:var(--text-muted);display:none;text-align:center;padding:30px">Chưa có đơn hàng nào.</p>
+      </div>
+
+      <!-- Order Detail Modal -->
+      <div id="orderDetailModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center">
+        <div style="background:var(--bg-color);border:1px solid var(--border-color);border-radius:16px;padding:30px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+            <h3 id="modalOrderId" style="color:var(--primary)"></h3>
+            <button onclick="document.getElementById('orderDetailModal').style.display='none'" style="background:none;border:none;color:var(--text-muted);font-size:1.3rem;cursor:pointer"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <div id="modalOrderContent"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Warranty Section -->
+    <div id="warranty" class="admin-section">
+      <div class="admin-card">
+        <h3>Quản lý Bảo hành</h3>
+        <p style="color: var(--text-muted)">Chức năng đang được phát triển. Quản lý các yêu cầu bảo hành và trạng thái sửa chữa.</p>
       </div>
     </div>
 

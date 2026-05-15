@@ -12,5 +12,8 @@ router.post('/', upload.single('image'), productController.createProduct);
 // POST /api/products/:id/serials - Nhập kho (S/N)
 router.post('/:productId/serials', productController.importSerials);
 
+// PUT /api/products/:id - Sửa sản phẩm
+router.put('/:id', upload.single('image'), productController.updateProduct);
+
 
 module.exports = router;
