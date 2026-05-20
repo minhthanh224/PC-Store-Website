@@ -1,0 +1,75 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Báo cáo - AeroTech</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <aside id="adminSidebar" class="admin-sidebar"></aside>
+    <main class="admin-main">
+      <header id="adminTopbar" class="admin-topbar"></header>
+      <section class="admin-content">
+        <div class="admin-page-heading">
+          <p class="eyebrow">Reports</p>
+          <h1>Báo cáo cửa hàng</h1>
+          <p class="page-subtitle">Theo dõi doanh thu, đơn hàng, tồn kho và bảo hành.</p>
+        </div>
+
+        <form id="reportFilterForm" class="admin-filter-bar report-filter-bar">
+          <input id="reportFrom" type="date" aria-label="Từ ngày">
+          <input id="reportTo" type="date" aria-label="Đến ngày">
+          <select id="reportGroupBy">
+            <option value="day">Theo ngày</option>
+            <option value="month">Theo tháng</option>
+          </select>
+          <button class="btn btn-dark" type="submit">Xem báo cáo</button>
+        </form>
+        <div id="reportMessage"></div>
+
+        <div id="reportOverview" class="admin-card-grid loading-box">Đang tải báo cáo...</div>
+
+        <section class="admin-panel">
+          <h2>Doanh thu</h2>
+          <div id="revenueReport" class="loading-box">Đang tải doanh thu...</div>
+        </section>
+
+        <section class="admin-panel">
+          <h2>Sản phẩm bán chạy</h2>
+          <div id="bestSellingReport" class="admin-table-wrap loading-box">Đang tải sản phẩm bán chạy...</div>
+        </section>
+
+        <section class="admin-panel">
+          <h2>Báo cáo tồn kho</h2>
+          <div id="inventoryReport" class="admin-table-wrap loading-box">Đang tải tồn kho...</div>
+        </section>
+
+        <div class="admin-detail-grid">
+          <section class="admin-panel">
+            <h2>Trạng thái bảo hành</h2>
+            <div id="warrantyReport" class="admin-table-wrap loading-box">Đang tải bảo hành...</div>
+          </section>
+
+          <section class="admin-panel">
+            <h2>Trạng thái đơn hàng</h2>
+            <div id="orderReport" class="admin-table-wrap loading-box">Đang tải đơn hàng...</div>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/utils.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/admin/admin-api.js"></script>
+  <script src="../assets/js/admin/admin-layout.js"></script>
+  <script src="../assets/js/admin/reports.js"></script>
+</body>
+</html>
+
+

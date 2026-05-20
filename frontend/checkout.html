@@ -1,0 +1,87 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thanh toán - AeroTech</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header id="siteHeader"></header>
+
+  <main class="container checkout-page">
+    <div class="page-heading">
+      <p class="eyebrow">Checkout</p>
+      <h1>Đặt hàng</h1>
+    </div>
+
+    <div class="checkout-layout">
+      <section class="checkout-card">
+        <h2>Thông tin nhận hàng</h2>
+        <form id="checkoutForm" class="stack-form">
+          <label>
+            Họ tên người nhận
+            <input id="checkoutName" name="customer_name" type="text" required>
+          </label>
+          <label>
+            Số điện thoại
+            <input id="checkoutPhone" name="customer_phone" type="tel" required>
+          </label>
+          <label>
+            Email
+            <input id="checkoutEmail" name="customer_email" type="email">
+          </label>
+          <div class="form-grid">
+            <label>
+              Tỉnh/Thành
+              <input id="checkoutProvince" name="province" type="text" required>
+            </label>
+            <label>
+              Quận/Huyện
+              <input id="checkoutDistrict" name="district" type="text" required>
+            </label>
+            <label>
+              Phường/Xã
+              <input id="checkoutWard" name="ward" type="text" required>
+            </label>
+          </div>
+          <label>
+            Địa chỉ chi tiết
+            <input id="checkoutAddress" name="address_line" type="text" required>
+          </label>
+          <label>
+            Ghi chú
+            <textarea id="checkoutNote" name="note" rows="4"></textarea>
+          </label>
+          <label>
+            Phương thức thanh toán
+            <select id="checkoutPayment" name="payment_method">
+              <option value="cod">COD - Thanh toán khi nhận hàng</option>
+              <option value="bank_transfer">Chuyển khoản</option>
+            </select>
+          </label>
+          <button class="btn btn-primary" type="submit">Xác nhận đặt hàng</button>
+        </form>
+        <div id="checkoutMessage"></div>
+      </section>
+
+      <aside class="checkout-card">
+        <h2>Tóm tắt giỏ hàng</h2>
+        <div id="checkoutSummary"></div>
+      </aside>
+    </div>
+  </main>
+
+  <footer id="siteFooter"></footer>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/cart-store.js"></script>
+  <script src="assets/js/layout.js"></script>
+  <script src="assets/js/checkout.js"></script>
+</body>
+</html>
+
+

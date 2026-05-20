@@ -1,0 +1,42 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tra cứu bảo hành - AeroTech</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header id="siteHeader"></header>
+
+  <main class="warranty-page">
+    <section class="warranty-hero">
+      <div class="container warranty-hero-inner">
+        <p class="eyebrow">Bảo hành Serial</p>
+        <h1>Tra cứu bảo hành sản phẩm</h1>
+        <p>Nhập Serial Number trên sản phẩm hoặc phiếu mua hàng để kiểm tra thời hạn bảo hành và tình trạng xử lý.</p>
+        <form id="warrantyLookupForm" class="warranty-search-card">
+          <input id="warrantySerialInput" placeholder="Nhập Serial, ví dụ: SN-PC-001" autocomplete="off" required>
+          <button class="btn btn-primary" type="submit">Tra cứu</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="container warranty-result-section">
+      <div id="warrantyResult" class="state-box">Nhập Serial để bắt đầu tra cứu bảo hành.</div>
+    </section>
+  </main>
+
+  <footer id="siteFooter"></footer>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/cart-store.js"></script>
+  <script src="assets/js/layout.js"></script>
+  <script src="assets/js/warranty-lookup.js"></script>
+</body>
+</html>
+
+

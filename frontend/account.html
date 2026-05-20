@@ -1,0 +1,57 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tài khoản - AeroTech</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header id="siteHeader"></header>
+
+  <main class="container account-page account-retail-page">
+    <div class="page-heading account-page-heading">
+      <p class="eyebrow">Khách hàng</p>
+      <h1>Tài khoản của tôi</h1>
+      <p class="page-subtitle">Quản lý thông tin, đơn hàng và địa chỉ giao hàng của bạn.</p>
+    </div>
+
+    <div class="account-layout">
+      <section id="profileCard" class="account-card account-profile-card loading-box">Đang tải hồ sơ...</section>
+      <section class="account-card account-shortcut-card">
+        <h2>Lối tắt</h2>
+        <div class="quick-link-grid">
+          <a class="quick-action-tile" href="my-orders.html"><span>01</span>Lịch sử mua hàng</a>
+          <a class="quick-action-tile" href="#addressSection"><span>02</span>Sổ địa chỉ</a>
+          <a class="quick-action-tile" href="wishlist.html"><span>03</span>Sản phẩm yêu thích</a>
+          <a class="quick-action-tile" href="warranty-lookup.html"><span>04</span>Tra cứu bảo hành</a>
+          <button id="accountLogoutBtn" class="quick-action-tile quick-action-danger" type="button"><span>05</span>Đăng xuất</button>
+        </div>
+      </section>
+      <section class="account-card account-orders-card wide-card">
+        <div class="section-heading compact-heading">
+          <h2>Đơn hàng gần đây</h2>
+          <a class="text-link" href="my-orders.html">Xem tất cả</a>
+        </div>
+        <div id="recentOrders" class="loading-box">Đang tải đơn hàng...</div>
+      </section>
+      <section id="addressSection" class="account-card account-address-card wide-card">
+        <h2>Sổ địa chỉ</h2>
+        <div id="addressList" class="address-list loading-box">Đang tải địa chỉ...</div>
+      </section>
+    </div>
+  </main>
+
+  <footer id="siteFooter"></footer>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/cart-store.js"></script>
+  <script src="assets/js/layout.js"></script>
+  <script src="assets/js/account.js"></script>
+</body>
+</html>
+
+

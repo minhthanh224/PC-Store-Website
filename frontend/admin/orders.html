@@ -1,0 +1,66 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý đơn hàng - AeroTech</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <aside id="adminSidebar" class="admin-sidebar"></aside>
+    <main class="admin-main">
+      <header id="adminTopbar" class="admin-topbar"></header>
+      <section class="admin-content">
+        <div class="admin-page-heading">
+          <p class="eyebrow">Orders</p>
+          <h1>Quản lý đơn hàng</h1>
+          <p class="page-subtitle">Theo dõi, duyệt đơn, cập nhật giao hàng và kiểm tra gán serial.</p>
+        </div>
+
+        <div id="orderStatusTabs" class="order-tabs admin-order-tabs">
+          <button class="active" type="button" data-status="">Tất cả</button>
+          <button type="button" data-status="pending">Chờ duyệt</button>
+          <button type="button" data-status="approved">Đã duyệt</button>
+          <button type="button" data-status="shipping">Đang giao</button>
+          <button type="button" data-status="completed">Hoàn thành</button>
+          <button type="button" data-status="cancelled">Đã hủy</button>
+        </div>
+
+        <form id="adminOrderFilterForm" class="admin-filter-bar">
+          <input id="orderKeyword" type="search" placeholder="Tìm mã đơn, khách hàng, SĐT, email">
+          <select id="orderStatus">
+            <option value="">Tất cả trạng thái</option>
+            <option value="pending">Chờ duyệt</option>
+            <option value="approved">Đã duyệt</option>
+            <option value="shipping">Đang giao</option>
+            <option value="completed">Hoàn thành</option>
+            <option value="cancelled">Đã hủy</option>
+          </select>
+          <select id="orderPaymentMethod">
+            <option value="">Tất cả thanh toán</option>
+            <option value="cod">COD</option>
+            <option value="bank_transfer">Chuyển khoản</option>
+          </select>
+          <button class="btn btn-dark" type="submit">Lọc</button>
+        </form>
+
+        <div id="adminOrderMessage"></div>
+        <div id="adminOrderTable" class="admin-table-wrap loading-box">Đang tải đơn hàng...</div>
+        <div id="adminOrderPagination" class="pagination"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/utils.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/admin/admin-api.js"></script>
+  <script src="../assets/js/admin/admin-layout.js"></script>
+  <script src="../assets/js/admin/orders.js"></script>
+</body>
+</html>
+
+
