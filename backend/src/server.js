@@ -9,5 +9,5 @@ if (!process.env.JWT_SECRET) {
 }
 
 app.listen(PORT, function () {
-  console.log(`AeroTech API is running on http://localhost:${PORT}`);
+  console.log(`AeroTech API is running on port ${PORT}`);
 });

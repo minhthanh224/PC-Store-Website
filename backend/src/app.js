@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
+const path = require("path");
 
 const healthRoutes = require("./routes/health.routes");
 const devRoutes = require("./routes/dev.routes");
@@ -24,6 +25,7 @@ const notFoundMiddleware = require("./middlewares/notFound.middleware");
 const errorMiddleware = require("./middlewares/error.middleware");
 
 const app = express();
+const frontendPath = path.join(__dirname, "../../frontend");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -48,6 +50,11 @@ app.use("/api/admin/dashboard", adminDashboardRoutes);
 app.use("/api/admin/orders", adminOrderRoutes);
 app.use("/api/admin/warranty-tickets", adminWarrantyRoutes);
 app.use("/api/admin/reports", adminReportRoutes);
+
+app.use(express.static(frontendPath));
+app.get("/", function (req, res) {
+  res.sendFile(path.join(frontendPath, "index.html"));
+});
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
