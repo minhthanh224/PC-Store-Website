@@ -70,11 +70,11 @@ async function requireAdminRole(allowedRoles) {
 
   try {
     const response = await adminGet("/auth/me");
-    const user = response.data.user;
+    const user = normalizeUserRole(response.data.user);
 
     localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
 
-    if (!allowedRoles.includes(user.role)) {
+    if (!allowedRoles.map(function (role) { return String(role).toLowerCase(); }).includes(user.role)) {
       document.body.innerHTML = `
         <main class="admin-access-denied">
           <section class="access-card">

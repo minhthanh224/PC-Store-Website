@@ -34,6 +34,8 @@ function renderHeader(categories) {
   const currentKeyword = searchParams.get("keyword") || searchParams.get("q") || searchParams.get("search") || "";
   const currentUser = getCurrentUser();
   const displayName = currentUser ? getSafeDisplayName(currentUser) : "";
+  const isStaff = isStaffUser(currentUser);
+  const greetingHref = isStaff ? getAdminHomeUrl(currentUser) : "account.html";
   const navItems = getAeroNavItems(categories).map(function (item) {
     const childLinks = (item.children || []).slice(0, 8).map(function (child) {
       const childHref = child.href || `products.html?category=${encodeURIComponent(child.slug)}`;
@@ -48,34 +50,56 @@ function renderHeader(categories) {
     `;
   }).join("");
 
-  const accountArea = currentUser
-    ? `
-      <div class="header-account header-auth-actions">
-        <a class="account-greeting" href="account.html">Xin chào, ${escapeHtml(displayName)}</a>
-        <button id="logoutBtn" class="header-action-btn header-logout-btn" type="button">Đăng xuất</button>
-      </div>
-    `
-    : `
-      <div class="header-account header-auth-actions">
-        <a class="header-action-btn header-login-btn" href="login.html">Đăng nhập</a>
-        <a class="header-action-btn header-register-btn" href="register.html">Đăng ký</a>
-      </div>
+  const cartAction = `
+    <a class="cart-link" href="cart.html" aria-label="Giỏ hàng, ${getCartCount()} sản phẩm">
+      <span class="cart-link-text">Giỏ hàng</span>
+      <span class="cart-icon-wrap" aria-hidden="true">
+        <img class="cart-icon" src="assets/icons/cart-fill.svg" alt="">
+        <span id="cartCount" class="cart-count-badge">${getCartCount()}</span>
+      </span>
+    </a>
+  `;
+  const wishlistAction = '<a class="header-action-btn header-wishlist-btn" href="wishlist.html">Yêu thích</a>';
+
+  let headerActions = `
+    ${wishlistAction}
+    ${cartAction}
+    <a class="header-action-btn header-login-btn" href="login.html">Đăng nhập</a>
+    <a class="header-action-btn header-register-btn" href="register.html">Đăng ký</a>
+  `;
+
+  if (currentUser && isStaff) {
+    headerActions = `
+      ${cartAction}
+      <a class="account-greeting" href="${escapeAttribute(greetingHref)}">Xin chào, ${escapeHtml(displayName)}</a>
+      <a class="header-action-btn header-admin-btn" href="${escapeAttribute(getAdminHomeUrl(currentUser))}">Quản trị</a>
+      <button id="logoutBtn" class="header-action-btn header-logout-btn" type="button">Đăng xuất</button>
     `;
+  } else if (currentUser) {
+    headerActions = `
+      ${wishlistAction}
+      ${cartAction}
+      <a class="account-greeting" href="${escapeAttribute(greetingHref)}">Xin chào, ${escapeHtml(displayName)}</a>
+      <button id="logoutBtn" class="header-action-btn header-logout-btn" type="button">Đăng xuất</button>
+    `;
+  }
 
   return `
-    <div class="top-strip">
-      <div class="container top-strip-inner">
+    <div class="top-strip header-topbar">
+      <div class="container top-strip-inner header-topbar-inner">
         <div class="utility-links">
           <a href="stores.html">Hệ thống showroom</a>
           <a href="contact.html">Dành cho doanh nghiệp</a>
           <a href="products.html?productType=pc_build">Xây dựng cấu hình</a>
           <a href="products.html?sort=newest">Khuyến mãi</a>
+          <a href="warranty-lookup.html">Bảo hành</a>
+          <a href="products.html?sort=newest">Tin mới</a>
         </div>
         <a class="utility-hotline" href="contact.html">Hotline 1900 1040</a>
       </div>
     </div>
-    <div class="site-header-main">
-      <div class="container header-grid">
+    <div class="site-header-main header-main-row">
+      <div class="container header-grid header-main-grid">
         <a class="site-logo" href="index.html" aria-label="AeroTech">
           <span class="logo-mark" aria-hidden="true"></span>
           <span class="logo-copy">
@@ -95,23 +119,13 @@ function renderHeader(categories) {
           <div id="searchSuggestionPanel" class="search-panel" hidden></div>
         </form>
         <div class="header-actions">
-          <a class="header-link" href="warranty-lookup.html">Bảo hành</a>
-          <a class="header-link" href="wishlist.html">Yêu thích</a>
-          <a class="header-link header-notification" href="products.html?sort=newest">Tin mới</a>
-          <a class="cart-link" href="cart.html" aria-label="Giỏ hàng, ${getCartCount()} sản phẩm">
-            <span class="cart-link-text">Giỏ hàng</span>
-            <span class="cart-icon-wrap" aria-hidden="true">
-              <img class="cart-icon" src="assets/icons/cart-fill.svg" alt="">
-              <span id="cartCount" class="cart-count-badge">${getCartCount()}</span>
-            </span>
-          </a>
-          ${accountArea}
+          ${headerActions}
         </div>
       </div>
     </div>
     <div id="searchBackdrop" class="search-backdrop" hidden></div>
-    <nav class="category-nav" aria-label="Danh mục sản phẩm">
-      <div class="container nav-scroll">
+    <nav class="category-nav category-menu-row" aria-label="Danh mục sản phẩm">
+      <div class="container nav-scroll category-menu">
         ${navItems}
       </div>
     </nav>

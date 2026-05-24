@@ -1,5 +1,17 @@
 ﻿const AUTH_TOKEN_KEY = "se104_auth_token";
 const AUTH_USER_KEY = "se104_auth_user";
+const STAFF_ROLES = ["admin", "sales", "technician"];
+
+function normalizeUserRole(user) {
+  if (!user) {
+    return null;
+  }
+
+  return {
+    ...user,
+    role: String(user.role || "").toLowerCase()
+  };
+}
 
 function getAuthToken() {
   return localStorage.getItem(AUTH_TOKEN_KEY);
@@ -13,15 +25,17 @@ function getCurrentUser() {
   }
 
   try {
-    return JSON.parse(rawUser);
+    return normalizeUserRole(JSON.parse(rawUser));
   } catch (error) {
     return null;
   }
 }
 
 function setAuthSession(authData) {
+  const user = normalizeUserRole(authData.user);
+
   localStorage.setItem(AUTH_TOKEN_KEY, authData.token);
-  localStorage.setItem(AUTH_USER_KEY, JSON.stringify(authData.user));
+  localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
 }
 
 function clearAuthSession() {
@@ -37,6 +51,15 @@ function getAuthHeaders() {
 
 function isLoggedIn() {
   return Boolean(getAuthToken());
+}
+
+function isStaffUser(user) {
+  const normalizedUser = normalizeUserRole(user);
+  return Boolean(normalizedUser && STAFF_ROLES.includes(normalizedUser.role));
+}
+
+function getAdminHomeUrl(user) {
+  return "/admin/dashboard.html";
 }
 
 function requireLogin(redirectUrl) {
