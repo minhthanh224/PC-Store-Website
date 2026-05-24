@@ -1,0 +1,64 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kho Serial - AeroTech</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <aside id="adminSidebar" class="admin-sidebar"></aside>
+    <main class="admin-main">
+      <header id="adminTopbar" class="admin-topbar"></header>
+      <section class="admin-content">
+        <div class="admin-page-heading">
+          <p class="eyebrow">Inventory</p>
+          <h1>Kho Serial</h1>
+          <p class="page-subtitle">Theo dõi serial, tồn kho, hàng đã bán, bảo hành và hàng trả về.</p>
+        </div>
+        <div id="inventorySummary" class="admin-table-wrap loading-box">Đang tải tồn kho...</div>
+
+        <section class="admin-panel">
+          <h2>Thêm Serial</h2>
+          <form id="serialForm" class="admin-inline-form">
+            <label>Sản phẩm<select id="serialProduct" required></select></label>
+            <label>Mã Serial<input id="serialCode" placeholder="SN-..." required></label>
+            <label>Ngày nhập<input id="serialImportDate" type="date"></label>
+            <label>Ghi chú<input id="serialNote" placeholder="Ghi chú kho"></label>
+            <button class="btn btn-primary" type="submit">Thêm Serial</button>
+          </form>
+          <div id="serialMessage"></div>
+        </section>
+
+        <section class="admin-panel">
+          <h2>Danh sách Serial</h2>
+          <form id="serialFilterForm" class="admin-filter-bar">
+            <input id="serialKeyword" type="search" placeholder="Tìm Serial, sản phẩm, SKU">
+            <select id="serialStatus">
+              <option value="">Tất cả trạng thái</option>
+              <option value="in_stock">Trong kho</option>
+              <option value="sold">Đã bán</option>
+              <option value="warranty">Bảo hành</option>
+              <option value="returned">Đã trả</option>
+            </select>
+            <button class="btn btn-dark" type="submit">Lọc</button>
+          </form>
+          <div id="serialTable" class="admin-table-wrap loading-box">Đang tải Serial...</div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/utils.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/admin/admin-api.js"></script>
+  <script src="../assets/js/admin/admin-layout.js"></script>
+  <script src="../assets/js/admin/inventory.js"></script>
+</body>
+</html>
+
+

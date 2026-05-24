@@ -1,0 +1,89 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Form sản phẩm - AeroTech</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <aside id="adminSidebar" class="admin-sidebar"></aside>
+    <main class="admin-main">
+      <header id="adminTopbar" class="admin-topbar"></header>
+      <section class="admin-content">
+        <div class="admin-page-heading">
+          <p class="eyebrow">Catalog</p>
+          <h1 id="productFormTitle">Thêm sản phẩm</h1>
+          <p class="page-subtitle">Cập nhật thông tin bán hàng, hình ảnh và thông số kỹ thuật sản phẩm.</p>
+        </div>
+        <form id="productForm" class="admin-form">
+          <section class="admin-panel">
+            <h2>Thông tin chính</h2>
+            <div class="admin-form-grid">
+              <label>Tên sản phẩm<input id="productName" required></label>
+              <label>SKU<input id="productSku" required></label>
+              <label>Slug<input id="productSlug" required></label>
+              <label>Danh mục<select id="productCategory" required></select></label>
+              <label>Thương hiệu<select id="productBrand"></select></label>
+              <label>Loại sản phẩm<select id="productType" required>
+                <option value="pc_build">PC build</option>
+                <option value="laptop">Laptop</option>
+                <option value="component">Linh kiện</option>
+                <option value="monitor">Màn hình</option>
+                <option value="accessory">Phụ kiện</option>
+                <option value="service">Dịch vụ</option>
+              </select></label>
+              <label>Giá bán<input id="productBasePrice" type="number" min="0" required></label>
+              <label>Giá khuyến mãi<input id="productSalePrice" type="number" min="0"></label>
+              <label>Bảo hành tháng<input id="productWarranty" type="number" min="0" value="0"></label>
+              <label>Tồn kho thường<input id="productStock" type="number" min="0" value="0"></label>
+              <label>Trạng thái<select id="productStatus">
+                <option value="active">Đang bán</option>
+                <option value="inactive">Ngừng bán</option>
+              </select></label>
+              <label class="checkbox-row"><input id="productRequiresSerial" type="checkbox"> Quản lý Serial</label>
+              <label class="checkbox-row"><input id="productFeatured" type="checkbox"> Sản phẩm nổi bật</label>
+            </div>
+            <label>Mô tả ngắn<textarea id="productShortDescription" rows="3"></textarea></label>
+            <label>Mô tả chi tiết<textarea id="productDescription" rows="5"></textarea></label>
+          </section>
+
+          <section class="admin-panel">
+            <div class="row-heading">
+              <h2>Hình ảnh</h2>
+              <button id="addImageRowBtn" class="btn btn-light" type="button">Thêm ảnh</button>
+            </div>
+            <div id="imageRows" class="dynamic-row-list"></div>
+          </section>
+
+          <section class="admin-panel">
+            <div class="row-heading">
+              <h2>Thông số kỹ thuật</h2>
+              <button id="addSpecRowBtn" class="btn btn-light" type="button">Thêm thông số</button>
+            </div>
+            <div id="specRows" class="dynamic-row-list"></div>
+          </section>
+
+          <div class="form-actions">
+            <button class="btn btn-primary" type="submit">Lưu sản phẩm</button>
+            <a class="btn btn-light" href="products.html">Quay lại</a>
+          </div>
+          <div id="productFormMessage"></div>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/utils.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/admin/admin-api.js"></script>
+  <script src="../assets/js/admin/admin-layout.js"></script>
+  <script src="../assets/js/admin/product-form.js"></script>
+</body>
+</html>
+
+

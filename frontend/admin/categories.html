@@ -1,0 +1,50 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý danh mục - AeroTech</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <aside id="adminSidebar" class="admin-sidebar"></aside>
+    <main class="admin-main">
+      <header id="adminTopbar" class="admin-topbar"></header>
+      <section class="admin-content">
+        <div class="admin-page-heading">
+          <p class="eyebrow">Catalog</p>
+          <h1>Danh mục</h1>
+          <p class="page-subtitle">Quản lý cấu trúc danh mục sản phẩm theo cha-con.</p>
+        </div>
+        <form id="categoryForm" class="admin-panel admin-inline-form">
+          <input id="categoryId" type="hidden">
+          <label>Danh mục cha<select id="categoryParent"></select></label>
+          <label>Tên danh mục<input id="categoryName" placeholder="Ví dụ: Laptop Gaming" required></label>
+          <label>Slug<input id="categorySlug" placeholder="laptop-gaming" required></label>
+          <label>Mô tả<input id="categoryDescription" placeholder="Mô tả ngắn"></label>
+          <label>Trạng thái<select id="categoryStatus">
+            <option value="active">Đang hoạt động</option>
+            <option value="inactive">Ngừng hoạt động</option>
+          </select></label>
+          <button class="btn btn-primary" type="submit">Lưu</button>
+          <button id="resetCategoryFormBtn" class="btn btn-light" type="button">Làm mới</button>
+        </form>
+        <div id="categoryMessage"></div>
+        <div id="categoryTable" class="admin-table-wrap loading-box">Đang tải danh mục...</div>
+      </section>
+    </main>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/utils.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/admin/admin-api.js"></script>
+  <script src="../assets/js/admin/admin-layout.js"></script>
+  <script src="../assets/js/admin/categories.js"></script>
+</body>
+</html>
+
+

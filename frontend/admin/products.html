@@ -1,0 +1,58 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý sản phẩm - AeroTech</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <aside id="adminSidebar" class="admin-sidebar"></aside>
+    <main class="admin-main">
+      <header id="adminTopbar" class="admin-topbar"></header>
+      <section class="admin-content">
+        <div class="admin-page-heading row-heading">
+          <div>
+            <p class="eyebrow">Catalog</p>
+            <h1>Quản lý sản phẩm</h1>
+            <p class="page-subtitle">Quản lý sản phẩm, giá bán, trạng thái kinh doanh và tồn kho.</p>
+          </div>
+          <a class="btn btn-primary" href="product-form.html">Thêm sản phẩm</a>
+        </div>
+        <form id="productFilterForm" class="admin-filter-bar">
+          <input id="productKeyword" type="search" placeholder="Tìm tên, SKU, slug">
+          <select id="productStatus">
+            <option value="">Tất cả trạng thái</option>
+            <option value="active">Đang bán</option>
+            <option value="inactive">Ngừng bán</option>
+          </select>
+          <select id="productType">
+            <option value="">Tất cả loại</option>
+            <option value="pc_build">PC build</option>
+            <option value="laptop">Laptop</option>
+            <option value="component">Linh kiện</option>
+            <option value="monitor">Màn hình</option>
+            <option value="accessory">Phụ kiện</option>
+            <option value="service">Dịch vụ</option>
+          </select>
+          <button class="btn btn-dark" type="submit">Lọc</button>
+        </form>
+        <div id="productTable" class="admin-table-wrap loading-box">Đang tải sản phẩm...</div>
+        <div id="productPagination" class="pagination"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/utils.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/admin/admin-api.js"></script>
+  <script src="../assets/js/admin/admin-layout.js"></script>
+  <script src="../assets/js/admin/products.js"></script>
+</body>
+</html>
+
+

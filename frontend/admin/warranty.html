@@ -1,0 +1,79 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bảo hành - AeroTech</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <aside id="adminSidebar" class="admin-sidebar"></aside>
+    <main class="admin-main">
+      <header id="adminTopbar" class="admin-topbar"></header>
+      <section class="admin-content">
+        <div class="admin-page-heading">
+          <p class="eyebrow">Warranty</p>
+          <h1>Quản lý bảo hành</h1>
+          <p class="page-subtitle">Tiếp nhận, theo dõi và cập nhật trạng thái xử lý bảo hành.</p>
+        </div>
+
+        <div id="warrantySummaryCards" class="admin-card-grid"></div>
+
+        <section class="admin-panel">
+          <h2>Tạo phiếu bảo hành</h2>
+          <form id="warrantyCreateForm" class="admin-form">
+            <div class="admin-form-grid">
+              <label>Serial<input id="warrantySerialCode" required placeholder="Nhập Serial sản phẩm"></label>
+              <label>Tên khách hàng<input id="warrantyCustomerName" required></label>
+              <label>Số điện thoại<input id="warrantyCustomerPhone" required></label>
+              <label>Ngày tiếp nhận<input id="warrantyReceivedDate" type="date"></label>
+            </div>
+            <label>Lỗi khách báo<textarea id="warrantyIssue" required></textarea></label>
+            <label>Ghi chú kỹ thuật<textarea id="warrantyNote"></textarea></label>
+            <div class="form-actions">
+              <button class="btn btn-primary" type="submit">Tạo phiếu bảo hành</button>
+            </div>
+          </form>
+          <div id="warrantyMessage"></div>
+        </section>
+
+        <section class="admin-panel">
+          <h2>Danh sách phiếu bảo hành</h2>
+          <form id="warrantyFilterForm" class="admin-filter-bar">
+            <input id="warrantyKeyword" type="search" placeholder="Tìm mã phiếu, Serial, sản phẩm, khách hàng">
+            <select id="warrantyStatus">
+              <option value="">Tất cả trạng thái</option>
+              <option value="received">Đã tiếp nhận</option>
+              <option value="repairing">Đang sửa</option>
+              <option value="waiting_parts">Chờ linh kiện</option>
+              <option value="done">Hoàn tất sửa chữa</option>
+              <option value="returned">Đã trả khách</option>
+              <option value="rejected">Từ chối bảo hành</option>
+            </select>
+            <button class="btn btn-dark" type="submit">Lọc</button>
+          </form>
+          <div id="warrantyTicketTable" class="admin-table-wrap loading-box">Đang tải phiếu bảo hành...</div>
+          <div id="warrantyPagination" class="pagination"></div>
+        </section>
+
+        <section id="warrantyDetailPanel" class="admin-panel warranty-detail-panel">
+          <h2>Chi tiết phiếu</h2>
+          <div id="warrantyDetailBody" class="state-box">Chọn một phiếu bảo hành để xem chi tiết.</div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/utils.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/admin/admin-api.js"></script>
+  <script src="../assets/js/admin/admin-layout.js"></script>
+  <script src="../assets/js/admin/warranty.js"></script>
+</body>
+</html>
+
+
