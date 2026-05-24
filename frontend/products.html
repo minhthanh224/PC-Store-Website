@@ -1,0 +1,120 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Danh sách sản phẩm - AeroTech</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header id="siteHeader"></header>
+
+  <main class="container catalog-page">
+    <div id="catalogHero" class="page-heading catalog-hero image-card">
+      <div class="image-card-content">
+        <p id="catalogHeroEyebrow" class="eyebrow">Catalog</p>
+        <h1 id="catalogHeroTitle">Sản phẩm</h1>
+        <p id="catalogHeroText">Tìm PC build, laptop, linh kiện, màn hình, phụ kiện và dịch vụ kỹ thuật.</p>
+      </div>
+    </div>
+
+    <div class="catalog-layout">
+      <aside class="filter-panel" aria-label="Bộ lọc sản phẩm">
+        <form id="filterForm">
+          <div class="filter-header">
+            <h2>Bộ lọc</h2>
+            <button id="clearFiltersBtn" class="btn btn-light" type="button">Xóa lọc</button>
+          </div>
+
+          <label>
+            Từ khóa
+            <input id="filterKeyword" name="keyword" type="search" placeholder="Laptop, RTX, ASUS...">
+          </label>
+
+          <label>
+            Danh mục
+            <select id="filterCategory" name="category">
+              <option value="">Tất cả danh mục</option>
+            </select>
+          </label>
+
+          <label>
+            Thương hiệu
+            <select id="filterBrand" name="brand">
+              <option value="">Tất cả thương hiệu</option>
+            </select>
+          </label>
+
+          <label>
+            Loại sản phẩm
+            <select id="filterProductType" name="productType">
+              <option value="">Tất cả loại</option>
+              <option value="pc_build">PC build</option>
+              <option value="laptop">Laptop</option>
+              <option value="component">Linh kiện</option>
+              <option value="monitor">Màn hình</option>
+              <option value="accessory">Phụ kiện</option>
+              <option value="service">Dịch vụ</option>
+            </select>
+          </label>
+
+          <div class="price-filter">
+            <label>
+              Giá từ
+              <input id="filterMinPrice" name="minPrice" type="number" min="0" step="100000" placeholder="0">
+            </label>
+            <label>
+              Giá đến
+              <input id="filterMaxPrice" name="maxPrice" type="number" min="0" step="100000" placeholder="30000000">
+            </label>
+          </div>
+
+          <label>
+            Serial
+            <select id="filterRequiresSerial" name="requiresSerial">
+              <option value="">Tất cả</option>
+              <option value="true">Có Serial</option>
+              <option value="false">Không cần Serial</option>
+            </select>
+          </label>
+
+          <button class="btn btn-primary filter-submit" type="submit">Áp dụng</button>
+        </form>
+      </aside>
+
+      <section class="catalog-results" aria-live="polite">
+        <div class="result-toolbar">
+          <div>
+            <h2 id="resultTitle">Tất cả sản phẩm</h2>
+            <p id="resultMeta">Đang tải...</p>
+          </div>
+          <label class="sort-control">
+            Sắp xếp
+            <select id="sortSelect">
+              <option value="newest">Mới nhất</option>
+              <option value="price_asc">Giá tăng dần</option>
+              <option value="price_desc">Giá giảm dần</option>
+              <option value="name_asc">Tên A-Z</option>
+            </select>
+          </label>
+        </div>
+
+        <div id="productGrid" class="product-grid loading-box">Đang tải sản phẩm...</div>
+        <div id="pagination" class="pagination"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer id="siteFooter"></footer>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/cart-store.js"></script>
+  <script src="assets/js/layout.js"></script>
+  <script src="assets/js/products.js"></script>
+</body>
+</html>
+
+

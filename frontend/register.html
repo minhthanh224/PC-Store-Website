@@ -1,0 +1,56 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Đăng ký - AeroTech</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header id="siteHeader"></header>
+
+  <main class="container auth-page">
+    <section class="auth-card">
+      <p class="eyebrow">Tạo tài khoản</p>
+      <h1>Đăng ký khách hàng</h1>
+      <form id="registerForm" class="stack-form">
+        <label>
+          Họ tên
+          <input id="registerFullName" type="text" required>
+        </label>
+        <label>
+          Email
+          <input id="registerEmail" type="email" required>
+        </label>
+        <label>
+          Số điện thoại
+          <input id="registerPhone" type="tel">
+        </label>
+        <label>
+          Mật khẩu
+          <input id="registerPassword" type="password" required minlength="6">
+        </label>
+        <label>
+          Xác nhận mật khẩu
+          <input id="registerConfirmPassword" type="password" required minlength="6">
+        </label>
+        <button class="btn btn-primary" type="submit">Đăng ký</button>
+      </form>
+      <p class="form-note">Đã có tài khoản? <a href="login.html">Đăng nhập</a></p>
+      <div id="authMessage"></div>
+    </section>
+  </main>
+
+  <footer id="siteFooter"></footer>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/cart-store.js"></script>
+  <script src="assets/js/layout.js"></script>
+  <script src="assets/js/register.js"></script>
+</body>
+</html>
+
+
