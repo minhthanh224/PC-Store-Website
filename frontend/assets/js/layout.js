@@ -24,6 +24,7 @@
   bindHeaderSearch();
   bindHeaderSearchPanel();
   bindHeaderAuthActions();
+  bindMobileHeaderMenu();
   bindWishlistActionButtons();
   bindCartActionButtons();
   updateCartCount();
@@ -36,7 +37,8 @@ function renderHeader(categories) {
   const displayName = currentUser ? getSafeDisplayName(currentUser) : "";
   const isStaff = isStaffUser(currentUser);
   const greetingHref = isStaff ? getAdminHomeUrl(currentUser) : "account.html";
-  const navItems = getAeroNavItems(categories).map(function (item) {
+  const aeroNavItems = getAeroNavItems(categories);
+  const navItems = aeroNavItems.map(function (item) {
     const childLinks = (item.children || []).slice(0, 8).map(function (child) {
       const childHref = child.href || `products.html?category=${encodeURIComponent(child.slug)}`;
       return `<a href="${escapeAttribute(childHref)}">${escapeHtml(child.name)}</a>`;
@@ -73,16 +75,31 @@ function renderHeader(categories) {
       ${cartAction}
       <a class="account-greeting" href="${escapeAttribute(greetingHref)}">Xin chào, ${escapeHtml(displayName)}</a>
       <a class="header-action-btn header-admin-btn" href="${escapeAttribute(getAdminHomeUrl(currentUser))}">Quản trị</a>
-      <button id="logoutBtn" class="header-action-btn header-logout-btn" type="button">Đăng xuất</button>
+      <button id="logoutBtn" class="header-action-btn header-logout-btn js-logout-btn" type="button">Đăng xuất</button>
     `;
   } else if (currentUser) {
     headerActions = `
       ${wishlistAction}
       ${cartAction}
       <a class="account-greeting" href="${escapeAttribute(greetingHref)}">Xin chào, ${escapeHtml(displayName)}</a>
-      <button id="logoutBtn" class="header-action-btn header-logout-btn" type="button">Đăng xuất</button>
+      <button id="logoutBtn" class="header-action-btn header-logout-btn js-logout-btn" type="button">Đăng xuất</button>
     `;
   }
+
+  const mobileCategoryLinks = aeroNavItems.map(function (item) {
+    return `<a href="${escapeAttribute(item.href)}">${escapeHtml(item.label)}</a>`;
+  }).join("");
+
+  const mobileAccountLinks = currentUser
+    ? `
+      <a href="${escapeAttribute(greetingHref)}">Xin chào, ${escapeHtml(displayName)}</a>
+      ${isStaff ? `<a href="${escapeAttribute(getAdminHomeUrl(currentUser))}">Quản trị</a>` : '<a href="wishlist.html">Yêu thích</a>'}
+      <button class="mobile-menu-link js-logout-btn" type="button">Đăng xuất</button>
+    `
+    : `
+      <a href="login.html">Đăng nhập</a>
+      <a href="register.html">Đăng ký</a>
+    `;
 
   return `
     <div class="top-strip header-topbar">
@@ -120,6 +137,33 @@ function renderHeader(categories) {
         </form>
         <div class="header-actions">
           ${headerActions}
+          <button id="mobileMenuToggle" class="mobile-menu-toggle" type="button" aria-controls="mobileHeaderMenu" aria-expanded="false">
+            <span class="mobile-menu-icon" aria-hidden="true"></span>
+            <span class="mobile-menu-label">Menu</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="mobileHeaderMenu" class="mobile-header-menu" hidden>
+      <div class="container mobile-header-menu-inner">
+        <div class="mobile-menu-group">
+          <strong>Tài khoản</strong>
+          <div class="mobile-menu-links">${mobileAccountLinks}</div>
+        </div>
+        <div class="mobile-menu-group">
+          <strong>Dịch vụ</strong>
+          <div class="mobile-menu-links">
+            <a href="stores.html">Hệ thống showroom</a>
+            <a href="contact.html">Dành cho doanh nghiệp</a>
+            <a href="products.html?productType=pc_build">Xây dựng cấu hình</a>
+            <a href="products.html?sort=newest">Khuyến mãi</a>
+            <a href="warranty-lookup.html">Bảo hành</a>
+            <a href="products.html?sort=newest">Tin mới</a>
+          </div>
+        </div>
+        <div class="mobile-menu-group">
+          <strong>Danh mục sản phẩm</strong>
+          <div class="mobile-menu-links mobile-category-links">${mobileCategoryLinks}</div>
         </div>
       </div>
     </div>
@@ -509,15 +553,49 @@ function clearSearchHistory() {
 }
 
 function bindHeaderAuthActions() {
-  const logoutBtn = document.getElementById("logoutBtn");
+  const logoutButtons = document.querySelectorAll("#logoutBtn, .js-logout-btn");
 
-  if (!logoutBtn) {
+  if (!logoutButtons.length) {
     return;
   }
 
-  logoutBtn.addEventListener("click", function () {
-    clearAuthSession();
-    window.location.href = "index.html";
+  logoutButtons.forEach(function (logoutBtn) {
+    logoutBtn.addEventListener("click", function () {
+      clearAuthSession();
+      window.location.href = "index.html";
+    });
+  });
+}
+
+function bindMobileHeaderMenu() {
+  const toggle = document.getElementById("mobileMenuToggle");
+  const menu = document.getElementById("mobileHeaderMenu");
+
+  if (!toggle || !menu) {
+    return;
+  }
+
+  function closeMenu() {
+    menu.hidden = true;
+    toggle.setAttribute("aria-expanded", "false");
+  }
+
+  toggle.addEventListener("click", function () {
+    const shouldOpen = menu.hidden;
+    menu.hidden = !shouldOpen;
+    toggle.setAttribute("aria-expanded", String(shouldOpen));
+  });
+
+  menu.addEventListener("click", function (event) {
+    if (event.target.closest("a")) {
+      closeMenu();
+    }
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      closeMenu();
+    }
   });
 }
 

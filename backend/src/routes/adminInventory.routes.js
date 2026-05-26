@@ -1,6 +1,7 @@
 const express = require("express");
 const {
   getInventorySummary,
+  getInventoryProducts,
   getSerials,
   createSerial,
   updateSerialStatus
@@ -12,6 +13,7 @@ const asyncHandler = require("../utils/asyncHandler");
 const router = express.Router();
 
 router.get("/summary", requireAuth, requireRoles("admin", "technician"), asyncHandler(getInventorySummary));
+router.get("/products", requireAuth, requireRoles("admin", "technician"), asyncHandler(getInventoryProducts));
 router.get("/serials", requireAuth, requireRoles("admin", "technician"), asyncHandler(getSerials));
 router.post("/serials", requireAuth, requireRoles("admin", "technician"), asyncHandler(createSerial));
 router.patch("/serials/:id/status", requireAuth, requireRoles("admin"), asyncHandler(updateSerialStatus));

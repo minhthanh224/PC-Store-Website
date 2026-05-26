@@ -50,7 +50,9 @@ function setReportLoading() {
   document.getElementById("revenueReport").innerHTML = renderLoading("Đang tải doanh thu...");
   document.getElementById("bestSellingReport").innerHTML = renderLoading("Đang tải sản phẩm bán chạy...");
   document.getElementById("inventoryReport").innerHTML = renderLoading("Đang tải tồn kho...");
+  document.getElementById("warrantyReport").className = "admin-table-wrap loading-box";
   document.getElementById("warrantyReport").innerHTML = renderLoading("Đang tải bảo hành...");
+  document.getElementById("orderReport").className = "admin-table-wrap loading-box";
   document.getElementById("orderReport").innerHTML = renderLoading("Đang tải đơn hàng...");
 }
 
@@ -79,6 +81,7 @@ function renderReportCard(label, value) {
 
 function renderRevenue(rows) {
   const container = document.getElementById("revenueReport");
+  container.className = "";
 
   if (!rows.length) {
     container.innerHTML = renderEmpty("Chưa có doanh thu trong khoảng thời gian này.");
@@ -90,15 +93,15 @@ function renderRevenue(rows) {
   }), 1);
 
   container.innerHTML = `
-    <div class="report-bar-list">
+    <div class="report-revenue-list">
       ${rows.map(function (row) {
         const width = Math.max((Number(row.revenue) / maxRevenue) * 100, 3);
         return `
-          <div class="report-bar-row">
-            <span>${escapeHtml(row.label)}</span>
-            <div><i style="width:${width}%"></i></div>
-            <strong>${formatCurrency(row.revenue)} (${escapeHtml(row.order_count)} đơn)</strong>
-          </div>
+          <article class="report-revenue-row">
+            <span class="report-revenue-label">${escapeHtml(row.label)}</span>
+            <div class="report-revenue-track" aria-hidden="true"><i style="width:${width}%"></i></div>
+            <strong class="report-revenue-value">${formatCurrency(row.revenue)} (${escapeHtml(row.order_count)} đơn)</strong>
+          </article>
         `;
       }).join("")}
     </div>
@@ -109,10 +112,12 @@ function renderBestSelling(products) {
   const container = document.getElementById("bestSellingReport");
 
   if (!products.length) {
+    container.className = "";
     container.innerHTML = renderEmpty("Chưa có sản phẩm bán chạy.");
     return;
   }
 
+  container.className = "admin-table-wrap";
   container.innerHTML = `
     <table class="admin-table">
       <thead><tr><th>Sản phẩm</th><th>SKU</th><th>Thương hiệu</th><th>Danh mục</th><th>Số lượng</th><th>Doanh thu</th></tr></thead>
@@ -143,10 +148,12 @@ function renderInventory(products) {
   const container = document.getElementById("inventoryReport");
 
   if (!products.length) {
+    container.className = "";
     container.innerHTML = renderEmpty("Chưa có dữ liệu tồn kho.");
     return;
   }
 
+  container.className = "admin-table-wrap";
   container.innerHTML = `
     <table class="admin-table">
       <thead><tr><th>Sản phẩm</th><th>SKU</th><th>Loại</th><th>Serial</th><th>Stock thường</th><th>In stock</th><th>Sold</th><th>Warranty</th><th>Returned</th><th>Khả dụng</th><th>Cảnh báo</th></tr></thead>
@@ -177,20 +184,16 @@ function renderWarranty(data) {
   const container = document.getElementById("warrantyReport");
   const counts = data.counts || [];
 
+  container.className = "report-status-list";
   container.innerHTML = `
-    <table class="admin-table compact-report-table">
-      <thead><tr><th>Trạng thái</th><th>Số phiếu</th></tr></thead>
-      <tbody>
-        ${counts.map(function (row) {
-          return `
-            <tr>
-              <td><span class="status-badge ${escapeAttribute(row.status)}">${escapeHtml(row.status_label)}</span></td>
-              <td>${escapeHtml(row.count)}</td>
-            </tr>
-          `;
-        }).join("")}
-      </tbody>
-    </table>
+    ${counts.map(function (row) {
+      return `
+        <div class="report-status-row">
+          <span class="status-badge ${escapeAttribute(row.status)}">${escapeHtml(row.status_label)}</span>
+          <strong>${escapeHtml(row.count)}</strong>
+        </div>
+      `;
+    }).join("") || renderEmpty("Chưa có dữ liệu bảo hành.")}
   `;
 }
 
@@ -198,20 +201,16 @@ function renderOrders(data) {
   const container = document.getElementById("orderReport");
   const statuses = ["pending", "approved", "shipping", "completed", "cancelled"];
 
+  container.className = "report-status-list";
   container.innerHTML = `
-    <table class="admin-table compact-report-table">
-      <thead><tr><th>Trạng thái</th><th>Số đơn</th></tr></thead>
-      <tbody>
-        ${statuses.map(function (status) {
-          return `
-            <tr>
-              <td><span class="status-badge ${escapeAttribute(status)}">${escapeHtml(getOrderStatusLabel(status))}</span></td>
-              <td>${escapeHtml(data[status] || 0)}</td>
-            </tr>
-          `;
-        }).join("")}
-      </tbody>
-    </table>
+    ${statuses.map(function (status) {
+      return `
+        <div class="report-status-row">
+          <span class="status-badge ${escapeAttribute(status)}">${escapeHtml(getOrderStatusLabel(status))}</span>
+          <strong>${escapeHtml(data[status] || 0)}</strong>
+        </div>
+      `;
+    }).join("")}
   `;
 }
 

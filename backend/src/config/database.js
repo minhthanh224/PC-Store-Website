@@ -17,7 +17,8 @@ function getDatabaseConfig() {
     port: Number(process.env.DB_PORT || 3306),
     user: process.env.DB_USER || "root",
     password: process.env.DB_PASSWORD || "",
-    database: process.env.DB_NAME || "se104_pc_store"
+    database: process.env.DB_NAME || "se104_pc_store",
+    charset: "utf8mb4"
   };
 }
 

@@ -87,13 +87,13 @@ function renderWarrantyTicketTable(tickets) {
           return `
             <tr>
               <td><strong>${escapeHtml(ticket.ticket_code)}</strong></td>
-              <td>${escapeHtml(ticket.serial_code)}</td>
+              <td class="warranty-code-cell">${escapeHtml(ticket.serial_code)}</td>
               <td>${escapeHtml(getAdminRecordDisplayText(ticket.product_name, "Sản phẩm bảo hành"))}</td>
               <td>
                 <strong>${escapeHtml(getAdminPersonDisplayName(ticket.customer_name))}</strong>
                 <p class="table-subtext">${escapeHtml(ticket.customer_phone)}</p>
               </td>
-              <td>${escapeHtml(ticket.issue_description)}</td>
+              <td class="warranty-issue-cell">${escapeHtml(getWarrantyDisplayText(ticket.issue_description))}</td>
               <td><span class="status-badge ${escapeAttribute(ticket.status)}">${escapeHtml(getWarrantyTicketStatusLabel(ticket.status))}</span></td>
               <td>${escapeHtml(formatDateOnly(ticket.received_date))}</td>
               <td>${escapeHtml(formatDateOnly(ticket.completed_date))}</td>
@@ -171,7 +171,7 @@ function renderWarrantyTicketDetail(data) {
         <h3>${escapeHtml(ticket.ticket_code)}</h3>
         <p><span class="status-badge ${escapeAttribute(ticket.status)}">${escapeHtml(getWarrantyTicketStatusLabel(ticket.status))}</span></p>
         <p><strong>Khách hàng:</strong> ${escapeHtml(ticket.customer_name)} - ${escapeHtml(ticket.customer_phone)}</p>
-        <p><strong>Lỗi báo cáo:</strong> ${escapeHtml(ticket.issue_description)}</p>
+        <p><strong>Lỗi báo cáo:</strong> ${escapeHtml(getWarrantyDisplayText(ticket.issue_description))}</p>
         <p><strong>Ngày tiếp nhận:</strong> ${escapeHtml(formatDateOnly(ticket.received_date))}</p>
         <p><strong>Ngày hoàn tất:</strong> ${escapeHtml(formatDateOnly(ticket.completed_date))}</p>
       </section>
@@ -191,13 +191,13 @@ function renderWarrantyTicketDetail(data) {
         <select id="warrantyNextStatus" ${nextOptions ? "" : "disabled"}>
           ${nextOptions || '<option value="">Không còn trạng thái kế tiếp</option>'}
         </select>
-        <textarea id="warrantyStatusNote" placeholder="Ghi chú thêm khi cập nhật trạng thái">${escapeHtml(ticket.technician_note || "")}</textarea>
+        <textarea id="warrantyStatusNote" placeholder="Ghi chú thêm khi cập nhật trạng thái">${escapeHtml(getWarrantyDisplayText(ticket.technician_note || ""))}</textarea>
         <button class="btn btn-primary" type="submit" ${nextOptions ? "" : "disabled"}>Cập nhật trạng thái</button>
       </form>
 
       <form id="warrantyNoteForm" class="stack-form">
         <h3>Cập nhật ghi chú</h3>
-        <textarea id="warrantyDetailNote">${escapeHtml(ticket.technician_note || "")}</textarea>
+        <textarea id="warrantyDetailNote">${escapeHtml(getWarrantyDisplayText(ticket.technician_note || ""))}</textarea>
         <button class="btn btn-outline" type="submit">Lưu ghi chú</button>
       </form>
     </div>
@@ -297,6 +297,17 @@ function getWarrantyTicketStatusLabel(status) {
   };
 
   return labels[status] || status || "";
+}
+
+function getWarrantyDisplayText(value) {
+  const text = String(value || "");
+  const knownFixes = {
+    "Ki?m tra b?o h?nh demo": "Kiểm tra bảo hành demo",
+    "M?y kh?ng l?n h?nh khi kh?i ??ng": "Máy không lên hình khi khởi động",
+    "?? tr? kh?ch": "Đã trả khách"
+  };
+
+  return knownFixes[text] || text;
 }
 
 

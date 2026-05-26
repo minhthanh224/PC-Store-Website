@@ -60,6 +60,43 @@ async function getInventorySummary(req, res) {
   });
 }
 
+async function getInventoryProducts(req, res) {
+  const [products] = await pool.execute(
+    `
+      SELECT
+        p.id,
+        p.name,
+        p.sku,
+        p.product_type,
+        p.requires_serial,
+        p.status,
+        b.name AS brand_name,
+        c.name AS category_name
+      FROM products p
+      LEFT JOIN brands b ON b.id = p.brand_id
+      LEFT JOIN categories c ON c.id = p.category_id
+      WHERE p.requires_serial = 1
+      ORDER BY p.name ASC, p.id ASC
+    `
+  );
+
+  res.json({
+    success: true,
+    data: products.map(function (product) {
+      return {
+        id: product.id,
+        name: product.name,
+        sku: product.sku,
+        product_type: product.product_type,
+        requires_serial: Boolean(product.requires_serial),
+        status: product.status,
+        brand_name: product.brand_name,
+        category_name: product.category_name
+      };
+    })
+  });
+}
+
 async function getSerials(req, res) {
   const where = ["1 = 1"];
   const params = [];
@@ -230,6 +267,7 @@ async function updateSerialStatus(req, res) {
 
 module.exports = {
   getInventorySummary,
+  getInventoryProducts,
   getSerials,
   createSerial,
   updateSerialStatus

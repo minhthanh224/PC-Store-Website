@@ -62,11 +62,48 @@ function renderInventoryTable(products) {
 }
 
 async function loadSerializedProductOptions() {
-  const response = await adminGet("/admin/products?requiresSerial=true&limit=100");
-  const products = response.data || [];
-  document.getElementById("serialProduct").innerHTML = products.map(function (product) {
-    return `<option value="${escapeAttribute(product.id)}">${escapeHtml(product.name)} - ${escapeHtml(product.sku)}</option>`;
+  const select = document.getElementById("serialProduct");
+  select.disabled = true;
+  select.innerHTML = '<option value="">Đang tải sản phẩm...</option>';
+
+  try {
+    const response = await adminGet("/admin/inventory/products");
+    renderSerializedProductOptions(response.data || []);
+  } catch (error) {
+    console.error("Inventory product dropdown load failed:", error.message);
+
+    try {
+      const fallbackResponse = await apiGet("/products?requiresSerial=true&limit=48");
+      renderSerializedProductOptions(fallbackResponse.data || []);
+    } catch (fallbackError) {
+      select.innerHTML = '<option value="">Không tải được danh sách sản phẩm</option>';
+      showAdminMessage(
+        "serialMessage",
+        "error",
+        `Không tải được danh sách sản phẩm. ${error.message || "Vui lòng kiểm tra quyền hoặc thử lại."}`
+      );
+    }
+  }
+}
+
+function renderSerializedProductOptions(products) {
+  const select = document.getElementById("serialProduct");
+
+  if (!products.length) {
+    select.innerHTML = '<option value="">Không có sản phẩm khả dụng</option>';
+    return;
+  }
+
+  select.innerHTML = products.map(function (product) {
+    const meta = [
+      product.sku,
+      product.brand_name || product.brandName,
+      product.category_name || product.categoryName
+    ].filter(Boolean).join(" - ");
+
+    return `<option value="${escapeAttribute(product.id)}">${escapeHtml(product.name)}${meta ? ` - ${escapeHtml(meta)}` : ""}</option>`;
   }).join("");
+  select.disabled = false;
 }
 
 async function loadSerials() {

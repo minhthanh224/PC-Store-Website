@@ -1,8 +1,11 @@
 function renderAdminLayout(activeKey, user) {
+  document.body.classList.add("admin-page");
+
   const sidebar = document.getElementById("adminSidebar");
   const topbar = document.getElementById("adminTopbar");
   const displayName = getAdminDisplayName(user);
   const roleLabel = getAdminRoleLabel(user.role);
+  const roleMeta = getAdminRoleMeta(user.role);
 
   if (sidebar) {
     sidebar.innerHTML = `
@@ -13,6 +16,7 @@ function renderAdminLayout(activeKey, user) {
           <small>Operations Console</small>
         </span>
       </a>
+      <button id="adminDrawerCloseBtn" class="admin-drawer-close" type="button" aria-label="\u0110\u00f3ng menu">\u00d7</button>
       <nav class="admin-nav">
         ${renderAdminNavLink("dashboard", "B\u1ea3ng \u0111i\u1ec1u khi\u1ec3n", "dashboard.html", activeKey, "\u2302")}
         ${user.role === "admin" ? renderAdminNavLink("products", "S\u1ea3n ph\u1ea9m", "products.html", activeKey, "\u25a6") : ""}
@@ -30,16 +34,20 @@ function renderAdminLayout(activeKey, user) {
 
   if (topbar) {
     topbar.innerHTML = `
-      <div class="admin-topbar-user">
-        <span class="admin-user-avatar" aria-hidden="true">${escapeHtml(getAdminAvatarInitial(displayName))}</span>
-        <div>
-          <strong>${escapeHtml(displayName)}</strong>
-          <span>${escapeHtml(roleLabel)}</span>
-        </div>
+      <div class="admin-topbar-role" aria-label="Vai tr\u00f2 hi\u1ec7n t\u1ea1i">
+        <span class="admin-role-badge">${escapeHtml(roleLabel)}</span>
+        <small>${escapeHtml(displayName !== roleLabel ? displayName : roleMeta)}</small>
       </div>
-      <a class="admin-btn admin-btn-outline" href="../index.html">V\u1ec1 c\u1eeda h\u00e0ng</a>
+      <button id="adminMobileMenuBtn" class="admin-mobile-menu-btn" type="button" aria-controls="adminSidebar" aria-expanded="false">
+        <span aria-hidden="true">\u2630</span>
+        <span>Aero Admin Panel</span>
+      </button>
+      <div id="adminDrawerBackdrop" class="admin-drawer-backdrop" hidden></div>
     `;
   }
+
+  bindAdminMobileDrawer();
+  setupAdminTableEnhancer();
 
   const logoutBtn = document.getElementById("adminLogoutBtn");
   if (logoutBtn) {
@@ -48,6 +56,94 @@ function renderAdminLayout(activeKey, user) {
       window.location.href = "../index.html";
     });
   }
+}
+
+function bindAdminMobileDrawer() {
+  const sidebar = document.getElementById("adminSidebar");
+  const toggle = document.getElementById("adminMobileMenuBtn");
+  const backdrop = document.getElementById("adminDrawerBackdrop");
+  const closeBtn = document.getElementById("adminDrawerCloseBtn");
+
+  if (!sidebar || !toggle || !backdrop) {
+    return;
+  }
+
+  function closeDrawer() {
+    sidebar.classList.remove("is-open");
+    document.body.classList.remove("admin-drawer-open");
+    backdrop.hidden = true;
+    toggle.setAttribute("aria-expanded", "false");
+  }
+
+  function openDrawer() {
+    sidebar.classList.add("is-open");
+    document.body.classList.add("admin-drawer-open");
+    backdrop.hidden = false;
+    toggle.setAttribute("aria-expanded", "true");
+  }
+
+  toggle.addEventListener("click", function () {
+    if (sidebar.classList.contains("is-open")) {
+      closeDrawer();
+    } else {
+      openDrawer();
+    }
+  });
+
+  backdrop.addEventListener("click", closeDrawer);
+
+  if (closeBtn) {
+    closeBtn.addEventListener("click", closeDrawer);
+  }
+
+  sidebar.addEventListener("click", function (event) {
+    if (event.target.closest("a")) {
+      closeDrawer();
+    }
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      closeDrawer();
+    }
+  });
+}
+
+function setupAdminTableEnhancer() {
+  enhanceAdminTablesForMobile();
+
+  if (window.__adminTableEnhancerBound) {
+    return;
+  }
+
+  window.__adminTableEnhancerBound = true;
+  const target = document.querySelector(".admin-main") || document.body;
+  const observer = new MutationObserver(function () {
+    enhanceAdminTablesForMobile();
+  });
+
+  observer.observe(target, {
+    childList: true,
+    subtree: true
+  });
+}
+
+function enhanceAdminTablesForMobile(root) {
+  const scope = root || document;
+
+  scope.querySelectorAll("table.admin-table").forEach(function (table) {
+    const headers = Array.from(table.querySelectorAll("thead th")).map(function (header) {
+      return header.textContent.trim();
+    });
+
+    table.querySelectorAll("tbody tr").forEach(function (row) {
+      Array.from(row.children).forEach(function (cell, index) {
+        if (!cell.dataset.label && headers[index]) {
+          cell.dataset.label = headers[index];
+        }
+      });
+    });
+  });
 }
 
 function renderAdminNavLink(key, label, href, activeKey, icon) {
@@ -63,6 +159,17 @@ function getAdminRoleLabel(role) {
   };
 
   return labels[role] || role || "Nh\u00e2n s\u1ef1";
+}
+
+function getAdminRoleMeta(role) {
+  const labels = {
+    admin: "Admin",
+    sales: "Sales",
+    technician: "Technician",
+    customer: "Customer"
+  };
+
+  return labels[role] || "AeroTech";
 }
 
 function getAdminDisplayName(user) {
