@@ -89,3 +89,6 @@ build/
 *.pdf
 *.fdb_latexmk
 *.fls
+
+# Ignore Bao-cao folder completely
+Bao-cao/
