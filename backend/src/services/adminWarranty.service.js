@@ -1,4 +1,5 @@
 const pool = require("../config/database");
+const { getWarrantyCoverage } = require("./warranty.service");
 
 const TICKET_STATUSES = ["received", "repairing", "waiting_parts", "done", "returned", "rejected"];
 const ACTIVE_TICKET_STATUSES = ["received", "repairing", "waiting_parts", "done"];
@@ -249,9 +250,14 @@ async function findCompletedOrderForSerial(connection, serialId) {
       SELECT
         oi.id AS order_item_id,
         o.user_id AS customer_id,
-        o.status AS order_status
+        o.status AS order_status,
+        o.created_at AS order_created_at,
+        o.updated_at AS order_updated_at,
+        oi.warranty_months_snapshot,
+        p.warranty_months
       FROM order_items oi
       INNER JOIN orders o ON o.id = oi.order_id
+      INNER JOIN products p ON p.id = oi.product_id
       WHERE oi.serial_number_id = ?
       ORDER BY (o.status = 'completed') DESC, o.created_at DESC, oi.id DESC
       LIMIT 1
@@ -327,7 +333,7 @@ async function createTicket(body) {
     const serialCode = String(body.serial_code).trim();
     const [serials] = await connection.execute(
       `
-        SELECT id, status
+        SELECT id, status, sold_date
         FROM serial_numbers
         WHERE serial_code = ?
         LIMIT 1
@@ -376,6 +382,18 @@ async function createTicket(body) {
 
     if (orderLink.order_status !== "completed") {
       throw createError("Serial này chưa thuộc đơn hàng đã hoàn thành nên chưa thể tạo phiếu bảo hành.", 400);
+    }
+
+    const warrantyCoverage = getWarrantyCoverage({
+      ...orderLink,
+      sold_date: serial.sold_date
+    });
+
+    if (warrantyCoverage.isExpired) {
+      const endDateMessage = warrantyCoverage.warrantyEndDateIso
+        ? ` Hạn bảo hành kết thúc ngày ${warrantyCoverage.warrantyEndDateIso}.`
+        : "";
+      throw createError(`Serial này đã hết hạn bảo hành nên không thể tạo phiếu bảo hành.${endDateMessage}`, 400);
     }
 
     const ticket = await insertTicketWithRetry(connection, {

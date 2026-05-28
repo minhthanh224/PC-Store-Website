@@ -33,6 +33,36 @@ function toIsoDate(value) {
   return date.toISOString().slice(0, 10);
 }
 
+function getWarrantyStartDate(row) {
+  if (!row) {
+    return null;
+  }
+
+  if (row.order_status === "completed" && row.order_updated_at) {
+    return row.order_updated_at;
+  }
+
+  return row.sold_date || row.purchase_date || row.order_created_at || null;
+}
+
+function getWarrantyCoverage(row) {
+  const warrantyMonthValue = row && row.warranty_months_snapshot !== null && row.warranty_months_snapshot !== undefined
+    ? row.warranty_months_snapshot
+    : row && row.warranty_months;
+  const warrantyMonths = Number(warrantyMonthValue || 0);
+  const warrantyStartDate = getWarrantyStartDate(row);
+  const warrantyEndDate = warrantyStartDate ? addMonths(warrantyStartDate, warrantyMonths) : null;
+
+  return {
+    warrantyMonths,
+    warrantyStartDate,
+    warrantyStartDateIso: toIsoDate(warrantyStartDate),
+    warrantyEndDate,
+    warrantyEndDateIso: toIsoDate(warrantyEndDate),
+    isExpired: !warrantyEndDate || toIsoDate(warrantyEndDate) < todayIso()
+  };
+}
+
 function getWarrantyStatus(serialStatus, orderStatus, warrantyEndDate) {
   if (serialStatus === "warranty") {
     return {
@@ -85,15 +115,18 @@ async function lookupWarranty(serialCode) {
         sn.id AS serial_id,
         sn.serial_code,
         sn.status AS serial_status,
+        sn.sold_date,
         p.name AS product_name,
         p.sku,
         b.name AS brand_name,
         c.name AS category_name,
         oi.id AS order_item_id,
         oi.warranty_months_snapshot,
+        p.warranty_months,
         o.order_code,
         o.status AS order_status,
-        o.created_at AS purchase_date
+        o.created_at AS purchase_date,
+        o.updated_at AS order_updated_at
       FROM serial_numbers sn
       INNER JOIN products p ON p.id = sn.product_id
       LEFT JOIN brands b ON b.id = p.brand_id
@@ -142,9 +175,8 @@ async function lookupWarranty(serialCode) {
     };
   }
 
-  const warrantyMonths = Number(row.warranty_months_snapshot || 0);
-  const warrantyEndDate = addMonths(row.purchase_date, warrantyMonths);
-  const statusInfo = getWarrantyStatus(row.serial_status, row.order_status, warrantyEndDate);
+  const warrantyCoverage = getWarrantyCoverage(row);
+  const statusInfo = getWarrantyStatus(row.serial_status, row.order_status, warrantyCoverage.warrantyEndDate);
   const [tickets] = await pool.execute(
     `
       SELECT
@@ -176,8 +208,9 @@ async function lookupWarranty(serialCode) {
     order_code: row.order_code,
     order_status: row.order_status,
     purchase_date: toIsoDate(row.purchase_date),
-    warranty_months: warrantyMonths,
-    warranty_end_date: toIsoDate(warrantyEndDate),
+    warranty_start_date: warrantyCoverage.warrantyStartDateIso,
+    warranty_months: warrantyCoverage.warrantyMonths,
+    warranty_end_date: warrantyCoverage.warrantyEndDateIso,
     warranty_status: statusInfo.status,
     warranty_status_label: statusInfo.label,
     active_ticket: activeTicket,
@@ -186,5 +219,6 @@ async function lookupWarranty(serialCode) {
 }
 
 module.exports = {
-  lookupWarranty
+  lookupWarranty,
+  getWarrantyCoverage
 };

@@ -1,4 +1,9 @@
 const pool = require("../config/database");
+const {
+  getAvailableStockExpression,
+  getReservedStockExpression,
+  getTotalStockExpression
+} = require("./stock.service");
 
 const PRODUCT_TYPES = ["pc_build", "laptop", "component", "monitor", "accessory", "service"];
 const STATUSES = ["active", "inactive"];
@@ -34,14 +39,9 @@ const adminProductSelect = `
       ORDER BY pi.is_primary DESC, pi.sort_order ASC, pi.id ASC
       LIMIT 1
     ) AS primary_image,
-    CASE
-      WHEN p.requires_serial = 1 THEN (
-        SELECT COUNT(*)
-        FROM serial_numbers sn
-        WHERE sn.product_id = p.id AND sn.status = 'in_stock'
-      )
-      ELSE p.stock_quantity
-    END AS available_stock
+    ${getTotalStockExpression("p")} AS total_stock_quantity,
+    ${getReservedStockExpression("p")} AS reserved_quantity,
+    ${getAvailableStockExpression("p")} AS available_stock
   FROM products p
   LEFT JOIN brands b ON b.id = p.brand_id
   INNER JOIN categories c ON c.id = p.category_id
@@ -86,6 +86,9 @@ function formatAdminProduct(product) {
     sale_price: product.sale_price === null ? null : Number(product.sale_price),
     requires_serial: Boolean(product.requires_serial),
     is_featured: Boolean(product.is_featured),
+    stock_quantity: Number(product.stock_quantity || 0),
+    total_stock_quantity: Number(product.total_stock_quantity || 0),
+    reserved_quantity: Number(product.reserved_quantity || 0),
     available_stock: Number(product.available_stock || 0)
   };
 }

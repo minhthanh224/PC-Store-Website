@@ -33,7 +33,9 @@ app.use(cors(process.env.CORS_ORIGIN ? { origin: process.env.CORS_ORIGIN } : und
 app.use(morgan("dev"));
 
 app.use("/api/health", healthRoutes);
-app.use("/api/dev", devRoutes);
+if (process.env.NODE_ENV !== "production") {
+  app.use("/api/dev", devRoutes);
+}
 app.use("/api/categories", categoryRoutes);
 app.use("/api/brands", brandRoutes);
 app.use("/api/products", productRoutes);

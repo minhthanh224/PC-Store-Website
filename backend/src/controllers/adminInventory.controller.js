@@ -1,4 +1,9 @@
 const pool = require("../config/database");
+const {
+  getAvailableStockExpression,
+  getReservedStockExpression,
+  getTotalStockExpression
+} = require("../services/stock.service");
 
 const SERIAL_STATUSES = ["in_stock", "sold", "warranty", "returned"];
 
@@ -23,6 +28,9 @@ async function getInventorySummary(req, res) {
         p.product_type,
         p.requires_serial,
         p.stock_quantity AS normal_stock_quantity,
+        ${getTotalStockExpression("p")} AS total_stock_quantity,
+        ${getReservedStockExpression("p")} AS reserved_quantity,
+        ${getAvailableStockExpression("p")} AS available_stock,
         COALESCE(SUM(CASE WHEN sn.status = 'in_stock' THEN 1 ELSE 0 END), 0) AS serial_in_stock,
         COALESCE(SUM(CASE WHEN sn.status = 'sold' THEN 1 ELSE 0 END), 0) AS serial_sold,
         COALESCE(SUM(CASE WHEN sn.status = 'warranty' THEN 1 ELSE 0 END), 0) AS serial_warranty,
@@ -36,7 +44,7 @@ async function getInventorySummary(req, res) {
 
   const data = rows.map(function (row) {
     const requiresSerial = Boolean(row.requires_serial);
-    const availableStock = requiresSerial ? Number(row.serial_in_stock) : Number(row.normal_stock_quantity);
+    const availableStock = Number(row.available_stock || 0);
 
     return {
       product_id: row.product_id,
@@ -45,6 +53,8 @@ async function getInventorySummary(req, res) {
       product_type: row.product_type,
       requires_serial: requiresSerial,
       normal_stock_quantity: Number(row.normal_stock_quantity),
+      total_stock_quantity: Number(row.total_stock_quantity || 0),
+      reserved_quantity: Number(row.reserved_quantity || 0),
       serial_in_stock: Number(row.serial_in_stock),
       serial_sold: Number(row.serial_sold),
       serial_warranty: Number(row.serial_warranty),
