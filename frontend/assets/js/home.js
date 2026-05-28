@@ -2,12 +2,197 @@
   initHomePage();
 });
 
+const HOME_HERO_AUTOPLAY_MS = 5200;
+const HOME_HERO_SLIDES = [
+  {
+    badge: "AEROTECH RETAIL PRO",
+    title: "Nâng cấp góc làm việc và chiến game của bạn",
+    description: "PC build, laptop, màn hình và phụ kiện công nghệ được tuyển chọn cho học tập, làm việc, gaming và sáng tạo nội dung.",
+    image: "/assets/images/hero/hero-main.webp",
+    primaryCta: {
+      label: "Xem PC Build",
+      href: "products.html?productType=pc_build"
+    },
+    secondaryCta: {
+      label: "Khám phá sản phẩm",
+      href: "products.html"
+    }
+  },
+  {
+    badge: "NEW ARRIVAL",
+    title: "Dòng laptop mới cho học tập và di chuyển",
+    description: "Thiết kế gọn nhẹ, pin tốt, cấu hình ổn định cho sinh viên và dân văn phòng.",
+    image: "/assets/images/hero/hero-ultrabook.webp",
+    primaryCta: {
+      label: "Xem Laptop",
+      href: "products.html?productType=laptop"
+    },
+    secondaryCta: {
+      label: "Tìm hiểu thêm",
+      href: "products.html?productType=laptop&category=ultrabook"
+    }
+  },
+  {
+    badge: "MEGA SALE",
+    title: "Săn ưu đãi thiết bị gaming và phụ kiện",
+    description: "Giảm giá cho gaming gear, màn hình và linh kiện trong thời gian giới hạn.",
+    image: "/assets/images/hero/hero-accessories.webp",
+    primaryCta: {
+      label: "Xem khuyến mãi",
+      href: "products.html?productType=accessory"
+    },
+    secondaryCta: {
+      label: "Mua ngay",
+      href: "products.html"
+    }
+  },
+  {
+    badge: "CUSTOM BUILD",
+    title: "Build PC theo nhu cầu của bạn",
+    description: "Từ gaming, học tập đến workstation, AeroTech hỗ trợ tư vấn cấu hình phù hợp.",
+    image: "/assets/images/banners/banner-pc-build.webp",
+    primaryCta: {
+      label: "Xem dịch vụ",
+      href: "products.html?productType=service"
+    },
+    secondaryCta: {
+      label: "Liên hệ tư vấn",
+      href: "contact.html"
+    }
+  }
+];
+
 async function initHomePage() {
   await loadSiteLayout();
+  initHomeHeroCarousel();
   await Promise.all([
     loadHomeCategories(),
     loadFeaturedProducts()
   ]);
+}
+
+function initHomeHeroCarousel() {
+  const carousel = document.getElementById("homeHeroCarousel");
+  const slidesTrack = document.getElementById("homeHeroSlides");
+  const dotsContainer = document.getElementById("homeHeroDots");
+
+  if (!carousel || !slidesTrack || !dotsContainer || !HOME_HERO_SLIDES.length) {
+    return;
+  }
+
+  let activeIndex = 0;
+  let autoplayTimer = null;
+  const prefersReducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  slidesTrack.innerHTML = HOME_HERO_SLIDES.map(function (slide, index) {
+    return renderHeroSlide(slide, index);
+  }).join("");
+
+  dotsContainer.innerHTML = HOME_HERO_SLIDES.map(function (_, index) {
+    return `
+      <button
+        class="hero-carousel-dot"
+        type="button"
+        aria-label="Chuyển đến slide ${index + 1}"
+        data-slide-index="${index}"
+      ></button>
+    `;
+  }).join("");
+
+  const prevButton = carousel.querySelector(".hero-carousel-prev");
+  const nextButton = carousel.querySelector(".hero-carousel-next");
+  const dotButtons = Array.from(dotsContainer.querySelectorAll(".hero-carousel-dot"));
+
+  function setActiveSlide(nextIndex) {
+    activeIndex = (nextIndex + HOME_HERO_SLIDES.length) % HOME_HERO_SLIDES.length;
+    slidesTrack.style.transform = `translateX(-${activeIndex * 100}%)`;
+
+    dotButtons.forEach(function (button, index) {
+      const isActive = index === activeIndex;
+      button.classList.toggle("active", isActive);
+      button.setAttribute("aria-current", isActive ? "true" : "false");
+    });
+  }
+
+  function startAutoplay() {
+    if (prefersReducedMotion || HOME_HERO_SLIDES.length < 2) {
+      return;
+    }
+
+    stopAutoplay();
+    autoplayTimer = window.setInterval(function () {
+      setActiveSlide(activeIndex + 1);
+    }, HOME_HERO_AUTOPLAY_MS);
+  }
+
+  function stopAutoplay() {
+    if (autoplayTimer) {
+      window.clearInterval(autoplayTimer);
+      autoplayTimer = null;
+    }
+  }
+
+  function restartAutoplay() {
+    stopAutoplay();
+    startAutoplay();
+  }
+
+  if (prevButton) {
+    prevButton.addEventListener("click", function () {
+      setActiveSlide(activeIndex - 1);
+      restartAutoplay();
+    });
+  }
+
+  if (nextButton) {
+    nextButton.addEventListener("click", function () {
+      setActiveSlide(activeIndex + 1);
+      restartAutoplay();
+    });
+  }
+
+  dotButtons.forEach(function (button) {
+    button.addEventListener("click", function () {
+      setActiveSlide(Number(button.dataset.slideIndex || 0));
+      restartAutoplay();
+    });
+  });
+
+  carousel.addEventListener("mouseenter", stopAutoplay);
+  carousel.addEventListener("mouseleave", startAutoplay);
+  carousel.addEventListener("focusin", stopAutoplay);
+  carousel.addEventListener("focusout", startAutoplay);
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) {
+      stopAutoplay();
+    } else {
+      startAutoplay();
+    }
+  });
+
+  setActiveSlide(0);
+  startAutoplay();
+}
+
+function renderHeroSlide(slide, index) {
+  const secondaryCta = slide.secondaryCta ? `
+    <a class="btn btn-secondary" href="${escapeAttribute(slide.secondaryCta.href)}">${escapeHtml(slide.secondaryCta.label)}</a>
+  ` : "";
+
+  return `
+    <section class="hero-carousel-slide" aria-label="${escapeAttribute(slide.title)}" aria-roledescription="slide" data-slide="${index + 1}">
+      <div class="hero-carousel-bg" style="background-image: url('${escapeAttribute(slide.image)}')"></div>
+      <div class="hero-carousel-content image-card-content">
+        <p class="eyebrow">${escapeHtml(slide.badge)}</p>
+        <h1>${escapeHtml(slide.title)}</h1>
+        <p>${escapeHtml(slide.description)}</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="${escapeAttribute(slide.primaryCta.href)}">${escapeHtml(slide.primaryCta.label)}</a>
+          ${secondaryCta}
+        </div>
+      </div>
+    </section>
+  `;
 }
 
 async function loadHomeCategories() {

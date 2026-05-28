@@ -37,19 +37,13 @@
           </nav>
         </aside>
 
-        <article class="commerce-main-banner retail-banner image-card" style="--card-bg: url('/assets/images/hero/hero-main.webp')">
-          <div class="image-card-content">
-            <p class="eyebrow">AeroTech Retail Pro</p>
-            <h1>Nâng cấp góc làm việc và chiến game của bạn</h1>
-            <p>
-              PC build, laptop, màn hình và phụ kiện công nghệ được tuyển chọn cho học tập,
-              làm việc, gaming và sáng tạo nội dung.
-            </p>
-            <div class="hero-actions">
-              <a class="btn btn-primary" href="products.html?productType=pc_build">Xem PC Build</a>
-              <a class="btn btn-secondary" href="products.html">Khám phá sản phẩm</a>
-            </div>
+        <article id="homeHeroCarousel" class="commerce-main-banner commerce-hero-carousel retail-banner image-card" aria-label="Khuyến mãi AeroTech" aria-roledescription="carousel">
+          <div class="hero-carousel-viewport">
+            <div id="homeHeroSlides" class="hero-carousel-slides" aria-live="polite"></div>
           </div>
+          <button class="hero-carousel-btn hero-carousel-prev" type="button" aria-label="Slide trước">‹</button>
+          <button class="hero-carousel-btn hero-carousel-next" type="button" aria-label="Slide tiếp theo">›</button>
+          <div id="homeHeroDots" class="hero-carousel-dots" aria-label="Chọn slide"></div>
         </article>
 
         <aside class="commerce-promo-stack">
