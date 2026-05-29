@@ -24,6 +24,7 @@ const adminOrderRoutes = require("./routes/adminOrder.routes");
 const adminWarrantyRoutes = require("./routes/adminWarranty.routes");
 const adminReportRoutes = require("./routes/adminReport.routes");
 const adminImportRoutes = require("./routes/adminImport.routes");
+const adminReviewRoutes = require("./routes/adminReview.routes");
 const notFoundMiddleware = require("./middlewares/notFound.middleware");
 const errorMiddleware = require("./middlewares/error.middleware");
 
@@ -114,6 +115,7 @@ app.use("/api/admin/orders", adminOrderRoutes);
 app.use("/api/admin/warranty-tickets", adminWarrantyRoutes);
 app.use("/api/admin/reports", adminReportRoutes);
 app.use("/api/admin/import", importRateLimiter, adminImportRoutes);
+app.use("/api/admin/reviews", adminReviewRoutes);
 
 app.use(express.static(frontendPath));
 app.get("/", function (req, res) {

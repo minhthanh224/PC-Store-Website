@@ -592,6 +592,19 @@
   color: var(--admin-muted) !important;
 }
 
+.admin-review-table .review-comment-cell {
+  max-width: 360px;
+  white-space: normal;
+  color: var(--admin-text);
+  line-height: 1.5;
+}
+
+.admin-review-table .review-rating-cell {
+  color: #f59e0b;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
 .table-actions {
   gap: 8px;
 }
