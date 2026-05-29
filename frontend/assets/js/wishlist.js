@@ -37,14 +37,28 @@ async function loadWishlist() {
 function renderWishlistProductCard(product) {
   const detailsUrl = `product-detail.html?slug=${encodeURIComponent(product.slug)}`;
   const cartPayload = escapeAttribute(JSON.stringify(getCartProductPayload(product)));
+  const imageFallback = getProductImageFallback(product);
+  const isService = isServiceProduct(product);
+  const warrantyBadge = isService
+    ? '<span class="warranty-badge">Theo dịch vụ</span>'
+    : `<span class="warranty-badge">${escapeHtml(product.warranty_months)}T BH</span>`;
+  const actions = isService ? `
+          <a class="btn btn-outline" href="${detailsUrl}">Chi tiết</a>
+          <a class="btn btn-primary" href="contact.html">Liên hệ tư vấn</a>
+          <button class="btn btn-light js-remove-wishlist" type="button" data-product-id="${escapeAttribute(product.id)}">Bỏ yêu thích</button>
+        ` : `
+          <a class="btn btn-outline" href="${detailsUrl}">Chi tiết</a>
+          <button class="btn btn-primary js-add-cart" type="button" data-product="${cartPayload}" ${product.available_stock <= 0 ? "disabled" : ""}>Thêm vào giỏ</button>
+          <button class="btn btn-light js-remove-wishlist" type="button" data-product-id="${escapeAttribute(product.id)}">Bỏ yêu thích</button>
+        `;
 
   return `
     <article class="product-card">
       <a class="product-image-link" href="${detailsUrl}" aria-label="${escapeAttribute(product.name)}">
         <img
-          src="${escapeAttribute(getImageUrl(product.primary_image))}"
+          src="${escapeAttribute(getImageUrl(product.primary_image, product))}"
           alt="${escapeAttribute(product.name)}"
-          onerror="this.onerror=null;this.src='${PRODUCT_PLACEHOLDER_IMAGE}'"
+          onerror="this.onerror=null;this.src='${escapeAttribute(imageFallback)}'"
         >
       </a>
       <div class="product-card-body">
@@ -55,15 +69,13 @@ function renderWishlistProductCard(product) {
         <h3><a href="${detailsUrl}">${escapeHtml(product.name)}</a></h3>
         ${renderPrice(product)}
         <div class="product-card-footer">
-          <span class="stock-badge ${product.available_stock > 0 || product.product_type === "service" ? "in-stock" : "out-stock"}">
+          <span class="stock-badge ${product.available_stock > 0 || isService ? "in-stock" : "out-stock"}">
             ${escapeHtml(getStockLabel(product))}
           </span>
-          <span class="warranty-badge">${escapeHtml(product.warranty_months)}T BH</span>
+          ${warrantyBadge}
         </div>
         <div class="product-actions">
-          <a class="btn btn-outline" href="${detailsUrl}">Chi tiết</a>
-          <button class="btn btn-primary js-add-cart" type="button" data-product="${cartPayload}" ${product.available_stock <= 0 ? "disabled" : ""}>Thêm vào giỏ</button>
-          <button class="btn btn-light js-remove-wishlist" type="button" data-product-id="${escapeAttribute(product.id)}">Bỏ yêu thích</button>
+          ${actions}
         </div>
       </div>
     </article>

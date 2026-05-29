@@ -7,7 +7,7 @@ async function initLoginPage() {
 
   if (isLoggedIn()) {
     const currentUser = getCurrentUser();
-    window.location.href = isStaffUser(currentUser) ? getAdminHomeUrl(currentUser) : getRedirectTarget("account.html");
+    window.location.href = isStaffUser(currentUser) ? getAdminHomeUrl(currentUser) : getRedirectTarget("account.html", currentUser);
     return;
   }
 
@@ -28,7 +28,7 @@ async function handleLogin(event) {
 
     setAuthSession(response.data);
     const user = getCurrentUser();
-    window.location.href = isStaffUser(user) ? getAdminHomeUrl(user) : getRedirectTarget("account.html");
+    window.location.href = isStaffUser(user) ? getAdminHomeUrl(user) : getRedirectTarget("account.html", user);
   } catch (error) {
     message.innerHTML = renderError(error.message);
   }

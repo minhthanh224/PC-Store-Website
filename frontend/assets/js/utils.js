@@ -1,7 +1,48 @@
 ﻿const PLACEHOLDER_IMAGE =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='480' viewBox='0 0 640 480'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop stop-color='%23070b14'/%3E%3Cstop offset='1' stop-color='%23111827'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='640' height='480' fill='url(%23g)'/%3E%3Crect x='82' y='92' width='476' height='292' rx='22' fill='%230b1120' stroke='%23263244'/%3E%3Cpath d='M166 324h308l-95-108-63 70-46-50z' fill='%2306eaff' opacity='.72'/%3E%3Ccircle cx='238' cy='184' r='34' fill='%238b5cf6' opacity='.45'/%3E%3Ctext x='320' y='425' text-anchor='middle' font-family='Arial' font-size='31' font-weight='700' fill='%23f8fafc'%3EAeroTech%3C/text%3E%3C/svg%3E";
 
-const PRODUCT_PLACEHOLDER_IMAGE = "/assets/images/placeholders/placeholder-product.webp";
+const PRODUCT_FALLBACK_DEFINITIONS = {
+  default: { label: "AeroTech", accent: "#06eaff", glow: "#0f766e", icon: "A" },
+  laptop: { label: "Laptop", accent: "#38bdf8", glow: "#1d4ed8", icon: "LT" },
+  pc_build: { label: "PC Build", accent: "#22d3ee", glow: "#0f766e", icon: "PC" },
+  component: { label: "Linh kiện", accent: "#a3e635", glow: "#3f6212", icon: "HW" },
+  monitor: { label: "Màn hình", accent: "#60a5fa", glow: "#1e40af", icon: "4K" },
+  accessory: { label: "Phụ kiện", accent: "#f59e0b", glow: "#92400e", icon: "GEAR" },
+  service: { label: "Dịch vụ", accent: "#34d399", glow: "#065f46", icon: "SV" }
+};
+
+function createProductFallbackImage(definition) {
+  const item = definition || PRODUCT_FALLBACK_DEFINITIONS.default;
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480">
+      <defs>
+        <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+          <stop stop-color="#07111f"/>
+          <stop offset="1" stop-color="#111827"/>
+        </linearGradient>
+        <radialGradient id="glow" cx="50%" cy="42%" r="50%">
+          <stop stop-color="${item.glow}" stop-opacity=".72"/>
+          <stop offset="1" stop-color="${item.glow}" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <rect width="640" height="480" fill="url(#bg)"/>
+      <circle cx="320" cy="210" r="190" fill="url(#glow)"/>
+      <rect x="96" y="86" width="448" height="278" rx="24" fill="#0b1220" stroke="#263244" stroke-width="2"/>
+      <rect x="132" y="124" width="376" height="168" rx="18" fill="#101827" stroke="${item.accent}" stroke-opacity=".55"/>
+      <text x="320" y="220" text-anchor="middle" font-family="Arial, sans-serif" font-size="64" font-weight="800" fill="${item.accent}">${item.icon}</text>
+      <text x="320" y="333" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="700" fill="#f8fafc">${item.label}</text>
+      <text x="320" y="389" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#94a3b8">AeroTech</text>
+    </svg>
+  `.trim();
+
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+const PRODUCT_FALLBACK_IMAGES = Object.keys(PRODUCT_FALLBACK_DEFINITIONS).reduce(function (images, key) {
+  images[key] = createProductFallbackImage(PRODUCT_FALLBACK_DEFINITIONS[key]);
+  return images;
+}, {});
+const PRODUCT_PLACEHOLDER_IMAGE = PRODUCT_FALLBACK_IMAGES.default;
 const EMPTY_CART_IMAGE = "/assets/images/empty-states/empty-cart.svg";
 const ACCESS_DENIED_IMAGE = "/assets/images/empty-states/access-denied.svg";
 const BANNER_IMAGES = {
@@ -9,7 +50,8 @@ const BANNER_IMAGES = {
   laptop: "/assets/images/banners/banner-laptop.webp",
   component: "/assets/images/banners/banner-components.webp",
   monitor: "/assets/images/banners/banner-monitor.webp",
-  accessory: "/assets/images/banners/banner-accessories.webp"
+  accessory: "/assets/images/banners/banner-accessories.webp",
+  service: PRODUCT_FALLBACK_IMAGES.service
 };
 
 function escapeHtml(value) {
@@ -72,7 +114,7 @@ function getCatalogStatusLabel(status) {
 
 function getStockLabel(product) {
   if (product.product_type === "service") {
-    return "Dịch vụ";
+    return "Dịch vụ tư vấn";
   }
 
   if (Number(product.available_stock) > 0) {
@@ -137,8 +179,31 @@ function getWarrantyStatusLabel(status) {
   return labels[status] || status;
 }
 
-function getImageUrl(imageUrl) {
-  return imageUrl && String(imageUrl).trim() ? imageUrl : PRODUCT_PLACEHOLDER_IMAGE;
+function isServiceProduct(product) {
+  return product && product.product_type === "service";
+}
+
+function getProductFallbackKey(product) {
+  const type = product && product.product_type;
+
+  if (PRODUCT_FALLBACK_IMAGES[type]) {
+    return type;
+  }
+
+  const categorySlug = product && product.category && product.category.slug
+    ? product.category.slug
+    : (product && (product.category_slug || product.category_name || ""));
+  const bannerKey = getBannerKeyFromSlug(categorySlug);
+
+  return PRODUCT_FALLBACK_IMAGES[bannerKey] ? bannerKey : "default";
+}
+
+function getProductImageFallback(product) {
+  return PRODUCT_FALLBACK_IMAGES[getProductFallbackKey(product)] || PRODUCT_PLACEHOLDER_IMAGE;
+}
+
+function getImageUrl(imageUrl, product) {
+  return imageUrl && String(imageUrl).trim() ? imageUrl : getProductImageFallback(product);
 }
 
 function getBannerImageByKey(key) {
@@ -255,7 +320,8 @@ function getCartProductPayload(product) {
     slug: product.slug,
     name: product.name,
     sku: product.sku,
-    image: product.primary_image || product.image || PRODUCT_PLACEHOLDER_IMAGE,
+    image: getImageUrl(product.primary_image || product.image, product),
+    fallback_image: getProductImageFallback(product),
     price: getEffectivePrice(product),
     quantity: 1,
     requires_serial: Boolean(product.requires_serial),
@@ -267,19 +333,48 @@ function getCartProductPayload(product) {
 function renderProductCard(product) {
   const detailsUrl = `product-detail.html?slug=${encodeURIComponent(product.slug)}`;
   const cartPayload = escapeAttribute(JSON.stringify(getCartProductPayload(product)));
+  const imageFallback = getProductImageFallback(product);
+  const isService = isServiceProduct(product);
   const specs = (product.short_specs || []).slice(0, 3).map(function (spec) {
     return `<li>${escapeHtml(spec)}</li>`;
   }).join("");
-  const hasStock = Number(product.available_stock) > 0 || product.product_type === "service";
-  const canBuy = Number(product.available_stock) > 0;
+  const hasStock = Number(product.available_stock) > 0 || isService;
+  const canBuy = !isService && Number(product.available_stock) > 0;
+  const warrantyBadge = isService
+    ? '<span class="warranty-badge">Theo dịch vụ</span>'
+    : `<span class="warranty-badge">${escapeHtml(product.warranty_months)}T BH</span>`;
+  const actions = isService ? `
+          <a class="btn btn-outline" href="${detailsUrl}">Chi tiết</a>
+          <a class="btn btn-primary" href="contact.html">Liên hệ tư vấn</a>
+          <button
+            class="btn btn-light js-add-wishlist"
+            type="button"
+            data-product-id="${escapeAttribute(product.id)}"
+            aria-label="Thêm vào yêu thích"
+          >Yêu thích</button>
+        ` : `
+          <a class="btn btn-outline" href="${detailsUrl}">Chi tiết</a>
+          <button
+            class="btn btn-primary js-add-cart"
+            type="button"
+            data-product="${cartPayload}"
+            ${canBuy ? "" : "disabled"}
+          >+ Giỏ hàng</button>
+          <button
+            class="btn btn-light js-add-wishlist"
+            type="button"
+            data-product-id="${escapeAttribute(product.id)}"
+            aria-label="Thêm vào yêu thích"
+          >Yêu thích</button>
+        `;
 
   return `
     <article class="product-card">
       <a class="product-image-link" href="${detailsUrl}" aria-label="${escapeAttribute(product.name)}">
         <img
-          src="${escapeAttribute(getImageUrl(product.primary_image))}"
+          src="${escapeAttribute(getImageUrl(product.primary_image, product))}"
           alt="${escapeAttribute(product.name)}"
-          onerror="this.onerror=null;this.src='${PRODUCT_PLACEHOLDER_IMAGE}'"
+          onerror="this.onerror=null;this.src='${escapeAttribute(imageFallback)}'"
         >
       </a>
       <div class="product-card-body">
@@ -298,22 +393,10 @@ function renderProductCard(product) {
           <span class="stock-badge ${hasStock ? "in-stock" : "out-stock"}">
             ${escapeHtml(getStockLabel(product))}
           </span>
-          <span class="warranty-badge">${escapeHtml(product.warranty_months)}T BH</span>
+          ${warrantyBadge}
         </div>
         <div class="product-actions">
-          <a class="btn btn-outline" href="${detailsUrl}">Chi tiết</a>
-          <button
-            class="btn btn-primary js-add-cart"
-            type="button"
-            data-product="${cartPayload}"
-            ${canBuy ? "" : "disabled"}
-          >+ Giỏ hàng</button>
-          <button
-            class="btn btn-light js-add-wishlist"
-            type="button"
-            data-product-id="${escapeAttribute(product.id)}"
-            aria-label="Thêm vào yêu thích"
-          >Yêu thích</button>
+          ${actions}
         </div>
       </div>
     </article>
@@ -321,12 +404,14 @@ function renderProductCard(product) {
 }
 
 function renderOrderCard(order) {
+  const imageFallback = getProductImageFallback(order);
+
   return `
     <article class="order-card">
       <img
-        src="${escapeAttribute(getImageUrl(order.first_product_image))}"
+        src="${escapeAttribute(getImageUrl(order.first_product_image, order))}"
         alt="${escapeAttribute(order.first_product_name || order.order_code)}"
-        onerror="this.onerror=null;this.src='${PRODUCT_PLACEHOLDER_IMAGE}'"
+        onerror="this.onerror=null;this.src='${escapeAttribute(imageFallback)}'"
       >
       <div>
         <div class="order-card-title">

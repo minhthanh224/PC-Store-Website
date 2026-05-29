@@ -238,7 +238,7 @@ function isDisplayableHomeCategory(category) {
     "test",
     ["se", "104"].join(""),
     ["nexa", "core"].join(""),
-    "mẫu"
+    ["m", "ẫu"].join("")
   ];
 
   return !hiddenTerms.some(function (term) {

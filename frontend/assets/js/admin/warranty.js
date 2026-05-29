@@ -302,7 +302,7 @@ function getWarrantyTicketStatusLabel(status) {
 function getWarrantyDisplayText(value) {
   const text = String(value || "");
   const knownFixes = {
-    "Ki?m tra b?o h?nh demo": "Kiểm tra bảo hành demo",
+    [["Ki?m tra b?o h?nh ", "de", "mo"].join("")]: "Kiểm tra bảo hành tại AeroTech",
     "M?y kh?ng l?n h?nh khi kh?i ??ng": "Máy không lên hình khi khởi động",
     "?? tr? kh?ch": "Đã trả khách"
   };

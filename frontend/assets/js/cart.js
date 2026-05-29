@@ -34,12 +34,14 @@ function renderCartPage() {
 }
 
 function renderCartItem(item) {
+  const imageFallback = item.fallback_image || getProductImageFallback(item);
+
   return `
     <article class="cart-item">
       <img
-        src="${escapeAttribute(getImageUrl(item.image))}"
+        src="${escapeAttribute(getImageUrl(item.image, item))}"
         alt="${escapeAttribute(item.name)}"
-        onerror="this.onerror=null;this.src='${PRODUCT_PLACEHOLDER_IMAGE}'"
+        onerror="this.onerror=null;this.src='${escapeAttribute(imageFallback)}'"
       >
       <div>
         <h2>${escapeHtml(item.name)}</h2>

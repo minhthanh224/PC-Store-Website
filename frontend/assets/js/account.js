@@ -111,12 +111,14 @@ async function loadAddresses() {
 }
 
 function renderAccountOrderCard(order) {
+  const imageFallback = getProductImageFallback(order);
+
   return `
     <article class="order-card account-order-row">
       <img
-        src="${escapeAttribute(getImageUrl(order.first_product_image))}"
+        src="${escapeAttribute(getImageUrl(order.first_product_image, order))}"
         alt="${escapeAttribute(order.first_product_name || order.order_code)}"
-        onerror="this.onerror=null;this.src='${PRODUCT_PLACEHOLDER_IMAGE}'"
+        onerror="this.onerror=null;this.src='${escapeAttribute(imageFallback)}'"
       >
       <div class="account-order-main">
         <div class="order-card-title">

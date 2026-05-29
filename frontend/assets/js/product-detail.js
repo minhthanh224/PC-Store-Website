@@ -51,54 +51,37 @@ function renderBreadcrumb(product) {
 }
 
 function renderProductDetail(product) {
+  const imageFallback = getProductImageFallback(product);
   const images = product.images && product.images.length ? product.images : [{
-    image_url: PRODUCT_PLACEHOLDER_IMAGE,
+    image_url: imageFallback,
     alt_text: product.name
   }];
   const cartPayload = escapeAttribute(JSON.stringify(getCartProductPayload(product)));
+  const isService = isServiceProduct(product);
   const quickSpecs = (product.short_specs || []).map(function (spec) {
     return `<li>${escapeHtml(spec)}</li>`;
   }).join("");
-
-  return `
-    <section class="product-gallery">
-      <div class="main-product-image">
-        <img
-          src="${escapeAttribute(getImageUrl(images[0].image_url))}"
-          alt="${escapeAttribute(images[0].alt_text || product.name)}"
-          onerror="this.onerror=null;this.src='${PRODUCT_PLACEHOLDER_IMAGE}'"
-        >
-      </div>
-      <div class="thumbnail-row">
-        ${images.map(function (image) {
-          return `
-            <img
-              src="${escapeAttribute(getImageUrl(image.image_url))}"
-              alt="${escapeAttribute(image.alt_text || product.name)}"
-              onerror="this.onerror=null;this.src='${PRODUCT_PLACEHOLDER_IMAGE}'"
-            >
-          `;
-        }).join("")}
-      </div>
-    </section>
-
-    <section class="product-info-panel">
-      <div class="product-title-block">
-        <span class="type-badge">${escapeHtml(getProductTypeLabel(product.product_type))}</span>
-        <h1>${escapeHtml(product.name)}</h1>
-        <p>${escapeHtml(product.short_description || "")}</p>
-      </div>
-
-      <dl class="product-meta-list">
+  const metaRows = isService ? `
+        <div><dt>Thương hiệu</dt><dd>${escapeHtml(product.brand_name || "AeroTech")}</dd></div>
+        <div><dt>SKU</dt><dd>${escapeHtml(product.sku)}</dd></div>
+        <div><dt>Loại dịch vụ</dt><dd>${escapeHtml(getStockLabel(product))}</dd></div>
+        <div><dt>Hình thức</dt><dd>Liên hệ tư vấn</dd></div>
+      ` : `
         <div><dt>Thương hiệu</dt><dd>${escapeHtml(product.brand_name || "AeroTech")}</dd></div>
         <div><dt>SKU</dt><dd>${escapeHtml(product.sku)}</dd></div>
         <div><dt>Bảo hành</dt><dd>${escapeHtml(product.warranty_months)} tháng</dd></div>
         <div><dt>Tồn kho</dt><dd>${escapeHtml(getStockLabel(product))}</dd></div>
-      </dl>
-
-      <div class="detail-price">${renderPrice(product)}</div>
-
-      <div class="detail-actions">
+      `;
+  const detailActions = isService ? `
+        <a class="btn btn-primary" href="contact.html">Liên hệ tư vấn</a>
+        <a class="btn btn-dark" href="stores.html">Đặt lịch tại showroom</a>
+        <button
+          class="btn btn-outline js-add-wishlist"
+          type="button"
+          data-product-id="${escapeAttribute(product.id)}"
+        >Yêu thích</button>
+        <a class="btn btn-light" href="products.html?productType=service">Dịch vụ khác</a>
+      ` : `
         <button
           class="btn btn-primary js-add-cart"
           type="button"
@@ -117,6 +100,45 @@ function renderProductDetail(product) {
           data-product-id="${escapeAttribute(product.id)}"
         >Yêu thích</button>
         <a class="btn btn-light" href="products.html">Tiếp tục mua</a>
+      `;
+
+  return `
+    <section class="product-gallery">
+      <div class="main-product-image">
+        <img
+          src="${escapeAttribute(getImageUrl(images[0].image_url, product))}"
+          alt="${escapeAttribute(images[0].alt_text || product.name)}"
+          onerror="this.onerror=null;this.src='${escapeAttribute(imageFallback)}'"
+        >
+      </div>
+      <div class="thumbnail-row">
+        ${images.map(function (image) {
+          return `
+            <img
+              src="${escapeAttribute(getImageUrl(image.image_url, product))}"
+              alt="${escapeAttribute(image.alt_text || product.name)}"
+              onerror="this.onerror=null;this.src='${escapeAttribute(imageFallback)}'"
+            >
+          `;
+        }).join("")}
+      </div>
+    </section>
+
+    <section class="product-info-panel">
+      <div class="product-title-block">
+        <span class="type-badge">${escapeHtml(getProductTypeLabel(product.product_type))}</span>
+        <h1>${escapeHtml(product.name)}</h1>
+        <p>${escapeHtml(product.short_description || "")}</p>
+      </div>
+
+      <dl class="product-meta-list">
+        ${metaRows}
+      </dl>
+
+      <div class="detail-price">${renderPrice(product)}</div>
+
+      <div class="detail-actions">
+        ${detailActions}
       </div>
 
       <div class="quick-spec-panel">

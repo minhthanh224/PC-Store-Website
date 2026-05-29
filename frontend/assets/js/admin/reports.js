@@ -1,7 +1,7 @@
 ﻿document.addEventListener("DOMContentLoaded", initReportsPage);
 
 async function initReportsPage() {
-  const user = await requireAdminRole(["admin", "sales"]);
+  const user = await requireAdminRole(["admin"]);
   if (!user) return;
 
   renderAdminLayout("reports", user);
@@ -123,11 +123,13 @@ function renderBestSelling(products) {
       <thead><tr><th>Sản phẩm</th><th>SKU</th><th>Thương hiệu</th><th>Danh mục</th><th>Số lượng</th><th>Doanh thu</th></tr></thead>
       <tbody>
         ${products.map(function (product) {
+          const imageFallback = getProductImageFallback(product);
+
           return `
             <tr>
               <td>
                 <div class="table-product-cell">
-                  <img src="${escapeAttribute(getImageUrl(product.primary_image))}" alt="${escapeAttribute(product.product_name)}" onerror="this.onerror=null;this.src='${PRODUCT_PLACEHOLDER_IMAGE}'">
+                  <img src="${escapeAttribute(getImageUrl(product.primary_image, product))}" alt="${escapeAttribute(product.product_name)}" onerror="this.onerror=null;this.src='${escapeAttribute(imageFallback)}'">
                   <span>${escapeHtml(product.product_name)}</span>
                 </div>
               </td>

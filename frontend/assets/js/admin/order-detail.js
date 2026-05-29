@@ -159,11 +159,13 @@ function renderAdminOrderItems(items, order) {
       </thead>
       <tbody>
         ${items.map(function (item) {
+          const imageFallback = getProductImageFallback(item);
+
           return `
             <tr>
               <td>
                 <div class="table-product-cell">
-                  <img src="${escapeAttribute(getImageUrl(item.product_image))}" alt="${escapeAttribute(item.product_name_snapshot)}" onerror="this.onerror=null;this.src='${PRODUCT_PLACEHOLDER_IMAGE}'">
+                  <img src="${escapeAttribute(getImageUrl(item.product_image, item))}" alt="${escapeAttribute(item.product_name_snapshot)}" onerror="this.onerror=null;this.src='${escapeAttribute(imageFallback)}'">
                   <span>${escapeHtml(item.product_name_snapshot)}</span>
                 </div>
               </td>

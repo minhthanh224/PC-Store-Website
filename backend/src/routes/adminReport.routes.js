@@ -14,7 +14,7 @@ const asyncHandler = require("../utils/asyncHandler");
 const router = express.Router();
 
 router.use(requireAuth);
-router.use(requireRoles("admin", "sales"));
+router.use(requireRoles("admin"));
 
 router.get("/overview", asyncHandler(getOverview));
 router.get("/revenue", asyncHandler(getRevenue));

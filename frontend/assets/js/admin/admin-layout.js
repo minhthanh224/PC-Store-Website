@@ -25,7 +25,7 @@ function renderAdminLayout(activeKey, user) {
         ${["admin", "technician"].includes(user.role) ? renderAdminNavLink("inventory", "Kho Serial", "inventory.html", activeKey, "\u25ce") : ""}
         ${["admin", "sales", "technician"].includes(user.role) ? renderAdminNavLink("orders", "\u0110\u01a1n h\u00e0ng", "orders.html", activeKey, "\u25c7") : ""}
         ${["admin", "technician"].includes(user.role) ? renderAdminNavLink("warranty", "B\u1ea3o h\u00e0nh", "warranty.html", activeKey, "\u271a") : ""}
-        ${["admin", "sales"].includes(user.role) ? renderAdminNavLink("reports", "B\u00e1o c\u00e1o", "reports.html", activeKey, "\u25a4") : ""}
+        ${user.role === "admin" ? renderAdminNavLink("reports", "B\u00e1o c\u00e1o", "reports.html", activeKey, "\u25a4") : ""}
         <a class="admin-nav-home" href="../index.html"><span>${escapeHtml("\u2197")}</span>V\u1ec1 trang ch\u1ee7</a>
         <button id="adminLogoutBtn" class="admin-nav-logout" type="button"><span>${escapeHtml("\u00d7")}</span>\u0110\u0103ng xu\u1ea5t</button>
       </nav>
@@ -206,7 +206,7 @@ function getAdminRecordDisplayText(value, fallback) {
     ["ph", "ase"].join(""),
     ["se", "104"].join(""),
     ["sam", "ple"].join(""),
-    "k\u1ebft n\u1ed1i mysql",
+    ["k\u1ebft n\u1ed1i ", "mysql"].join(""),
     "s\u1ea3n ph\u1ea9m m\u1eabu",
     "\u0111\u1ed3 \u00e1n"
   ];

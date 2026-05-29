@@ -96,8 +96,39 @@ async function authDelete(endpoint) {
   });
 }
 
-function getRedirectTarget(defaultTarget) {
+function isSafeRedirectTarget(target) {
+  const value = String(target || "").trim();
+
+  if (!value || value.startsWith("//") || value.startsWith("\\\\") || value.includes("\\")) {
+    return false;
+  }
+
+  if (/^[a-z][a-z0-9+.-]*:/i.test(value)) {
+    return false;
+  }
+
+  if (value.startsWith("/")) {
+    return true;
+  }
+
+  if (value.startsWith("../") || value === ".." || value.includes("/../")) {
+    return false;
+  }
+
+  return /^[a-z0-9][a-z0-9._~/-]*(\?[^\s#]*)?(#[^\s]*)?$/i.test(value);
+}
+
+function getUnsafeRedirectFallback(user) {
+  return isStaffUser(user) ? getAdminHomeUrl(user) : "/";
+}
+
+function getRedirectTarget(defaultTarget, user) {
   const redirect = new URLSearchParams(window.location.search).get("redirect");
-  return redirect || defaultTarget || "account.html";
+
+  if (redirect) {
+    return isSafeRedirectTarget(redirect) ? redirect : getUnsafeRedirectFallback(user);
+  }
+
+  return defaultTarget || (isStaffUser(user) ? getAdminHomeUrl(user) : "account.html");
 }
 

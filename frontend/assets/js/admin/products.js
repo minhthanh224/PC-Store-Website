@@ -61,11 +61,13 @@ function renderProductTable(products) {
       </thead>
       <tbody>
         ${products.map(function (product) {
+          const imageFallback = getProductImageFallback(product);
+
           return `
             <tr>
               <td>
                 <div class="table-product-cell">
-                  <img src="${escapeAttribute(getImageUrl(product.primary_image))}" alt="${escapeAttribute(product.name)}" onerror="this.onerror=null;this.src='${PRODUCT_PLACEHOLDER_IMAGE}'">
+                  <img src="${escapeAttribute(getImageUrl(product.primary_image, product))}" alt="${escapeAttribute(product.name)}" onerror="this.onerror=null;this.src='${escapeAttribute(imageFallback)}'">
                   <span>${escapeHtml(product.name)}</span>
                 </div>
               </td>

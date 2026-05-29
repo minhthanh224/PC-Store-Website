@@ -493,12 +493,14 @@ function renderSearchPanel() {
 }
 
 function renderSearchProductSuggestion(product) {
+  const imageFallback = getProductImageFallback(product);
+
   return `
     <a class="search-product-item" href="product-detail.html?slug=${encodeURIComponent(product.slug)}">
       <img
-        src="${escapeAttribute(getImageUrl(product.primary_image))}"
+        src="${escapeAttribute(getImageUrl(product.primary_image, product))}"
         alt="${escapeAttribute(product.name)}"
-        onerror="this.onerror=null;this.src='${PRODUCT_PLACEHOLDER_IMAGE}'"
+        onerror="this.onerror=null;this.src='${escapeAttribute(imageFallback)}'"
       >
       <span>
         <strong>${escapeHtml(product.name)}</strong>

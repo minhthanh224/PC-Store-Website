@@ -60,7 +60,8 @@ function normalizeCartProduct(product) {
     slug: product.slug,
     name: product.name,
     sku: product.sku,
-    image: product.image || PRODUCT_PLACEHOLDER_IMAGE,
+    image: getImageUrl(product.image, product),
+    fallback_image: product.fallback_image || getProductImageFallback(product),
     price: Number(product.price || 0),
     quantity: Number(product.quantity || 1),
     requires_serial: Boolean(product.requires_serial),
@@ -79,6 +80,13 @@ function addToCart(product, quantity) {
     return {
       success: false,
       message: "Sản phẩm không hợp lệ."
+    };
+  }
+
+  if (isServiceProduct(itemToAdd)) {
+    return {
+      success: false,
+      message: "Dịch vụ kỹ thuật cần được tư vấn trước khi đặt lịch."
     };
   }
 
