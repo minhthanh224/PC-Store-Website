@@ -321,6 +321,58 @@ async function releaseAssignedSerials(connection, orderId) {
   );
 }
 
+async function decrementNonSerializedStockOnCompletion(connection, orderId) {
+  const [items] = await connection.execute(
+    `
+      SELECT
+        p.id AS product_id,
+        p.name,
+        p.stock_quantity,
+        oi.quantity
+      FROM order_items oi
+      INNER JOIN products p ON p.id = oi.product_id
+      WHERE oi.order_id = ?
+        AND p.requires_serial = 0
+      FOR UPDATE
+    `,
+    [orderId]
+  );
+
+  const quantityByProduct = new Map();
+
+  items.forEach(function (item) {
+    const productId = Number(item.product_id);
+    const current = quantityByProduct.get(productId) || {
+      product_id: productId,
+      name: item.name,
+      stock_quantity: Number(item.stock_quantity || 0),
+      quantity: 0
+    };
+
+    current.quantity += Number(item.quantity || 0);
+    quantityByProduct.set(productId, current);
+  });
+
+  for (const item of quantityByProduct.values()) {
+    if (item.stock_quantity < item.quantity) {
+      throw createError(`Sản phẩm ${item.name} không đủ tồn kho để hoàn tất đơn hàng. Hiện còn ${item.stock_quantity}, cần ${item.quantity}.`, 400);
+    }
+
+    const [result] = await connection.execute(
+      `
+        UPDATE products
+        SET stock_quantity = stock_quantity - ?
+        WHERE id = ? AND stock_quantity >= ?
+      `,
+      [item.quantity, item.product_id, item.quantity]
+    );
+
+    if (result.affectedRows === 0) {
+      throw createError(`Không thể trừ tồn kho cho sản phẩm ${item.name}. Vui lòng kiểm tra lại tồn kho.`, 400);
+    }
+  }
+}
+
 async function updateOrderStatus(orderCode, nextStatus) {
   if (!ORDER_STATUSES.includes(nextStatus)) {
     throw createError("Trạng thái đơn hàng không hợp lệ.", 400);
@@ -366,6 +418,10 @@ async function updateOrderStatus(orderCode, nextStatus) {
 
     if (nextStatus === "cancelled") {
       await releaseAssignedSerials(connection, order.id);
+    }
+
+    if (nextStatus === "completed") {
+      await decrementNonSerializedStockOnCompletion(connection, order.id);
     }
 
     await connection.execute(
