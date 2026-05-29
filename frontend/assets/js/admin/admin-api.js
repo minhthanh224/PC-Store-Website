@@ -56,6 +56,38 @@ function adminPatch(endpoint, body) {
   });
 }
 
+async function adminPostFormData(endpoint, formData) {
+  const token = getAuthToken();
+
+  if (!token) {
+    window.location.href = `../login.html?redirect=${encodeURIComponent(getAdminRedirectPath())}`;
+    return null;
+  }
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`
+    },
+    body: formData
+  });
+  const data = await response.json();
+
+  if (response.status === 401) {
+    clearAuthSession();
+    window.location.href = `../login.html?redirect=${encodeURIComponent(getAdminRedirectPath())}`;
+    return null;
+  }
+
+  if (!response.ok || data.success === false) {
+    const error = new Error(data.message || "Yêu cầu không thành công.");
+    error.data = data.data || null;
+    throw error;
+  }
+
+  return data;
+}
+
 function getAdminRedirectPath() {
   return `admin/${window.location.pathname.split("/admin/")[1] || "dashboard.html"}${window.location.search}`;
 }

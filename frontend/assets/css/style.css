@@ -8954,3 +8954,20 @@ video {
   }
 }
 
+#siteHeader .account-greeting {
+  max-width: clamp(112px, 14vw, 180px);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#siteHeader .header-actions {
+  min-width: 0;
+}
+
+@media (min-width: 1025px) {
+  #siteHeader .header-actions {
+    max-width: min(460px, 38vw);
+  }
+}
+

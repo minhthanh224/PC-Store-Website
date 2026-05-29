@@ -135,10 +135,13 @@ async function getOverview(query) {
 }
 
 async function getRevenue(query) {
-  const groupBy = query.groupBy === "month" ? "month" : "day";
+  const allowedGroups = ["day", "week", "month"];
+  const groupBy = allowedGroups.includes(query.groupBy) ? query.groupBy : "day";
   const labelExpression = groupBy === "month"
     ? "DATE_FORMAT(o.created_at, '%Y-%m')"
-    : "DATE(o.created_at)";
+    : groupBy === "week"
+      ? "DATE_FORMAT(DATE_SUB(DATE(o.created_at), INTERVAL WEEKDAY(o.created_at) DAY), '%Y-%m-%d')"
+      : "DATE(o.created_at)";
   const dateFilter = getDateFilter(query, "o");
   const orderDateSql = dateFilter.where.length ? `AND ${dateFilter.where.join(" AND ")}` : "";
 

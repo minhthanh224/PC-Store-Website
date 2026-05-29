@@ -18,6 +18,16 @@
           <h1>Danh mục</h1>
           <p class="page-subtitle">Quản lý cấu trúc danh mục sản phẩm theo cha-con.</p>
         </div>
+        <form id="categoryFilterForm" class="admin-filter-bar">
+          <input id="categoryKeyword" type="search" placeholder="Tìm tên hoặc slug danh mục">
+          <select id="categoryFilterStatus">
+            <option value="">Tất cả trạng thái</option>
+            <option value="active">Đang hoạt động</option>
+            <option value="inactive">Ngừng hoạt động</option>
+          </select>
+          <button class="btn btn-dark" type="submit">Lọc</button>
+          <button id="refreshCategoriesBtn" class="btn btn-light" type="button">Làm mới</button>
+        </form>
         <form id="categoryForm" class="admin-panel admin-inline-form">
           <input id="categoryId" type="hidden">
           <label>Danh mục cha<select id="categoryParent"></select></label>
@@ -29,7 +39,7 @@
             <option value="inactive">Ngừng hoạt động</option>
           </select></label>
           <button class="btn btn-primary" type="submit">Lưu</button>
-          <button id="resetCategoryFormBtn" class="btn btn-light" type="button">Làm mới</button>
+          <button id="resetCategoryFormBtn" class="btn btn-light" type="button">Hủy sửa</button>
         </form>
         <div id="categoryMessage"></div>
         <div id="categoryTable" class="admin-table-wrap loading-box">Đang tải danh mục...</div>

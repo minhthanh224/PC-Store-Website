@@ -8,6 +8,11 @@ async function initCategories() {
 
   renderAdminLayout("categories", user);
   document.getElementById("categoryForm").addEventListener("submit", saveCategory);
+  document.getElementById("categoryFilterForm").addEventListener("submit", function (event) {
+    event.preventDefault();
+    renderFilteredCategories();
+  });
+  document.getElementById("refreshCategoriesBtn").addEventListener("click", refreshCategoryList);
   document.getElementById("resetCategoryFormBtn").addEventListener("click", resetCategoryForm);
   await loadCategories();
 }
@@ -20,11 +25,38 @@ async function loadCategories() {
     adminCategories = response.data || [];
     renderCategoryParentOptions();
     container.className = "admin-table-wrap";
-    container.innerHTML = renderCategoryTable(adminCategories);
+    container.innerHTML = renderCategoryTable(getFilteredCategories());
     bindCategoryActions();
   } catch (error) {
     container.innerHTML = renderError(error.message);
   }
+}
+
+function getFilteredCategories() {
+  const keyword = document.getElementById("categoryKeyword").value.trim().toLowerCase();
+  const status = document.getElementById("categoryFilterStatus").value;
+
+  return adminCategories.filter(function (category) {
+    const keywordMatched = !keyword
+      || String(category.name || "").toLowerCase().includes(keyword)
+      || String(category.slug || "").toLowerCase().includes(keyword);
+    const statusMatched = !status || category.status === status;
+
+    return keywordMatched && statusMatched;
+  });
+}
+
+function renderFilteredCategories() {
+  const container = document.getElementById("categoryTable");
+  container.className = "admin-table-wrap";
+  container.innerHTML = renderCategoryTable(getFilteredCategories());
+  bindCategoryActions();
+}
+
+async function refreshCategoryList() {
+  document.getElementById("categoryKeyword").value = "";
+  document.getElementById("categoryFilterStatus").value = "";
+  await loadCategories();
 }
 
 function renderCategoryParentOptions() {
@@ -41,6 +73,10 @@ function getParentName(parentId) {
 }
 
 function renderCategoryTable(categories) {
+  if (!categories.length) {
+    return renderEmpty("Chưa có danh mục phù hợp.");
+  }
+
   return `
     <table class="admin-table">
       <thead><tr><th>ID</th><th>Tên</th><th>Cha</th><th>Slug</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>

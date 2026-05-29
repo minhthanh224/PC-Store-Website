@@ -19,28 +19,116 @@
             <h1>Quản lý sản phẩm</h1>
             <p class="page-subtitle">Quản lý sản phẩm, giá bán, trạng thái kinh doanh và tồn kho.</p>
           </div>
-          <a class="btn btn-primary" href="product-form.html">Thêm sản phẩm</a>
         </div>
-        <form id="productFilterForm" class="admin-filter-bar">
-          <input id="productKeyword" type="search" placeholder="Tìm tên, SKU, slug">
-          <select id="productStatus">
-            <option value="">Tất cả trạng thái</option>
-            <option value="active">Đang bán</option>
-            <option value="inactive">Ngừng bán</option>
-          </select>
-          <select id="productType">
-            <option value="">Tất cả loại</option>
-            <option value="pc_build">PC build</option>
-            <option value="laptop">Laptop</option>
-            <option value="component">Linh kiện</option>
-            <option value="monitor">Màn hình</option>
-            <option value="accessory">Phụ kiện</option>
-            <option value="service">Dịch vụ</option>
-          </select>
-          <button class="btn btn-dark" type="submit">Lọc</button>
-        </form>
-        <div id="productTable" class="admin-table-wrap loading-box">Đang tải sản phẩm...</div>
-        <div id="productPagination" class="pagination"></div>
+
+        <div id="productsAdminTabs" class="admin-order-tabs products-admin-tabs" role="tablist" aria-label="Quản lý sản phẩm">
+          <button class="active" type="button" data-product-tab="list" role="tab" aria-selected="true">Danh sách sản phẩm</button>
+          <button type="button" data-product-tab="create" role="tab" aria-selected="false">Thêm sản phẩm</button>
+        </div>
+
+        <section id="productListPanel" class="product-tab-panel product-list-panel" data-product-panel="list">
+          <form id="productFilterForm" class="admin-filter-bar">
+            <input id="productKeyword" type="search" placeholder="Tìm tên, SKU, slug">
+            <select id="productStatus">
+              <option value="">Tất cả trạng thái</option>
+              <option value="active">Đang bán</option>
+              <option value="inactive">Ngừng bán</option>
+            </select>
+            <select id="productType">
+              <option value="">Tất cả loại</option>
+              <option value="pc_build">PC build</option>
+              <option value="laptop">Laptop</option>
+              <option value="component">Linh kiện</option>
+              <option value="monitor">Màn hình</option>
+              <option value="accessory">Phụ kiện</option>
+              <option value="service">Dịch vụ</option>
+            </select>
+            <button class="btn btn-dark" type="submit">Lọc</button>
+            <button id="resetProductFilterBtn" class="btn btn-light" type="button">Làm mới</button>
+          </form>
+          <div id="productTable" class="admin-table-wrap loading-box">Đang tải sản phẩm...</div>
+          <div id="productPagination" class="pagination"></div>
+        </section>
+
+        <section id="productCreatePanel" class="product-tab-panel product-create-panel" data-product-panel="create" hidden>
+          <div class="product-create-options">
+            <article class="product-create-option-card product-create-card">
+              <span class="product-create-option-icon" aria-hidden="true">+</span>
+              <div>
+                <h2>Thêm thủ công</h2>
+                <p>Tạo một sản phẩm mới bằng form quản trị.</p>
+              </div>
+              <a class="btn btn-primary" href="product-form.html">Thêm sản phẩm thủ công</a>
+            </article>
+            <article class="product-create-option-card product-create-card">
+              <span class="product-create-option-icon" aria-hidden="true">ZIP</span>
+              <div>
+                <h2>Import hàng loạt</h2>
+                <p>Upload file .zip chứa products.csv, product_images.csv, product_specs.csv và thư mục images/.</p>
+              </div>
+              <button id="focusProductImportBtn" class="btn btn-outline" type="button">Đi tới import</button>
+            </article>
+          </div>
+
+          <section id="productImportPanel" class="admin-import-card product-import-section">
+            <div class="admin-import-header">
+              <div>
+                <h2>Import sản phẩm hàng loạt</h2>
+                <p>Tải lên file .zip chứa products.csv, product_images.csv, product_specs.csv và thư mục images/.</p>
+              </div>
+              <span class="admin-import-badge">Phase 1</span>
+            </div>
+
+            <div class="import-step-list" aria-label="Quy trình import">
+              <div class="import-step-item">
+                <span>1</span>
+                <strong>Chọn file ZIP</strong>
+              </div>
+              <div class="import-step-item">
+                <span>2</span>
+                <strong>Kiểm tra dữ liệu</strong>
+              </div>
+              <div class="import-step-item">
+                <span>3</span>
+                <strong>Xác nhận import</strong>
+              </div>
+            </div>
+
+            <div class="admin-import-body product-import-layout">
+              <div class="import-upload-column product-import-upload-column">
+                <input id="productImportFile" class="import-file-input" type="file" accept=".zip,application/zip">
+                <label id="productImportUploadBox" class="import-upload-box" for="productImportFile" tabindex="-1">
+                  <span class="import-upload-icon" aria-hidden="true">ZIP</span>
+                  <span class="import-upload-main">Chọn file import .zip</span>
+                  <span class="import-upload-sub">Hỗ trợ file .zip chứa CSV và thư mục images</span>
+                  <span class="import-upload-button">Chọn file</span>
+                </label>
+                <div id="productImportFileMeta" class="import-file-meta">Chưa chọn file import.</div>
+              </div>
+
+              <aside class="import-required-files product-import-info-column">
+                <h3>Cấu trúc bắt buộc</h3>
+                <div class="import-required-list">
+                  <span>products.csv</span>
+                  <span>product_images.csv</span>
+                  <span>product_specs.csv</span>
+                  <span>images/</span>
+                </div>
+                <p>Các file nâng cao như promotions.csv, bundle_offers.csv sẽ được bỏ qua nếu phase hiện tại chưa hỗ trợ.</p>
+              </aside>
+            </div>
+
+            <div id="productImportMessage"></div>
+
+            <div class="import-actions">
+              <button id="previewProductImportBtn" class="btn btn-dark" type="button">Kiểm tra dữ liệu</button>
+              <button id="commitProductImportBtn" class="btn btn-primary" type="button" disabled>Xác nhận import</button>
+              <button id="viewProductListAfterImportBtn" class="btn btn-light" type="button" hidden>Xem danh sách sản phẩm</button>
+            </div>
+
+            <div id="productImportPreview" class="admin-import-preview"></div>
+          </section>
+        </section>
       </section>
     </main>
   </div>

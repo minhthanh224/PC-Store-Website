@@ -18,9 +18,29 @@
           <h1>Kho Serial</h1>
           <p class="page-subtitle">Theo dõi serial, tồn kho, hàng đã bán, bảo hành và hàng trả về.</p>
         </div>
-        <div id="inventorySummary" class="admin-table-wrap loading-box">Đang tải tồn kho...</div>
+        <div id="inventoryTabs" class="admin-order-tabs admin-inventory-tabs" role="tablist">
+          <button class="active" type="button" data-tab="overview">Tổng quan kho</button>
+          <button type="button" data-tab="add">Thêm Serial</button>
+          <button type="button" data-tab="serials">Danh sách Serial</button>
+        </div>
 
-        <section class="admin-panel">
+        <section id="inventoryOverviewPanel" class="admin-tab-panel" data-tab-panel="overview">
+          <form id="inventorySummaryFilterForm" class="admin-filter-bar">
+            <input id="inventorySummaryKeyword" type="search" placeholder="Tìm sản phẩm hoặc SKU">
+            <select id="inventorySummaryStatus">
+              <option value="">Tất cả tồn kho</option>
+              <option value="low_stock">Tồn thấp</option>
+              <option value="in_stock">Còn hàng</option>
+              <option value="out_stock">Hết hàng</option>
+              <option value="requires_serial">Có quản lý Serial</option>
+            </select>
+            <button class="btn btn-dark" type="submit">Lọc</button>
+            <button id="resetInventorySummaryFilterBtn" class="btn btn-light" type="button">Làm mới</button>
+          </form>
+          <div id="inventorySummary" class="admin-table-wrap loading-box">Đang tải tồn kho...</div>
+        </section>
+
+        <section id="inventoryAddPanel" class="admin-panel admin-tab-panel" data-tab-panel="add" hidden>
           <h2>Thêm Serial</h2>
           <form id="serialForm" class="admin-inline-form">
             <label>Sản phẩm<select id="serialProduct" required></select></label>
@@ -32,7 +52,7 @@
           <div id="serialMessage"></div>
         </section>
 
-        <section class="admin-panel">
+        <section id="inventorySerialsPanel" class="admin-panel admin-tab-panel" data-tab-panel="serials" hidden>
           <h2>Danh sách Serial</h2>
           <form id="serialFilterForm" class="admin-filter-bar">
             <input id="serialKeyword" type="search" placeholder="Tìm Serial, sản phẩm, SKU">

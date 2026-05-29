@@ -73,7 +73,7 @@ function renderHeader(categories) {
   if (currentUser && isStaff) {
     headerActions = `
       ${cartAction}
-      <a class="account-greeting" href="${escapeAttribute(greetingHref)}">Xin chào, ${escapeHtml(displayName)}</a>
+      <a class="account-greeting" href="${escapeAttribute(greetingHref)}" title="${escapeAttribute(displayName)}">${escapeHtml(displayName)}</a>
       <a class="header-action-btn header-admin-btn" href="${escapeAttribute(getAdminHomeUrl(currentUser))}">Quản trị</a>
       <button id="logoutBtn" class="header-action-btn header-logout-btn js-logout-btn" type="button">Đăng xuất</button>
     `;
@@ -81,7 +81,7 @@ function renderHeader(categories) {
     headerActions = `
       ${wishlistAction}
       ${cartAction}
-      <a class="account-greeting" href="${escapeAttribute(greetingHref)}">Xin chào, ${escapeHtml(displayName)}</a>
+      <a class="account-greeting" href="${escapeAttribute(greetingHref)}" title="${escapeAttribute(displayName)}">${escapeHtml(displayName)}</a>
       <button id="logoutBtn" class="header-action-btn header-logout-btn js-logout-btn" type="button">Đăng xuất</button>
     `;
   }
@@ -92,7 +92,7 @@ function renderHeader(categories) {
 
   const mobileAccountLinks = currentUser
     ? `
-      <a href="${escapeAttribute(greetingHref)}">Xin chào, ${escapeHtml(displayName)}</a>
+      <a href="${escapeAttribute(greetingHref)}">${escapeHtml(displayName)}</a>
       ${isStaff ? `<a href="${escapeAttribute(getAdminHomeUrl(currentUser))}">Quản trị</a>` : '<a href="wishlist.html">Yêu thích</a>'}
       <button class="mobile-menu-link js-logout-btn" type="button">Đăng xuất</button>
     `

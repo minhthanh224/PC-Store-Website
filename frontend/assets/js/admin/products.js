@@ -2,17 +2,84 @@
 
 document.addEventListener("DOMContentLoaded", initAdminProducts);
 
+let latestProductImportPreview = null;
+
 async function initAdminProducts() {
   const user = await requireAdminRole(["admin"]);
   if (!user) return;
 
   renderAdminLayout("products", user);
+  bindProductPageTabs();
   document.getElementById("productFilterForm").addEventListener("submit", function (event) {
     event.preventDefault();
     adminProductPage = 1;
     loadAdminProducts();
   });
+  document.getElementById("resetProductFilterBtn").addEventListener("click", resetProductFilters);
+  document.getElementById("productImportFile").addEventListener("change", handleProductImportFileChange);
+  document.getElementById("previewProductImportBtn").addEventListener("click", previewProductImport);
+  document.getElementById("commitProductImportBtn").addEventListener("click", commitProductImport);
+  document.getElementById("focusProductImportBtn").addEventListener("click", function () {
+    document.getElementById("productImportPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+    document.getElementById("productImportUploadBox").focus({ preventScroll: true });
+  });
+  document.getElementById("viewProductListAfterImportBtn").addEventListener("click", function () {
+    setProductTab("list");
+    loadAdminProducts();
+  });
+  updateProductImportFileMeta();
+  setProductTab("list");
   await loadAdminProducts();
+}
+
+function bindProductPageTabs() {
+  const tabs = document.getElementById("productsAdminTabs");
+  const openCreateButton = document.getElementById("openProductCreateTabBtn");
+
+  if (tabs) {
+    tabs.addEventListener("click", function (event) {
+      const button = event.target.closest("button[data-product-tab]");
+
+      if (!button) {
+        return;
+      }
+
+      setProductTab(button.dataset.productTab);
+    });
+  }
+
+  if (openCreateButton) {
+    openCreateButton.addEventListener("click", function () {
+      setProductTab("create");
+    });
+  }
+}
+
+function setProductTab(tabKey) {
+  const key = tabKey === "create" ? "create" : "list";
+  const openCreateButton = document.getElementById("openProductCreateTabBtn");
+
+  document.querySelectorAll("[data-product-tab]").forEach(function (button) {
+    const isActive = button.dataset.productTab === key;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-selected", String(isActive));
+  });
+
+  document.querySelectorAll("[data-product-panel]").forEach(function (panel) {
+    panel.hidden = panel.dataset.productPanel !== key;
+  });
+
+  if (openCreateButton) {
+    openCreateButton.hidden = key === "create";
+  }
+}
+
+function resetProductFilters() {
+  document.getElementById("productKeyword").value = "";
+  document.getElementById("productStatus").value = "";
+  document.getElementById("productType").value = "";
+  adminProductPage = 1;
+  loadAdminProducts();
 }
 
 async function loadAdminProducts() {
@@ -132,6 +199,223 @@ function renderAdminProductPagination(pagination) {
       loadAdminProducts();
     });
   });
+}
+
+function getProductImportFile() {
+  const input = document.getElementById("productImportFile");
+  return input && input.files && input.files[0] ? input.files[0] : null;
+}
+
+function getProductImportFormData() {
+  const file = getProductImportFile();
+
+  if (!file) {
+    showProductImportAlert("warning", "Vui lòng chọn file .zip để import.");
+    return null;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+  return formData;
+}
+
+function handleProductImportFileChange() {
+  latestProductImportPreview = null;
+  document.getElementById("commitProductImportBtn").disabled = true;
+  document.getElementById("viewProductListAfterImportBtn").hidden = true;
+  document.getElementById("productImportPreview").innerHTML = "";
+  document.getElementById("productImportMessage").innerHTML = "";
+  updateProductImportFileMeta();
+}
+
+function updateProductImportFileMeta() {
+  const file = getProductImportFile();
+  const meta = document.getElementById("productImportFileMeta");
+
+  if (!meta) {
+    return;
+  }
+
+  if (!file) {
+    meta.textContent = "Chưa chọn file import.";
+    meta.classList.remove("has-file");
+    return;
+  }
+
+  meta.textContent = `${file.name} - ${formatFileSize(file.size)}`;
+  meta.classList.add("has-file");
+}
+
+function formatFileSize(size) {
+  const bytes = Number(size || 0);
+
+  if (bytes >= 1024 * 1024) {
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  }
+
+  if (bytes >= 1024) {
+    return `${Math.ceil(bytes / 1024)} KB`;
+  }
+
+  return `${bytes} B`;
+}
+
+function showProductImportAlert(type, message) {
+  const container = document.getElementById("productImportMessage");
+  const labels = {
+    success: "OK",
+    error: "Lỗi",
+    warning: "Lưu ý",
+    info: "Đang xử lý"
+  };
+
+  if (!container) {
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="import-alert import-alert-${escapeAttribute(type)}">
+      <span class="import-alert-icon" aria-hidden="true">${escapeHtml(labels[type] || "Info")}</span>
+      <span>${escapeHtml(message)}</span>
+    </div>
+  `;
+}
+
+async function previewProductImport() {
+  const formData = getProductImportFormData();
+  const previewButton = document.getElementById("previewProductImportBtn");
+  const commitButton = document.getElementById("commitProductImportBtn");
+
+  if (!formData) {
+    return;
+  }
+
+  previewButton.disabled = true;
+  commitButton.disabled = true;
+  document.getElementById("viewProductListAfterImportBtn").hidden = true;
+  document.getElementById("productImportPreview").innerHTML = "";
+  showProductImportAlert("info", "Đang kiểm tra dữ liệu import...");
+
+  try {
+    const response = await adminPostFormData("/admin/import/products/preview", formData);
+    latestProductImportPreview = response.data;
+    document.getElementById("productImportPreview").innerHTML = renderProductImportPreview(response.data);
+    commitButton.disabled = !response.data.canCommit;
+    showProductImportAlert(
+      response.data.canCommit ? "success" : "error",
+      response.data.canCommit ? "Dữ liệu hợp lệ, có thể xác nhận import." : "File import còn lỗi cần xử lý."
+    );
+  } catch (error) {
+    latestProductImportPreview = error.data || null;
+    document.getElementById("productImportPreview").innerHTML = error.data ? renderProductImportPreview(error.data) : "";
+    showProductImportAlert("error", error.message);
+  } finally {
+    previewButton.disabled = false;
+  }
+}
+
+async function commitProductImport() {
+  const formData = getProductImportFormData();
+  const commitButton = document.getElementById("commitProductImportBtn");
+
+  if (!formData || !latestProductImportPreview || !latestProductImportPreview.canCommit) {
+    return;
+  }
+
+  if (!confirm("Xác nhận import sản phẩm từ file zip này?")) {
+    return;
+  }
+
+  commitButton.disabled = true;
+  showProductImportAlert("info", "Đang import sản phẩm...");
+
+  try {
+    const response = await adminPostFormData("/admin/import/products/commit", formData);
+    document.getElementById("productImportPreview").innerHTML = renderProductImportPreview(response.data);
+    showProductImportAlert("success", response.message || "Import sản phẩm thành công.");
+    document.getElementById("viewProductListAfterImportBtn").hidden = false;
+    resetProductFilters();
+  } catch (error) {
+    document.getElementById("productImportPreview").innerHTML = error.data ? renderProductImportPreview(error.data) : "";
+    showProductImportAlert("error", error.message);
+    commitButton.disabled = !(error.data && error.data.canCommit);
+  }
+}
+
+function renderProductImportPreview(data) {
+  if (!data) {
+    return "";
+  }
+
+  const errors = data.errors || [];
+  const warnings = data.warnings || [];
+  const skippedOptionalFiles = data.skippedOptionalFiles || [];
+
+  return `
+    <div class="import-preview-summary">
+      <article><span>Tổng sản phẩm</span><strong>${escapeHtml(data.totalProducts || 0)}</strong></article>
+      <article><span>Sản phẩm mới</span><strong>${escapeHtml(data.createCount || 0)}</strong></article>
+      <article><span>Cập nhật</span><strong>${escapeHtml(data.updateCount || 0)}</strong></article>
+      <article><span>Ảnh</span><strong>${escapeHtml(data.imageCount || 0)}</strong></article>
+      <article><span>Thông số</span><strong>${escapeHtml(data.specCount || 0)}</strong></article>
+      <article class="${errors.length ? "has-errors" : ""}"><span>Lỗi</span><strong>${escapeHtml(errors.length)}</strong></article>
+      <article class="${warnings.length ? "has-warnings" : ""}"><span>Cảnh báo</span><strong>${escapeHtml(warnings.length)}</strong></article>
+    </div>
+    ${renderImportSampleProducts(data.sampleProducts || [])}
+    ${renderImportIssueList("Lỗi cần sửa", errors, "error")}
+    ${renderImportIssueList("Cảnh báo", warnings, "warning")}
+    ${skippedOptionalFiles.length ? `
+      <div class="import-preview-list">
+        <h3>Optional file bị bỏ qua</h3>
+        <ul>
+          ${skippedOptionalFiles.map(function (item) {
+            return `<li><strong>${escapeHtml(item.file)}</strong>: ${escapeHtml(item.reason)}</li>`;
+          }).join("")}
+        </ul>
+      </div>
+    ` : ""}
+  `;
+}
+
+function renderImportSampleProducts(products) {
+  if (!products.length) {
+    return "";
+  }
+
+  return `
+    <div class="import-preview-list">
+      <h3>Sản phẩm mẫu trong file</h3>
+      <ul>
+        ${products.map(function (product) {
+          return `<li><strong>${escapeHtml(product.sku)}</strong> - ${escapeHtml(product.name)} (${escapeHtml(getProductTypeLabel(product.product_type))})</li>`;
+        }).join("")}
+      </ul>
+    </div>
+  `;
+}
+
+function renderImportIssueList(title, issues, type) {
+  if (!issues.length) {
+    return "";
+  }
+
+  return `
+    <div class="import-preview-list ${type === "error" ? "has-errors" : "has-warnings"}">
+      <h3>${escapeHtml(title)}</h3>
+      <ul>
+        ${issues.slice(0, 30).map(function (issue) {
+          const prefix = [
+            issue.file,
+            issue.line ? `dòng ${issue.line}` : "",
+            issue.field || ""
+          ].filter(Boolean).join(" / ");
+
+          return `<li>${prefix ? `<strong>${escapeHtml(prefix)}:</strong> ` : ""}${escapeHtml(issue.message)}</li>`;
+        }).join("")}
+      </ul>
+      ${issues.length > 30 ? `<p>Và ${escapeHtml(issues.length - 30)} mục khác.</p>` : ""}
+    </div>
+  `;
 }
 
 

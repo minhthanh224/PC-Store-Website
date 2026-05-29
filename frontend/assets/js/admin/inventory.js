@@ -7,6 +7,12 @@ async function initInventory() {
   if (!user) return;
 
   renderAdminLayout("inventory", user);
+  bindInventoryTabs();
+  document.getElementById("inventorySummaryFilterForm").addEventListener("submit", function (event) {
+    event.preventDefault();
+    renderFilteredInventorySummary();
+  });
+  document.getElementById("resetInventorySummaryFilterBtn").addEventListener("click", resetInventorySummaryFilter);
   document.getElementById("serialForm").addEventListener("submit", addSerial);
   document.getElementById("serialFilterForm").addEventListener("submit", function (event) {
     event.preventDefault();
@@ -16,6 +22,34 @@ async function initInventory() {
   await Promise.all([loadInventorySummary(), loadSerializedProductOptions(), loadSerials()]);
 }
 
+function bindInventoryTabs() {
+  const tabs = document.getElementById("inventoryTabs");
+
+  if (!tabs) {
+    return;
+  }
+
+  tabs.addEventListener("click", function (event) {
+    const button = event.target.closest("button[data-tab]");
+
+    if (!button) {
+      return;
+    }
+
+    setInventoryTab(button.dataset.tab);
+  });
+}
+
+function setInventoryTab(tabKey) {
+  document.querySelectorAll("#inventoryTabs button").forEach(function (button) {
+    button.classList.toggle("active", button.dataset.tab === tabKey);
+  });
+
+  document.querySelectorAll("[data-tab-panel]").forEach(function (panel) {
+    panel.hidden = panel.dataset.tabPanel !== tabKey;
+  });
+}
+
 async function loadInventorySummary() {
   const container = document.getElementById("inventorySummary");
 
@@ -23,13 +57,54 @@ async function loadInventorySummary() {
     const response = await adminGet("/admin/inventory/summary");
     inventoryProducts = response.data || [];
     container.className = "admin-table-wrap";
-    container.innerHTML = renderInventoryTable(inventoryProducts);
+    container.innerHTML = renderInventoryTable(getFilteredInventoryProducts());
   } catch (error) {
     container.innerHTML = renderError(error.message);
   }
 }
 
+function getFilteredInventoryProducts() {
+  const keyword = document.getElementById("inventorySummaryKeyword").value.trim().toLowerCase();
+  const status = document.getElementById("inventorySummaryStatus").value;
+
+  return inventoryProducts.filter(function (product) {
+    const availableStock = Number(product.available_stock !== undefined ? product.available_stock : (product.requires_serial ? product.serial_in_stock : product.normal_stock_quantity));
+    const keywordMatched = !keyword
+      || String(product.product_name || "").toLowerCase().includes(keyword)
+      || String(product.sku || "").toLowerCase().includes(keyword);
+    let statusMatched = true;
+
+    if (status === "low_stock") {
+      statusMatched = Boolean(product.low_stock_warning);
+    } else if (status === "in_stock") {
+      statusMatched = availableStock > 0;
+    } else if (status === "out_stock") {
+      statusMatched = availableStock <= 0;
+    } else if (status === "requires_serial") {
+      statusMatched = Boolean(product.requires_serial);
+    }
+
+    return keywordMatched && statusMatched;
+  });
+}
+
+function renderFilteredInventorySummary() {
+  const container = document.getElementById("inventorySummary");
+  container.className = "admin-table-wrap";
+  container.innerHTML = renderInventoryTable(getFilteredInventoryProducts());
+}
+
+function resetInventorySummaryFilter() {
+  document.getElementById("inventorySummaryKeyword").value = "";
+  document.getElementById("inventorySummaryStatus").value = "";
+  renderFilteredInventorySummary();
+}
+
 function renderInventoryTable(products) {
+  if (!products.length) {
+    return renderEmpty("Chưa có sản phẩm phù hợp.");
+  }
+
   return `
     <table class="admin-table">
       <thead>

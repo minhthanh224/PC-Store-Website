@@ -19,45 +19,111 @@
           <p class="page-subtitle">Theo dõi doanh thu, đơn hàng, tồn kho và bảo hành.</p>
         </div>
 
-        <form id="reportFilterForm" class="admin-filter-bar report-filter-bar">
-          <input id="reportFrom" type="date" aria-label="Từ ngày">
-          <input id="reportTo" type="date" aria-label="Đến ngày">
-          <select id="reportGroupBy">
-            <option value="day">Theo ngày</option>
-            <option value="month">Theo tháng</option>
-          </select>
-          <button class="btn btn-dark" type="submit">Xem báo cáo</button>
-        </form>
-        <div id="reportMessage"></div>
-
-        <div id="reportOverview" class="admin-card-grid loading-box">Đang tải báo cáo...</div>
-
-        <section class="admin-panel">
-          <h2>Doanh thu</h2>
-          <div id="revenueReport" class="loading-box">Đang tải doanh thu...</div>
-        </section>
-
-        <section class="admin-panel">
-          <h2>Sản phẩm bán chạy</h2>
-          <div id="bestSellingReport" class="admin-table-wrap loading-box">Đang tải sản phẩm bán chạy...</div>
-        </section>
-
-        <section class="admin-panel">
-          <h2>Báo cáo tồn kho</h2>
-          <div id="inventoryReport" class="admin-table-wrap loading-box">Đang tải tồn kho...</div>
-        </section>
-
-        <div class="admin-detail-grid">
-          <section class="admin-panel">
-            <h2>Trạng thái bảo hành</h2>
-            <div id="warrantyReport" class="admin-table-wrap loading-box">Đang tải bảo hành...</div>
-          </section>
-
-          <section class="admin-panel">
-            <h2>Trạng thái đơn hàng</h2>
-            <div id="orderReport" class="admin-table-wrap loading-box">Đang tải đơn hàng...</div>
-          </section>
+        <div id="reportsTabs" class="admin-order-tabs reports-tabs" role="tablist" aria-label="Nhóm báo cáo">
+          <button class="active" type="button" data-report-tab="overview" role="tab" aria-selected="true">Tổng quan</button>
+          <button type="button" data-report-tab="inventory" role="tab" aria-selected="false">Tồn kho</button>
+          <button type="button" data-report-tab="sales" role="tab" aria-selected="false">Bán hàng</button>
+          <button type="button" data-report-tab="operations" role="tab" aria-selected="false">Bảo hành &amp; Đơn hàng</button>
         </div>
+
+        <section id="reportsOverviewPanel" class="report-tab-panel reports-overview-panel" data-report-panel="overview">
+          <form id="reportFilterForm" class="admin-filter-bar report-filter-bar">
+            <input id="reportFrom" type="date" aria-label="Từ ngày">
+            <input id="reportTo" type="date" aria-label="Đến ngày">
+            <select id="reportGroupBy">
+              <option value="day">Theo ngày</option>
+              <option value="week">Theo tuần</option>
+              <option value="month">Theo tháng</option>
+            </select>
+            <button class="btn btn-dark" type="submit">Xem báo cáo</button>
+            <button id="reportResetButton" class="btn btn-light" type="button">Làm mới</button>
+          </form>
+          <div id="reportMessage"></div>
+
+          <div id="reportOverview" class="admin-card-grid loading-box">Đang tải báo cáo...</div>
+
+          <section class="admin-panel">
+            <h2>Doanh thu</h2>
+            <div id="revenueReport" class="loading-box">Đang tải doanh thu...</div>
+          </section>
+
+          <div class="admin-detail-grid reports-status-grid">
+            <section class="admin-panel">
+              <h2>Trạng thái bảo hành</h2>
+              <div id="warrantyReport" class="admin-table-wrap loading-box">Đang tải bảo hành...</div>
+            </section>
+
+            <section class="admin-panel">
+              <h2>Trạng thái đơn hàng</h2>
+              <div id="orderReport" class="admin-table-wrap loading-box">Đang tải đơn hàng...</div>
+            </section>
+          </div>
+        </section>
+
+        <section id="reportsInventoryPanel" class="report-tab-panel reports-inventory-panel" data-report-panel="inventory" hidden>
+          <section class="admin-panel">
+            <div class="report-section-heading">
+              <div>
+                <h2>Báo cáo tồn kho</h2>
+                <p>Theo dõi tồn khả dụng, serial và cảnh báo tồn thấp.</p>
+              </div>
+            </div>
+            <form id="inventoryReportFilterForm" class="admin-filter-bar report-inventory-filter-bar">
+              <input id="inventoryReportSearch" type="search" placeholder="Tìm tên sản phẩm hoặc SKU" aria-label="Tìm tồn kho">
+              <select id="inventoryReportType">
+                <option value="">Tất cả loại sản phẩm</option>
+                <option value="laptop">Laptop</option>
+                <option value="pc_build">PC build</option>
+                <option value="component">Linh kiện</option>
+                <option value="monitor">Màn hình</option>
+                <option value="accessory">Phụ kiện</option>
+                <option value="service">Dịch vụ</option>
+              </select>
+              <select id="inventoryReportSerial">
+                <option value="">Tất cả serial</option>
+                <option value="with_serial">Có serial</option>
+                <option value="without_serial">Không serial</option>
+              </select>
+              <select id="inventoryReportAlert">
+                <option value="">Tất cả cảnh báo</option>
+                <option value="ok">Ổn</option>
+                <option value="low_stock">Tồn thấp</option>
+                <option value="out_stock">Hết hàng</option>
+              </select>
+              <button class="btn btn-dark" type="submit">Lọc</button>
+              <button id="inventoryReportReset" class="btn btn-light" type="button">Làm mới</button>
+            </form>
+            <div id="inventoryReportSummary" class="report-filter-summary"></div>
+            <div id="inventoryReport" class="admin-table-wrap loading-box">Đang tải tồn kho...</div>
+            <div id="inventoryReportPagination" class="report-pagination"></div>
+          </section>
+        </section>
+
+        <section id="reportsSalesPanel" class="report-tab-panel reports-sales-panel" data-report-panel="sales" hidden>
+          <section class="admin-panel">
+            <h2>Doanh thu</h2>
+            <div id="salesRevenueReport" class="loading-box">Đang tải doanh thu...</div>
+          </section>
+
+          <section class="admin-panel">
+            <h2>Sản phẩm bán chạy</h2>
+            <div id="bestSellingReport" class="admin-table-wrap loading-box">Đang tải sản phẩm bán chạy...</div>
+          </section>
+        </section>
+
+        <section id="reportsOperationsPanel" class="report-tab-panel reports-operations-panel" data-report-panel="operations" hidden>
+          <div class="admin-detail-grid reports-status-grid">
+            <section class="admin-panel">
+              <h2>Trạng thái bảo hành</h2>
+              <div id="operationsWarrantyReport" class="admin-table-wrap loading-box">Đang tải bảo hành...</div>
+            </section>
+
+            <section class="admin-panel">
+              <h2>Trạng thái đơn hàng</h2>
+              <div id="operationsOrderReport" class="admin-table-wrap loading-box">Đang tải đơn hàng...</div>
+            </section>
+          </div>
+        </section>
       </section>
     </main>
   </div>
