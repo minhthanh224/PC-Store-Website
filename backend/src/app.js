@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 const morgan = require("morgan");
 const path = require("path");
 
@@ -27,10 +29,66 @@ const errorMiddleware = require("./middlewares/error.middleware");
 
 const app = express();
 const frontendPath = path.join(__dirname, "../../frontend");
+const isProduction = process.env.NODE_ENV === "production";
 
+function parseAllowedOrigins(value) {
+  return String(value || "")
+    .split(",")
+    .map(function (origin) {
+      return origin.trim();
+    })
+    .filter(Boolean);
+}
+
+const allowedCorsOrigins = parseAllowedOrigins(process.env.CORS_ORIGIN);
+const corsOptions = allowedCorsOrigins.length
+  ? {
+      origin: function (origin, callback) {
+        if (!origin || allowedCorsOrigins.includes(origin)) {
+          callback(null, true);
+          return;
+        }
+
+        const error = new Error("Nguồn truy cập không được CORS cho phép.");
+        error.statusCode = 403;
+        callback(error);
+      }
+    }
+  : isProduction
+    ? {
+        origin: false
+      }
+    : undefined;
+
+const authRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Bạn thao tác quá nhanh. Vui lòng thử lại sau."
+  }
+});
+
+const importRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: "Bạn upload import quá nhiều lần. Vui lòng thử lại sau."
+  }
+});
+
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors(process.env.CORS_ORIGIN ? { origin: process.env.CORS_ORIGIN } : undefined));
+app.use(cors(corsOptions));
 app.use(morgan("dev"));
 
 app.use("/api/health", healthRoutes);
@@ -41,6 +99,8 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/brands", brandRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/warranty", warrantyRoutes);
+app.use("/api/auth/login", authRateLimiter);
+app.use("/api/auth/register", authRateLimiter);
 app.use("/api/auth", authRoutes);
 app.use("/api/account", accountRoutes);
 app.use("/api/orders", orderRoutes);
@@ -53,7 +113,7 @@ app.use("/api/admin/dashboard", adminDashboardRoutes);
 app.use("/api/admin/orders", adminOrderRoutes);
 app.use("/api/admin/warranty-tickets", adminWarrantyRoutes);
 app.use("/api/admin/reports", adminReportRoutes);
-app.use("/api/admin/import", adminImportRoutes);
+app.use("/api/admin/import", importRateLimiter, adminImportRoutes);
 
 app.use(express.static(frontendPath));
 app.get("/", function (req, res) {

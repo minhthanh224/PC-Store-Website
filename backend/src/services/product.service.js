@@ -81,6 +81,12 @@ function normalizeRequiresSerial(value) {
   return null;
 }
 
+function createError(message, statusCode) {
+  const error = new Error(message);
+  error.statusCode = statusCode;
+  return error;
+}
+
 function getSortClause(sort) {
   if (sort === "price_asc") {
     return "ORDER BY COALESCE(p.sale_price, p.base_price) ASC, p.id DESC";
@@ -388,9 +394,7 @@ async function createProductReview(slug, userId, body) {
   const comment = body.comment ? String(body.comment).trim() : null;
 
   if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
-    const error = new Error("Vui lòng chọn đánh giá từ 1 đến 5 sao.");
-    error.statusCode = 400;
-    throw error;
+    throw createError("Vui lòng chọn đánh giá từ 1 đến 5 sao.", 400);
   }
 
   const [products] = await pool.execute(
@@ -399,9 +403,39 @@ async function createProductReview(slug, userId, body) {
   );
 
   if (products.length === 0) {
-    const error = new Error("Không tìm thấy sản phẩm đang bán.");
-    error.statusCode = 404;
-    throw error;
+    throw createError("Không tìm thấy sản phẩm đang bán.", 404);
+  }
+
+  const productId = products[0].id;
+  const [completedOrders] = await pool.execute(
+    `
+      SELECT oi.id
+      FROM order_items oi
+      INNER JOIN orders o ON o.id = oi.order_id
+      WHERE o.user_id = ?
+        AND o.status = 'completed'
+        AND oi.product_id = ?
+      LIMIT 1
+    `,
+    [userId, productId]
+  );
+
+  if (completedOrders.length === 0) {
+    throw createError("Bạn chỉ có thể đánh giá sản phẩm đã mua và đã hoàn thành đơn hàng.", 403);
+  }
+
+  const [existingReviews] = await pool.execute(
+    `
+      SELECT id
+      FROM product_reviews
+      WHERE user_id = ? AND product_id = ?
+      LIMIT 1
+    `,
+    [userId, productId]
+  );
+
+  if (existingReviews.length > 0) {
+    throw createError("Bạn đã đánh giá sản phẩm này.", 409);
   }
 
   const [result] = await pool.execute(
@@ -409,7 +443,7 @@ async function createProductReview(slug, userId, body) {
       INSERT INTO product_reviews (product_id, user_id, rating, comment, status)
       VALUES (?, ?, ?, ?, 'pending')
     `,
-    [products[0].id, userId, rating, comment]
+    [productId, userId, rating, comment]
   );
 
   return {
