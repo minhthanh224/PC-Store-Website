@@ -330,9 +330,28 @@ function getCartProductPayload(product) {
   };
 }
 
+function getCompareProductPayload(product) {
+  return {
+    id: product.id || product.product_id,
+    slug: product.slug,
+    name: product.name,
+    image: getImageUrl(product.primary_image || product.image, product),
+    fallback_image: getProductImageFallback(product),
+    price: getEffectivePrice(product),
+    base_price: product.base_price,
+    sale_price: product.sale_price,
+    brand_name: product.brand_name || (product.brand && product.brand.name) || "",
+    category_name: product.category_name || (product.category && product.category.name) || "",
+    category_slug: product.category_slug || (product.category && product.category.slug) || "",
+    product_type: product.product_type,
+    available_stock: Number(product.available_stock || 0)
+  };
+}
+
 function renderProductCard(product) {
   const detailsUrl = `product-detail.html?slug=${encodeURIComponent(product.slug)}`;
   const cartPayload = escapeAttribute(JSON.stringify(getCartProductPayload(product)));
+  const comparePayload = escapeAttribute(JSON.stringify(getCompareProductPayload(product)));
   const imageFallback = getProductImageFallback(product);
   const isService = isServiceProduct(product);
   const specs = (product.short_specs || []).slice(0, 3).map(function (spec) {
@@ -343,6 +362,16 @@ function renderProductCard(product) {
   const warrantyBadge = isService
     ? '<span class="warranty-badge">Theo dịch vụ</span>'
     : `<span class="warranty-badge">${escapeHtml(product.warranty_months)}T BH</span>`;
+  const compareAction = isService ? "" : `
+          <button
+            class="btn btn-compare js-compare-toggle"
+            type="button"
+            data-compare-product="${comparePayload}"
+            data-default-label="So sánh"
+            data-selected-label="Đã chọn"
+            aria-pressed="false"
+          >So sánh</button>
+        `;
   const actions = isService ? `
           <a class="btn btn-outline" href="${detailsUrl}">Chi tiết</a>
           <a class="btn btn-primary" href="contact.html">Liên hệ tư vấn</a>
@@ -352,6 +381,7 @@ function renderProductCard(product) {
             data-product-id="${escapeAttribute(product.id)}"
             aria-label="Thêm vào yêu thích"
           >Yêu thích</button>
+          ${compareAction}
         ` : `
           <a class="btn btn-outline" href="${detailsUrl}">Chi tiết</a>
           <button
@@ -366,6 +396,7 @@ function renderProductCard(product) {
             data-product-id="${escapeAttribute(product.id)}"
             aria-label="Thêm vào yêu thích"
           >Yêu thích</button>
+          ${compareAction}
         `;
 
   return `

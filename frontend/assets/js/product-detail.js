@@ -106,6 +106,7 @@ function renderProductDetail(product) {
     primary_image: images[0] ? images[0].image_url : product.primary_image
   };
   const cartPayload = escapeAttribute(JSON.stringify(getCartProductPayload(cartProduct)));
+  const comparePayload = escapeAttribute(JSON.stringify(getCompareProductPayload(cartProduct)));
   const isService = isServiceProduct(product);
   const quickSpecs = getQuickSpecs(product);
   const highlights = deriveProductHighlights(product, quickSpecs);
@@ -116,7 +117,7 @@ function renderProductDetail(product) {
     </section>
 
     <section class="product-info-panel product-info-panel-pro">
-      ${renderPurchaseSummary(product, cartPayload, isService)}
+      ${renderPurchaseSummary(product, cartPayload, comparePayload, isService)}
       ${renderQuickSpecs(quickSpecs)}
     </section>
 
@@ -191,7 +192,7 @@ function renderProductGallery(product, images, imageFallback) {
   `;
 }
 
-function renderPurchaseSummary(product, cartPayload, isService) {
+function renderPurchaseSummary(product, cartPayload, comparePayload, isService) {
   const isAvailable = Number(product.available_stock) > 0;
 
   return `
@@ -220,7 +221,7 @@ function renderPurchaseSummary(product, cartPayload, isService) {
     </dl>
 
     <div class="detail-actions detail-actions-pro">
-      ${renderDetailActions(product, cartPayload, isService, isAvailable)}
+      ${renderDetailActions(product, cartPayload, comparePayload, isService, isAvailable)}
     </div>
 
     ${isService ? `
@@ -278,7 +279,7 @@ function renderPurchaseMeta(product, isService) {
   }).join("");
 }
 
-function renderDetailActions(product, cartPayload, isService, isAvailable) {
+function renderDetailActions(product, cartPayload, comparePayload, isService, isAvailable) {
   if (isService) {
     return `
       <a class="btn btn-primary" href="contact.html">Liên hệ tư vấn</a>
@@ -310,6 +311,14 @@ function renderDetailActions(product, cartPayload, isService, isAvailable) {
       type="button"
       data-product-id="${escapeAttribute(product.id)}"
     >Yêu thích</button>
+    <button
+      class="btn btn-compare js-compare-toggle"
+      type="button"
+      data-compare-product="${comparePayload}"
+      data-default-label="So sánh cấu hình"
+      data-selected-label="Đã chọn so sánh"
+      aria-pressed="false"
+    >So sánh cấu hình</button>
     <a class="btn btn-light" href="products.html">Tiếp tục mua</a>
   `;
 }
