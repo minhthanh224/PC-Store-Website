@@ -52,6 +52,12 @@ function bindReportFilters() {
   const reportResetButton = document.getElementById("reportResetButton");
   const inventoryFilterForm = document.getElementById("inventoryReportFilterForm");
   const inventoryResetButton = document.getElementById("inventoryReportReset");
+  const exportRevenueButton = document.getElementById("exportRevenueReportBtn");
+  const exportSalesRevenueButton = document.getElementById("exportSalesRevenueReportBtn");
+  const exportInventoryButton = document.getElementById("exportInventoryReportBtn");
+  const exportBestSellingButton = document.getElementById("exportBestSellingReportBtn");
+  const exportWarrantyButton = document.getElementById("exportWarrantyReportBtn");
+  const exportOrderStatusButton = document.getElementById("exportOrderStatusReportBtn");
 
   if (reportFilterForm) {
     reportFilterForm.addEventListener("submit", function (event) {
@@ -86,6 +92,56 @@ function bindReportFilters() {
       inventoryReportState.page = 1;
       renderInventoryTable();
     });
+  }
+
+  if (exportRevenueButton) {
+    exportRevenueButton.addEventListener("click", function () {
+      exportReportCsv("revenue");
+    });
+  }
+
+  if (exportSalesRevenueButton) {
+    exportSalesRevenueButton.addEventListener("click", function () {
+      exportReportCsv("revenue");
+    });
+  }
+
+  if (exportInventoryButton) {
+    exportInventoryButton.addEventListener("click", function () {
+      exportReportCsv("inventory");
+    });
+  }
+
+  if (exportBestSellingButton) {
+    exportBestSellingButton.addEventListener("click", function () {
+      exportReportCsv("best-selling");
+    });
+  }
+
+  if (exportWarrantyButton) {
+    exportWarrantyButton.addEventListener("click", function () {
+      exportReportCsv("warranty");
+    });
+  }
+
+  if (exportOrderStatusButton) {
+    exportOrderStatusButton.addEventListener("click", function () {
+      exportReportCsv("orders");
+    });
+  }
+}
+
+async function exportReportCsv(type) {
+  const query = buildQueryString({
+    from: document.getElementById("reportFrom").value,
+    to: document.getElementById("reportTo").value,
+    groupBy: document.getElementById("reportGroupBy").value
+  });
+
+  try {
+    await adminDownloadFile(`/admin/reports/export/${encodeURIComponent(type)}?${query}`, `aerotech-report-${type}.csv`);
+  } catch (error) {
+    showAdminMessage("reportMessage", "error", error.message || "Không thể xuất báo cáo.");
   }
 }
 

@@ -231,6 +231,71 @@ async function getOrders(query) {
   };
 }
 
+
+async function exportOrders(query) {
+  const where = ["1 = 1"];
+  const params = [];
+
+  if (query.keyword && query.keyword.trim()) {
+    const keyword = `%${query.keyword.trim()}%`;
+    where.push("(o.order_code LIKE ? OR o.customer_name LIKE ? OR o.customer_phone LIKE ? OR o.customer_email LIKE ?)");
+    params.push(keyword, keyword, keyword, keyword);
+  }
+
+  if (query.status && ORDER_STATUSES.includes(query.status)) {
+    where.push("o.status = ?");
+    params.push(query.status);
+  }
+
+  if (query.paymentMethod && PAYMENT_METHODS.includes(query.paymentMethod)) {
+    where.push("o.payment_method = ?");
+    params.push(query.paymentMethod);
+  }
+
+  const whereSql = where.join(" AND ");
+  const [orders] = await pool.execute(
+    `
+      SELECT
+        o.id,
+        o.order_code,
+        o.customer_name,
+        o.customer_phone,
+        o.customer_email,
+        o.payment_method,
+        o.payment_status,
+        o.status,
+        o.subtotal_amount,
+        o.shipping_fee,
+        o.discount_amount,
+        o.promotion_code_snapshot,
+        o.promotion_title_snapshot,
+        o.total_amount,
+        o.created_at,
+        o.updated_at,
+        COALESCE(SUM(oi.quantity), 0) AS item_count,
+        COALESCE(SUM(CASE WHEN oi.is_bundle_addon = 1 THEN oi.quantity ELSE 0 END), 0) AS bundle_item_count,
+        COALESCE(SUM(CASE WHEN oi.warranty_package_id IS NOT NULL THEN oi.quantity ELSE 0 END), 0) AS warranty_package_item_count,
+        COALESCE(SUM(CASE WHEN p.requires_serial = 1 THEN oi.quantity ELSE 0 END), 0) AS serialized_item_count,
+        COALESCE(SUM(CASE WHEN oi.serial_number_id IS NOT NULL THEN 1 ELSE 0 END), 0) AS assigned_serial_count
+      FROM orders o
+      LEFT JOIN order_items oi ON oi.order_id = o.id
+      LEFT JOIN products p ON p.id = oi.product_id
+      WHERE ${whereSql}
+      GROUP BY o.id
+      ORDER BY o.created_at DESC, o.id DESC
+    `,
+    params
+  );
+
+  return orders.map(normalizeOrder).map(function (order) {
+    return {
+      ...order,
+      bundle_item_count: Number(order.bundle_item_count || 0),
+      warranty_package_item_count: Number(order.warranty_package_item_count || 0)
+    };
+  });
+}
+
 async function getOrderDetail(orderCode) {
   const [orders] = await pool.execute(
     `
@@ -842,6 +907,7 @@ async function addInternalNote(orderCode, actor, body) {
 
 module.exports = {
   getOrders,
+  exportOrders,
   getOrderDetail,
   updateOrderStatus,
   assignSerial,

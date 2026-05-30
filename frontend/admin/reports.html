@@ -37,6 +37,7 @@
             </select>
             <button class="btn btn-dark" type="submit">Xem báo cáo</button>
             <button id="reportResetButton" class="btn btn-light" type="button">Làm mới</button>
+            <button id="exportRevenueReportBtn" class="btn btn-outline" type="button">Xuất doanh thu CSV</button>
           </form>
           <div id="reportMessage"></div>
 
@@ -67,6 +68,7 @@
                 <h2>Báo cáo tồn kho</h2>
                 <p>Theo dõi tồn khả dụng, serial và cảnh báo tồn thấp.</p>
               </div>
+              <button id="exportInventoryReportBtn" class="btn btn-outline" type="button">Xuất CSV</button>
             </div>
             <form id="inventoryReportFilterForm" class="admin-filter-bar report-inventory-filter-bar">
               <input id="inventoryReportSearch" type="search" placeholder="Tìm tên sản phẩm hoặc SKU" aria-label="Tìm tồn kho">
@@ -101,12 +103,18 @@
 
         <section id="reportsSalesPanel" class="report-tab-panel reports-sales-panel" data-report-panel="sales" hidden>
           <section class="admin-panel">
-            <h2>Doanh thu</h2>
+            <div class="report-section-heading">
+              <h2>Doanh thu</h2>
+              <button id="exportSalesRevenueReportBtn" class="btn btn-outline" type="button">Xuất CSV</button>
+            </div>
             <div id="salesRevenueReport" class="loading-box">Đang tải doanh thu...</div>
           </section>
 
           <section class="admin-panel">
-            <h2>Sản phẩm bán chạy</h2>
+            <div class="report-section-heading">
+              <h2>Sản phẩm bán chạy</h2>
+              <button id="exportBestSellingReportBtn" class="btn btn-outline" type="button">Xuất CSV</button>
+            </div>
             <div id="bestSellingReport" class="admin-table-wrap loading-box">Đang tải sản phẩm bán chạy...</div>
           </section>
         </section>
@@ -114,12 +122,18 @@
         <section id="reportsOperationsPanel" class="report-tab-panel reports-operations-panel" data-report-panel="operations" hidden>
           <div class="admin-detail-grid reports-status-grid">
             <section class="admin-panel">
-              <h2>Trạng thái bảo hành</h2>
+              <div class="report-section-heading">
+                <h2>Trạng thái bảo hành</h2>
+                <button id="exportWarrantyReportBtn" class="btn btn-outline" type="button">Xuất CSV</button>
+              </div>
               <div id="operationsWarrantyReport" class="admin-table-wrap loading-box">Đang tải bảo hành...</div>
             </section>
 
             <section class="admin-panel">
-              <h2>Trạng thái đơn hàng</h2>
+              <div class="report-section-heading">
+                <h2>Trạng thái đơn hàng</h2>
+                <button id="exportOrderStatusReportBtn" class="btn btn-outline" type="button">Xuất CSV</button>
+              </div>
               <div id="operationsOrderReport" class="admin-table-wrap loading-box">Đang tải đơn hàng...</div>
             </section>
           </div>

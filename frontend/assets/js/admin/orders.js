@@ -24,6 +24,17 @@ function bindOrderFilters() {
     loadAdminOrders();
   });
 
+  const resetButton = document.getElementById("resetOrderFilterBtn");
+  const exportButton = document.getElementById("exportOrdersBtn");
+
+  if (resetButton) {
+    resetButton.addEventListener("click", resetOrderFilters);
+  }
+
+  if (exportButton) {
+    exportButton.addEventListener("click", exportAdminOrders);
+  }
+
   document.getElementById("orderStatus").addEventListener("change", function () {
     syncOrderTabs(this.value);
   });
@@ -36,6 +47,30 @@ function bindOrderFilters() {
       loadAdminOrders();
     });
   });
+}
+
+
+function resetOrderFilters() {
+  document.getElementById("orderKeyword").value = "";
+  document.getElementById("orderStatus").value = "";
+  document.getElementById("orderPaymentMethod").value = "";
+  syncOrderTabs("");
+  adminOrderPage = 1;
+  loadAdminOrders();
+}
+
+async function exportAdminOrders() {
+  const query = buildQueryString({
+    keyword: document.getElementById("orderKeyword").value.trim(),
+    status: document.getElementById("orderStatus").value,
+    paymentMethod: document.getElementById("orderPaymentMethod").value
+  });
+
+  try {
+    await adminDownloadFile(`/admin/orders/export?${query}`, "aerotech-orders.csv");
+  } catch (error) {
+    showAdminMessage("adminOrderMessage", "error", error.message || "Không thể xuất danh sách đơn hàng.");
+  }
 }
 
 function syncOrderTabs(status) {

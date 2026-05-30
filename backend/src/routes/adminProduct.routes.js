@@ -1,6 +1,7 @@
 const express = require("express");
 const {
   getProducts,
+  exportProducts,
   getProductById,
   createProduct,
   updateProduct,
@@ -16,6 +17,7 @@ router.use(requireAuth);
 router.use(requireRoles("admin"));
 
 router.get("/", asyncHandler(getProducts));
+router.get("/export", asyncHandler(exportProducts));
 router.get("/:id", asyncHandler(getProductById));
 router.post("/", asyncHandler(createProduct));
 router.put("/:id", asyncHandler(updateProduct));

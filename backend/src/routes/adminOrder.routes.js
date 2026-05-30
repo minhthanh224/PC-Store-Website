@@ -1,6 +1,7 @@
 const express = require("express");
 const {
   getOrders,
+  exportOrders,
   getOrderDetail,
   updateOrderStatus,
   assignSerial,
@@ -16,6 +17,7 @@ const router = express.Router();
 router.use(requireAuth);
 
 router.get("/", requireRoles("admin", "sales", "technician"), asyncHandler(getOrders));
+router.get("/export", requireRoles("admin", "sales"), asyncHandler(exportOrders));
 router.get("/:orderCode", requireRoles("admin", "sales", "technician"), asyncHandler(getOrderDetail));
 router.patch("/:orderCode/status", requireRoles("admin", "sales"), asyncHandler(updateOrderStatus));
 router.post("/:orderCode/notes", requireRoles("admin", "sales", "technician"), asyncHandler(addInternalNote));

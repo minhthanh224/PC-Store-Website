@@ -16,6 +16,7 @@ async function initAdminProducts() {
     loadAdminProducts();
   });
   document.getElementById("resetProductFilterBtn").addEventListener("click", resetProductFilters);
+  document.getElementById("exportProductsBtn").addEventListener("click", exportAdminProducts);
   document.getElementById("productImportFile").addEventListener("change", handleProductImportFileChange);
   document.getElementById("previewProductImportBtn").addEventListener("click", previewProductImport);
   document.getElementById("commitProductImportBtn").addEventListener("click", commitProductImport);
@@ -76,6 +77,21 @@ function setProductTab(tabKey) {
 
   if (openCreateButton) {
     openCreateButton.hidden = key === "create";
+  }
+}
+
+
+async function exportAdminProducts() {
+  const query = buildQueryString({
+    keyword: document.getElementById("productKeyword").value.trim(),
+    status: document.getElementById("productStatus").value,
+    productType: document.getElementById("productType").value
+  });
+
+  try {
+    await adminDownloadFile(`/admin/products/export?${query}`, "aerotech-products.csv");
+  } catch (error) {
+    alert(error.message || "Không thể xuất danh sách sản phẩm.");
   }
 }
 

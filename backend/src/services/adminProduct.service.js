@@ -358,6 +358,21 @@ async function getProducts(query) {
   };
 }
 
+
+async function exportProducts(query) {
+  const { whereClause, params } = buildFilters(query);
+  const [rows] = await pool.execute(
+    `
+      ${adminProductSelect}
+      WHERE ${whereClause}
+      ORDER BY p.created_at DESC, p.id DESC
+    `,
+    params
+  );
+
+  return rows.map(formatAdminProduct);
+}
+
 async function getProductById(id) {
   const [rows] = await pool.execute(
     `${adminProductSelect} WHERE p.id = ? LIMIT 1`,
@@ -555,6 +570,7 @@ async function updateProductStatus(id, status) {
 
 module.exports = {
   getProducts,
+  exportProducts,
   getProductById,
   createProduct,
   updateProduct,

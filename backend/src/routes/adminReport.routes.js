@@ -5,7 +5,8 @@ const {
   getBestSelling,
   getInventory,
   getWarranty,
-  getOrders
+  getOrders,
+  exportReport
 } = require("../controllers/adminReport.controller");
 const { requireAuth } = require("../middlewares/auth.middleware");
 const { requireRoles } = require("../middlewares/role.middleware");
@@ -16,6 +17,7 @@ const router = express.Router();
 router.use(requireAuth);
 router.use(requireRoles("admin"));
 
+router.get("/export/:type", asyncHandler(exportReport));
 router.get("/overview", asyncHandler(getOverview));
 router.get("/revenue", asyncHandler(getRevenue));
 router.get("/best-selling", asyncHandler(getBestSelling));

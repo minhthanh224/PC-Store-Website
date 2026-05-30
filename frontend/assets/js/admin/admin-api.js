@@ -154,3 +154,52 @@ function showAdminMessage(elementId, type, message) {
 }
 
 
+
+async function adminDownloadFile(endpoint, fallbackFilename) {
+  const token = getAuthToken();
+
+  if (!token) {
+    window.location.href = `../login.html?redirect=${encodeURIComponent(getAdminRedirectPath())}`;
+    return;
+  }
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (response.status === 401) {
+    clearAuthSession();
+    window.location.href = `../login.html?redirect=${encodeURIComponent(getAdminRedirectPath())}`;
+    return;
+  }
+
+  if (!response.ok) {
+    const text = await response.text();
+    try {
+      const data = JSON.parse(text);
+      throw new Error(data.message || "Không thể tải file.");
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        throw new Error(text || "Không thể tải file.");
+      }
+      throw error;
+    }
+  }
+
+  const blob = await response.blob();
+  const disposition = response.headers.get("Content-Disposition") || "";
+  const filenameMatch = disposition.match(/filename="?([^";]+)"?/i);
+  const filename = filenameMatch ? filenameMatch[1] : fallbackFilename;
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = filename || "aerotech-export.csv";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
