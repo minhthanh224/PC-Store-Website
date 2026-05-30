@@ -321,6 +321,10 @@ function flattenCompareSpecs(product) {
 
   (product.specs || []).forEach(function (group, groupIndex) {
     (group.items || []).forEach(function (item, itemIndex) {
+      if (item.compare_enabled === false || item.compare_enabled === 0) {
+        return;
+      }
+
       const rawKey = item.key || item.spec_key || item.spec_label || "";
       const label = item.label || item.spec_label || formatCompareSpecLabel(rawKey);
       const value = formatCompareSpecValue(item);

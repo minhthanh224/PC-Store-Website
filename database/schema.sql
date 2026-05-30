@@ -147,10 +147,16 @@ CREATE TABLE product_specs (
   product_id BIGINT UNSIGNED NOT NULL,
   spec_group VARCHAR(100) NULL,
   spec_key VARCHAR(120) NOT NULL,
+  spec_label VARCHAR(160) NULL,
   spec_value VARCHAR(255) NOT NULL,
+  unit VARCHAR(40) NULL,
+  compare_enabled TINYINT(1) NOT NULL DEFAULT 1,
+  filter_enabled TINYINT(1) NOT NULL DEFAULT 0,
   sort_order INT NOT NULL DEFAULT 0,
   PRIMARY KEY (id),
   KEY idx_product_specs_product_id (product_id),
+  KEY idx_product_specs_key_value (spec_key, spec_value),
+  KEY idx_product_specs_filter (filter_enabled, spec_key),
   CONSTRAINT fk_product_specs_product
     FOREIGN KEY (product_id) REFERENCES products(id)
     ON DELETE CASCADE

@@ -1088,6 +1088,35 @@ INSERT INTO product_specs (product_id, spec_group, spec_key, spec_value, sort_or
 (187, 'Dịch vụ', 'Bao gồm', 'Vệ sinh bụi, thay keo tản nhiệt, kiểm tra nhiệt độ.', 1),
 (188, 'Dịch vụ', 'Bao gồm', 'Tư vấn linh kiện, lắp ráp, đi dây và test máy.', 1);
 
+UPDATE product_specs
+SET spec_label = spec_key
+WHERE spec_label IS NULL OR spec_label = '';
+
+UPDATE product_specs
+SET filter_enabled = 1
+WHERE LOWER(spec_key) IN (
+  'cpu',
+  'gpu',
+  'vga',
+  'ram',
+  'storage',
+  'ssd',
+  'lưu trữ',
+  'màn hình',
+  'kích thước màn hình',
+  'tần số quét',
+  'refresh_rate',
+  'display_size',
+  'panel',
+  'tấm nền',
+  'socket',
+  'nhân',
+  'luồng',
+  'vram',
+  'dung lượng',
+  'chuẩn kết nối'
+);
+
 INSERT INTO serial_numbers (id, product_id, serial_code, status, import_date, sold_date, note) VALUES
 (1, 1, 'ASU-LAP-1-SN001', 'warranty', '2026-05-10', '2026-05-18', 'Da ban, dang xu ly bao hanh tai AeroTech'),
 (2, 1, 'ASU-LAP-1-SN002', 'in_stock', '2026-05-10', NULL, 'Hang nhap kho catalog AeroTech'),

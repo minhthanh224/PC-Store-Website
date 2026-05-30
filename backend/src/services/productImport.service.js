@@ -226,6 +226,18 @@ function requireColumns(rows, fileName, columns, errors) {
   });
 }
 
+function warnMissingOptionalColumns(rows, fileName, columns, warnings) {
+  if (!rows.length) {
+    return;
+  }
+
+  columns.forEach(function (column) {
+    if (!Object.prototype.hasOwnProperty.call(rows[0], column)) {
+      warnings.push(createValidationIssue(fileName, 1, column, `Thiếu cột ${column}; hệ thống sẽ dùng giá trị mặc định.`));
+    }
+  });
+}
+
 function getEntryForCsvPath(byRelativePath, filePath) {
   const normalizedPath = normalizeCsvPath(filePath);
 
@@ -528,18 +540,17 @@ function validateImages(rows, productsBySku, existingProductsBySku, byRelativePa
 
 function validateSpecs(rows, productsBySku, existingProductsBySku, errors, warnings) {
   const specs = [];
-  let warnedUnsupportedColumns = false;
 
   rows.forEach(function (row) {
     const line = row.__line;
     const sku = clean(row.sku);
     const specGroup = clean(row.spec_group);
     const specKey = clean(row.spec_key);
-    const specLabel = clean(row.spec_label);
+    const specLabel = clean(row.spec_label) || specKey;
     const specValue = clean(row.spec_value);
     const unit = clean(row.unit);
     const sortOrder = normalizeNumber(row.sort_order, 0);
-    const compareEnabled = normalizeBoolean(row.compare_enabled, false);
+    const compareEnabled = normalizeBoolean(row.compare_enabled, true);
     const filterEnabled = normalizeBoolean(row.filter_enabled, false);
     const product = productsBySku.get(sku) || existingProductsBySku.get(sku);
 
@@ -559,10 +570,6 @@ function validateSpecs(rows, productsBySku, existingProductsBySku, errors, warni
       warnings.push(createValidationIssue("product_specs.csv", line, "spec_key", "spec_key nên dùng lowercase, số, gạch ngang hoặc gạch dưới."));
     }
 
-    if (!specLabel) {
-      errors.push(createValidationIssue("product_specs.csv", line, "spec_label", "spec_label là bắt buộc."));
-    }
-
     if (!specValue) {
       errors.push(createValidationIssue("product_specs.csv", line, "spec_value", "spec_value là bắt buộc."));
     }
@@ -579,18 +586,17 @@ function validateSpecs(rows, productsBySku, existingProductsBySku, errors, warni
       errors.push(createValidationIssue("product_specs.csv", line, "filter_enabled", "filter_enabled phải là TRUE/FALSE."));
     }
 
-    if ((unit || compareEnabled || filterEnabled) && !warnedUnsupportedColumns) {
-      warnedUnsupportedColumns = true;
-      warnings.push(createValidationIssue("product_specs.csv", line, null, "Schema hiện tại chỉ lưu spec_group, spec_label/spec_key và spec_value; unit/compare/filter được đọc nhưng chưa lưu riêng trong phase 1."));
-    }
-
     specs.push({
       line,
       sku,
       spec_group: specGroup,
-      spec_key: specLabel || specKey,
-      spec_value: unit ? `${specValue} ${unit}` : specValue,
-      sort_order: sortOrder || 0
+      spec_key: specKey,
+      spec_label: specLabel,
+      spec_value: specValue,
+      unit: unit || null,
+      sort_order: sortOrder || 0,
+      compare_enabled: compareEnabled,
+      filter_enabled: filterEnabled
     });
   });
 
@@ -654,7 +660,8 @@ async function analyzeZip(zipBuffer) {
     "primary_image"
   ], errors);
   requireColumns(imageRows, "product_images.csv", ["sku", "image_path", "alt_text", "is_primary", "sort_order", "image_type"], errors);
-  requireColumns(specRows, "product_specs.csv", ["sku", "spec_group", "spec_key", "spec_label", "spec_value", "unit", "sort_order", "compare_enabled", "filter_enabled"], errors);
+  requireColumns(specRows, "product_specs.csv", ["sku", "spec_group", "spec_key", "spec_value"], errors);
+  warnMissingOptionalColumns(specRows, "product_specs.csv", ["spec_label", "unit", "sort_order", "compare_enabled", "filter_enabled"], warnings);
 
   const products = validateProducts(productRows, byRelativePath, errors, warnings);
   const productsBySku = new Map(products.filter(function (product) {
@@ -1021,10 +1028,23 @@ async function importProducts(zipBuffer) {
       for (const spec of specs) {
         await connection.execute(
           `
-            INSERT INTO product_specs (product_id, spec_group, spec_key, spec_value, sort_order)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO product_specs (
+              product_id, spec_group, spec_key, spec_label, spec_value, unit,
+              compare_enabled, filter_enabled, sort_order
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
           `,
-          [product.id, spec.spec_group, spec.spec_key, spec.spec_value, spec.sort_order]
+          [
+            product.id,
+            spec.spec_group,
+            spec.spec_key,
+            spec.spec_label,
+            spec.spec_value,
+            spec.unit,
+            spec.compare_enabled ? 1 : 0,
+            spec.filter_enabled ? 1 : 0,
+            spec.sort_order
+          ]
         );
       }
     }

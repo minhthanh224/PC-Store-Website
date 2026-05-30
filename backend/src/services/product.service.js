@@ -4,7 +4,43 @@ const { getAvailableStockExpression } = require("./stock.service");
 
 const PRODUCT_TYPES = ["pc_build", "laptop", "component", "monitor", "accessory", "service"];
 const SORT_OPTIONS = ["newest", "price_asc", "price_desc", "name_asc"];
-
+const SPEC_FILTERS = [
+  {
+    key: "cpu",
+    label: "CPU",
+    matchKeys: ["cpu", "processor", "bo_xu_ly", "bộ xử lý"]
+  },
+  {
+    key: "gpu",
+    label: "GPU",
+    matchKeys: ["gpu", "vga", "graphics", "card_do_hoa", "đồ họa"]
+  },
+  {
+    key: "ram",
+    label: "RAM",
+    matchKeys: ["ram", "memory", "bo_nho", "bộ nhớ"]
+  },
+  {
+    key: "storage",
+    label: "SSD / Lưu trữ",
+    matchKeys: ["storage", "ssd", "hdd", "luu_tru", "lưu trữ", "ổ cứng"]
+  },
+  {
+    key: "display_size",
+    label: "Màn hình",
+    matchKeys: ["display_size", "screen_size", "màn hình", "man_hinh", "display"]
+  },
+  {
+    key: "refresh_rate",
+    label: "Tần số quét",
+    matchKeys: ["refresh_rate", "tan_so_quet", "tần số quét"]
+  },
+  {
+    key: "panel",
+    label: "Tấm nền",
+    matchKeys: ["panel", "tam_nen", "tấm nền"]
+  }
+];
 const productCardSelect = `
   SELECT
     p.id,
@@ -103,6 +139,52 @@ function getSortClause(sort) {
   return "ORDER BY p.created_at DESC, p.id DESC";
 }
 
+function normalizeSpecText(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function getSpecMatchValues(filter) {
+  return filter.matchKeys.map(normalizeSpecText).filter(Boolean);
+}
+
+function buildSpecFilterCondition(filter) {
+  const matchValues = getSpecMatchValues(filter);
+  const placeholders = matchValues.map(function () {
+    return "?";
+  }).join(", ");
+
+  return {
+    clause: `
+      EXISTS (
+        SELECT 1
+        FROM product_specs ps_filter
+        WHERE ps_filter.product_id = p.id
+          AND (
+            LOWER(ps_filter.spec_key) IN (${placeholders})
+            OR LOWER(COALESCE(ps_filter.spec_label, '')) IN (${placeholders})
+          )
+          AND ps_filter.spec_value = ?
+      )
+    `,
+    params: matchValues.concat(matchValues)
+  };
+}
+
+function formatSpecValue(spec) {
+  const value = String(spec.spec_value || "").trim();
+  const unit = String(spec.unit || "").trim();
+
+  if (!value || !unit) {
+    return value;
+  }
+
+  if (value.toLowerCase().endsWith(unit.toLowerCase())) {
+    return value;
+  }
+
+  return `${value} ${unit}`;
+}
+
 function buildProductFilters(query) {
   const where = ["p.status = 'active'"];
   const params = [];
@@ -158,10 +240,93 @@ function buildProductFilters(query) {
     params.push(requiresSerial);
   }
 
+  SPEC_FILTERS.forEach(function (filter) {
+    const value = query[filter.key] ? String(query[filter.key]).trim() : "";
+
+    if (!value) {
+      return;
+    }
+
+    const condition = buildSpecFilterCondition(filter);
+    where.push(condition.clause);
+    params.push(...condition.params, value);
+  });
+
   return {
     whereClause: where.join(" AND "),
     params
   };
+}
+
+function rowMatchesSpecFilter(row, filter) {
+  const matchValues = getSpecMatchValues(filter);
+  const specKey = normalizeSpecText(row.spec_key);
+  const specLabel = normalizeSpecText(row.spec_label);
+
+  return matchValues.includes(specKey) || matchValues.includes(specLabel);
+}
+
+async function getProductFilterOptions() {
+  const allMatchValues = Array.from(new Set(SPEC_FILTERS.flatMap(getSpecMatchValues)));
+  const placeholders = allMatchValues.map(function () {
+    return "?";
+  }).join(", ");
+
+  const [rows] = await pool.execute(
+    `
+      SELECT DISTINCT
+        ps.spec_key,
+        COALESCE(NULLIF(ps.spec_label, ''), ps.spec_key) AS spec_label,
+        ps.spec_value,
+        ps.unit,
+        ps.sort_order
+      FROM product_specs ps
+      INNER JOIN products p ON p.id = ps.product_id
+      WHERE p.status = 'active'
+        AND ps.spec_value IS NOT NULL
+        AND ps.spec_value <> ''
+        AND (
+          ps.filter_enabled = 1
+          OR LOWER(ps.spec_key) IN (${placeholders})
+          OR LOWER(COALESCE(ps.spec_label, '')) IN (${placeholders})
+        )
+      ORDER BY ps.sort_order ASC, ps.spec_value ASC
+    `,
+    allMatchValues.concat(allMatchValues)
+  );
+
+  return SPEC_FILTERS.map(function (filter) {
+    const seenValues = new Set();
+    const options = rows
+      .filter(function (row) {
+        return rowMatchesSpecFilter(row, filter);
+      })
+      .map(function (row) {
+        const value = String(row.spec_value || "").trim();
+
+        if (!value || seenValues.has(value)) {
+          return null;
+        }
+
+        seenValues.add(value);
+        return {
+          value,
+          label: formatSpecValue(row)
+        };
+      })
+      .filter(Boolean)
+      .sort(function (a, b) {
+        return a.label.localeCompare(b.label, "vi", { numeric: true });
+      });
+
+    return {
+      key: filter.key,
+      label: filter.label,
+      options
+    };
+  }).filter(function (filter) {
+    return filter.options.length > 0;
+  });
 }
 
 async function attachShortSpecs(products, limit = 4) {
@@ -178,7 +343,7 @@ async function attachShortSpecs(products, limit = 4) {
 
   const [specRows] = await pool.execute(
     `
-      SELECT product_id, spec_key, spec_value
+      SELECT product_id, spec_key, COALESCE(NULLIF(spec_label, ''), spec_key) AS spec_label, spec_value, unit
       FROM product_specs
       WHERE product_id IN (${placeholders})
       ORDER BY product_id ASC, sort_order ASC, id ASC
@@ -194,7 +359,7 @@ async function attachShortSpecs(products, limit = 4) {
     }
 
     if (specsByProduct[spec.product_id].length < limit) {
-      specsByProduct[spec.product_id].push(`${spec.spec_key}: ${spec.spec_value}`);
+      specsByProduct[spec.product_id].push(`${spec.spec_label}: ${formatSpecValue(spec)}`);
     }
   });
 
@@ -283,7 +448,16 @@ async function getProductImages(productId) {
 async function getProductSpecs(productId) {
   const [rows] = await pool.execute(
     `
-      SELECT id, spec_group, spec_key, spec_value, sort_order
+      SELECT
+        id,
+        spec_group,
+        spec_key,
+        COALESCE(NULLIF(spec_label, ''), spec_key) AS spec_label,
+        spec_value,
+        unit,
+        compare_enabled,
+        filter_enabled,
+        sort_order
       FROM product_specs
       WHERE product_id = ?
       ORDER BY sort_order ASC, id ASC
@@ -310,7 +484,11 @@ async function getProductSpecs(productId) {
     group.items.push({
       id: spec.id,
       key: spec.spec_key,
+      label: spec.spec_label,
       value: spec.spec_value,
+      unit: spec.unit,
+      compare_enabled: Boolean(spec.compare_enabled),
+      filter_enabled: Boolean(spec.filter_enabled),
       sort_order: spec.sort_order
     });
   });
@@ -455,6 +633,7 @@ async function createProductReview(slug, userId, body) {
 module.exports = {
   getFeaturedProducts,
   getProducts,
+  getProductFilterOptions,
   getProductBySlug,
   getProductReviews,
   createProductReview

@@ -19,6 +19,15 @@ async function getProducts(req, res) {
   });
 }
 
+async function getProductFilterOptions(req, res) {
+  const options = await productService.getProductFilterOptions();
+
+  res.json({
+    success: true,
+    data: options
+  });
+}
+
 async function getProductBySlug(req, res) {
   const product = await productService.getProductBySlug(req.params.slug);
 
@@ -58,6 +67,7 @@ async function createProductReview(req, res) {
 module.exports = {
   getFeaturedProducts,
   getProducts,
+  getProductFilterOptions,
   getProductBySlug,
   getProductReviews,
   createProductReview

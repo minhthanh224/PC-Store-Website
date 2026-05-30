@@ -2,6 +2,7 @@ const express = require("express");
 const {
   getFeaturedProducts,
   getProducts,
+  getProductFilterOptions,
   getProductBySlug,
   getProductReviews,
   createProductReview
@@ -13,6 +14,7 @@ const asyncHandler = require("../utils/asyncHandler");
 const router = express.Router();
 
 router.get("/featured", asyncHandler(getFeaturedProducts));
+router.get("/filter-options", asyncHandler(getProductFilterOptions));
 router.get("/", asyncHandler(getProducts));
 router.get("/:slug/reviews", asyncHandler(getProductReviews));
 router.post("/:slug/reviews", requireAuth, requireRoles("customer"), asyncHandler(createProductReview));

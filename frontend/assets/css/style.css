@@ -687,6 +687,37 @@ button:disabled {
   width: 100%;
 }
 
+.spec-filter-group {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--soft);
+}
+
+.spec-filter-group[hidden] {
+  display: none;
+}
+
+.spec-filter-group legend {
+  padding: 0 6px;
+  color: var(--black);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.spec-filter-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.spec-filter-control {
+  min-width: 0;
+}
+
 .catalog-results {
   min-width: 0;
 }

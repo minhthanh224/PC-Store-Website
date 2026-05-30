@@ -1,5 +1,16 @@
 ﻿let catalogCategories = [];
 let catalogBrands = [];
+let catalogSpecFilters = [];
+
+const SPEC_FILTER_PARAM_KEYS = [
+  "cpu",
+  "gpu",
+  "ram",
+  "storage",
+  "display_size",
+  "refresh_rate",
+  "panel"
+];
 
 const CATEGORY_LABELS = {
   "laptop-gaming": "Laptop Gaming",
@@ -74,16 +85,21 @@ async function initProductsPage() {
 }
 
 async function loadFilterData() {
-  const [categoriesResponse, brandsResponse] = await Promise.all([
+  const [categoriesResponse, brandsResponse, specFiltersResponse] = await Promise.all([
     apiGet("/categories?tree=true"),
-    apiGet("/brands")
+    apiGet("/brands"),
+    apiGet("/products/filter-options").catch(function () {
+      return { data: [] };
+    })
   ]);
 
   catalogCategories = categoriesResponse.data || [];
   catalogBrands = brandsResponse.data || [];
+  catalogSpecFilters = Array.isArray(specFiltersResponse.data) ? specFiltersResponse.data : [];
 
   renderCategoryOptions();
   renderBrandOptions();
+  renderSpecFilterOptions();
   syncFiltersFromUrl();
 }
 
@@ -104,6 +120,37 @@ function renderBrandOptions() {
   }).join("");
 
   select.innerHTML = `<option value="">Tất cả thương hiệu</option>${options}`;
+}
+
+function renderSpecFilterOptions() {
+  const group = document.getElementById("specFilterGroup");
+  const grid = document.getElementById("specFilterGrid");
+  const visibleFilters = catalogSpecFilters.filter(function (filter) {
+    return filter && filter.key && Array.isArray(filter.options) && filter.options.length > 0;
+  });
+
+  if (!visibleFilters.length) {
+    group.hidden = true;
+    grid.innerHTML = "";
+    return;
+  }
+
+  group.hidden = false;
+  grid.innerHTML = visibleFilters.map(function (filter) {
+    const options = filter.options.map(function (option) {
+      return `<option value="${escapeAttribute(option.value)}">${escapeHtml(option.label || option.value)}</option>`;
+    }).join("");
+
+    return `
+      <label class="spec-filter-control">
+        ${escapeHtml(filter.label || filter.key)}
+        <select id="filterSpec_${escapeAttribute(filter.key)}" name="${escapeAttribute(filter.key)}" data-spec-filter="${escapeAttribute(filter.key)}">
+          <option value="">Tất cả</option>
+          ${options}
+        </select>
+      </label>
+    `;
+  }).join("");
 }
 
 function bindCatalogEvents() {
@@ -142,10 +189,20 @@ function syncFiltersFromUrl() {
   document.getElementById("filterMaxPrice").value = params.get("maxPrice") || "";
   document.getElementById("filterRequiresSerial").value = params.get("requiresSerial") || "";
   document.getElementById("sortSelect").value = params.get("sort") || "newest";
+
+  SPEC_FILTER_PARAM_KEYS.forEach(function (key) {
+    const select = document.getElementById(`filterSpec_${key}`);
+
+    if (!select) {
+      return;
+    }
+
+    setSelectValue(select.id, params.get(key) || "", params.get(key) || "");
+  });
 }
 
 function getFilterValues(extraValues) {
-  return {
+  const values = {
     keyword: document.getElementById("filterKeyword").value.trim(),
     category: document.getElementById("filterCategory").value,
     brand: document.getElementById("filterBrand").value,
@@ -156,6 +213,16 @@ function getFilterValues(extraValues) {
     sort: document.getElementById("sortSelect").value,
     page: extraValues && extraValues.page ? extraValues.page : new URLSearchParams(window.location.search).get("page")
   };
+
+  SPEC_FILTER_PARAM_KEYS.forEach(function (key) {
+    const select = document.getElementById(`filterSpec_${key}`);
+
+    if (select && select.value) {
+      values[key] = select.value;
+    }
+  });
+
+  return values;
 }
 
 function applyFilters(extraValues) {
@@ -280,7 +347,7 @@ function buildProductApiParams(sourceParams) {
     "sort",
     "page",
     "limit"
-  ];
+  ].concat(SPEC_FILTER_PARAM_KEYS);
 
   if (keyword) {
     apiParams.set("keyword", keyword);

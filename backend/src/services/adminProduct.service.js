@@ -79,6 +79,14 @@ function toBoolean(value) {
   return value === true || value === 1 || value === "1" || value === "true";
 }
 
+function toBooleanWithDefault(value, defaultValue) {
+  if (value === undefined || value === null || value === "") {
+    return defaultValue;
+  }
+
+  return toBoolean(value);
+}
+
 function formatAdminProduct(product) {
   return {
     ...product,
@@ -227,14 +235,21 @@ async function replaceSpecs(connection, productId, specs) {
 
     await connection.execute(
       `
-        INSERT INTO product_specs (product_id, spec_group, spec_key, spec_value, sort_order)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO product_specs (
+          product_id, spec_group, spec_key, spec_label, spec_value, unit,
+          compare_enabled, filter_enabled, sort_order
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         productId,
         spec.spec_group ? String(spec.spec_group).trim() : null,
         String(spec.spec_key).trim(),
+        spec.spec_label ? String(spec.spec_label).trim() : String(spec.spec_key).trim(),
         String(spec.spec_value).trim(),
+        spec.unit ? String(spec.unit).trim() : null,
+        toBooleanWithDefault(spec.compare_enabled, true) ? 1 : 0,
+        toBooleanWithDefault(spec.filter_enabled, false) ? 1 : 0,
         Number.isInteger(Number(spec.sort_order)) ? Number(spec.sort_order) : 0
       ]
     );
@@ -364,7 +379,16 @@ async function getProductById(id) {
   );
   const [specs] = await pool.execute(
     `
-      SELECT id, spec_group, spec_key, spec_value, sort_order
+      SELECT
+        id,
+        spec_group,
+        spec_key,
+        COALESCE(NULLIF(spec_label, ''), spec_key) AS spec_label,
+        spec_value,
+        unit,
+        compare_enabled,
+        filter_enabled,
+        sort_order
       FROM product_specs
       WHERE product_id = ?
       ORDER BY sort_order ASC, id ASC
@@ -380,7 +404,13 @@ async function getProductById(id) {
         is_primary: Boolean(image.is_primary)
       };
     }),
-    specs
+    specs: specs.map(function (spec) {
+      return {
+        ...spec,
+        compare_enabled: Boolean(spec.compare_enabled),
+        filter_enabled: Boolean(spec.filter_enabled)
+      };
+    })
   };
 }
 
