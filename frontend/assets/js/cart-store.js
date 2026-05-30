@@ -8,7 +8,8 @@ function getCartItems() {
   }
 
   try {
-    return JSON.parse(rawCart);
+    const parsed = JSON.parse(rawCart);
+    return Array.isArray(parsed) ? parsed.map(normalizeCartProduct) : [];
   } catch (error) {
     return [];
   }
@@ -31,7 +32,7 @@ function getCartCount() {
 
 function getCartSubtotal() {
   return getCartItems().reduce(function (total, item) {
-    return total + Number(item.price || 0) * Number(item.quantity || 0);
+    return total + getCartLineTotal(item);
   }, 0);
 }
 
@@ -55,6 +56,10 @@ function updateCartCount() {
 }
 
 function normalizeCartProduct(product) {
+  const warrantyPackage = product.warranty_package || {};
+  const warrantyPackageId = product.warranty_package_id || warrantyPackage.id || null;
+  const warrantyPackagePrice = Number(product.warranty_package_price || warrantyPackage.price || 0);
+
   return {
     product_id: Number(product.product_id),
     slug: product.slug,
@@ -66,8 +71,24 @@ function normalizeCartProduct(product) {
     quantity: Number(product.quantity || 1),
     requires_serial: Boolean(product.requires_serial),
     available_stock: Number(product.available_stock || 0),
-    product_type: product.product_type
+    product_type: product.product_type,
+    warranty_package_id: warrantyPackageId ? Number(warrantyPackageId) : null,
+    warranty_package_title: product.warranty_package_title || warrantyPackage.title || "",
+    warranty_package_duration_months: product.warranty_package_duration_months || warrantyPackage.duration_months || null,
+    warranty_package_price: warrantyPackagePrice
   };
+}
+
+function getCartItemKey(item) {
+  return `${Number(item.product_id)}:${item.warranty_package_id || "none"}`;
+}
+
+function getCartLineUnitPrice(item) {
+  return Number(item.price || 0) + Number(item.warranty_package_price || 0);
+}
+
+function getCartLineTotal(item) {
+  return getCartLineUnitPrice(item) * Number(item.quantity || 0);
 }
 
 function addToCart(product, quantity) {
@@ -99,7 +120,7 @@ function addToCart(product, quantity) {
 
   const items = getCartItems();
   const existingItem = items.find(function (item) {
-    return Number(item.product_id) === itemToAdd.product_id;
+    return getCartItemKey(item) === getCartItemKey(itemToAdd);
   });
 
   if (existingItem) {
@@ -133,10 +154,10 @@ function addToCart(product, quantity) {
   };
 }
 
-function updateCartItemQuantity(productId, quantity) {
+function updateCartItemQuantity(productIdOrKey, quantity) {
   const items = getCartItems();
   const item = items.find(function (cartItem) {
-    return Number(cartItem.product_id) === Number(productId);
+    return getCartItemKey(cartItem) === String(productIdOrKey) || Number(cartItem.product_id) === Number(productIdOrKey);
   });
 
   if (!item) {
@@ -148,9 +169,9 @@ function updateCartItemQuantity(productId, quantity) {
   saveCartItems(items);
 }
 
-function removeCartItem(productId) {
+function removeCartItem(productIdOrKey) {
   const nextItems = getCartItems().filter(function (item) {
-    return Number(item.product_id) !== Number(productId);
+    return getCartItemKey(item) !== String(productIdOrKey) && Number(item.product_id) !== Number(productIdOrKey);
   });
   saveCartItems(nextItems);
 }

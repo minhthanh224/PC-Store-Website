@@ -167,6 +167,8 @@ async function getTicketDetail(ticketCode) {
         c.name AS category_name,
         oi.id AS order_item_id,
         oi.warranty_months_snapshot,
+        oi.warranty_package_title,
+        oi.warranty_package_duration_months,
         o.order_code,
         o.status AS order_status,
         o.created_at AS order_created_at,
@@ -227,7 +229,9 @@ async function getTicketDetail(ticketCode) {
       status: row.order_status,
       created_at: row.order_created_at,
       customer_email: row.customer_email,
-      warranty_months: Number(row.warranty_months_snapshot || 0)
+      warranty_months: Number(row.warranty_months_snapshot || 0) + Number(row.warranty_package_duration_months || 0),
+      warranty_package_title: row.warranty_package_title,
+      warranty_package_duration_months: row.warranty_package_duration_months === null ? null : Number(row.warranty_package_duration_months)
     } : null
   };
 }
@@ -254,6 +258,7 @@ async function findCompletedOrderForSerial(connection, serialId) {
         o.created_at AS order_created_at,
         o.updated_at AS order_updated_at,
         oi.warranty_months_snapshot,
+        oi.warranty_package_duration_months,
         p.warranty_months
       FROM order_items oi
       INNER JOIN orders o ON o.id = oi.order_id

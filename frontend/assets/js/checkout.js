@@ -33,8 +33,11 @@ function renderCheckoutSummary() {
       ${items.map(function (item) {
         return `
           <div class="checkout-item">
-            <span>${escapeHtml(item.name)} x${escapeHtml(item.quantity)}</span>
-            <strong>${formatCurrency(item.price * item.quantity)}</strong>
+            <span>
+              <strong>${escapeHtml(item.name)} x${escapeHtml(item.quantity)}</strong>
+              ${renderCheckoutWarrantyPackage(item)}
+            </span>
+            <strong>${formatCurrency(getCartLineTotal(item))}</strong>
           </div>
         `;
       }).join("")}
@@ -85,7 +88,8 @@ async function submitCheckout(event) {
       items: items.map(function (item) {
         return {
           product_id: item.product_id,
-          quantity: item.quantity
+          quantity: item.quantity,
+          warranty_package_id: item.warranty_package_id || null
         };
       })
     });
@@ -95,6 +99,20 @@ async function submitCheckout(event) {
   } catch (error) {
     message.innerHTML = renderError(error.message);
   }
+}
+
+function renderCheckoutWarrantyPackage(item) {
+  if (!item.warranty_package_id) {
+    return "";
+  }
+
+  return `
+    <small class="checkout-warranty-note">
+      ${escapeHtml(item.warranty_package_title || "Gói bảo hành mở rộng")}
+      (+${escapeHtml(item.warranty_package_duration_months || 0)} tháng,
+      ${formatCurrency(item.warranty_package_price || 0)})
+    </small>
+  `;
 }
 
 

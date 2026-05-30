@@ -1504,6 +1504,31 @@ button:disabled {
   color: var(--muted);
 }
 
+.cart-warranty-note,
+.order-warranty-package,
+.checkout-warranty-note {
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.cart-warranty-note.selected,
+.order-warranty-package {
+  display: grid;
+  gap: 3px;
+  width: fit-content;
+  margin-top: 8px;
+  border: 1px solid #cfe3f7;
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: #f8fbff;
+}
+
+.cart-warranty-note strong,
+.order-warranty-package strong {
+  color: var(--color-primary-dark);
+}
+
 .quantity-control {
   display: grid;
   grid-template-columns: 36px 58px 36px;
@@ -1524,6 +1549,11 @@ button:disabled {
   display: grid;
   justify-items: end;
   gap: 8px;
+}
+
+.cart-line-total small {
+  color: var(--muted);
+  font-weight: 800;
 }
 
 .cart-summary {
@@ -1568,6 +1598,15 @@ button:disabled {
   justify-content: space-between;
   gap: 12px;
   color: var(--muted);
+}
+
+.checkout-item > span {
+  display: grid;
+  gap: 4px;
+}
+
+.checkout-item > span strong {
+  color: var(--text);
 }
 
 .order-detail-card {
@@ -9369,6 +9408,22 @@ video {
   background: #ffffff;
 }
 
+button.warranty-package-card {
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+button.warranty-package-card:hover,
+button.warranty-package-card.active {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.14);
+  transform: translateY(-1px);
+}
+
 .promotion-card-head,
 .warranty-package-head,
 .bundle-product-meta,
@@ -9446,6 +9501,34 @@ video {
   margin-top: 10px;
   color: var(--color-primary-dark);
   font-size: 1.06rem;
+}
+
+.warranty-price-summary {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  border: 1px solid #cfe3f7;
+  border-radius: 12px;
+  padding: 12px;
+  background: #ffffff;
+}
+
+.warranty-price-summary div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--color-muted);
+  font-weight: 800;
+}
+
+.warranty-price-summary strong {
+  color: var(--color-text);
+}
+
+.warranty-price-summary .total-line {
+  border-top: 1px solid var(--color-border);
+  padding-top: 8px;
+  color: var(--color-text);
 }
 
 .product-highlight-grid,

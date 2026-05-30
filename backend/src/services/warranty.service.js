@@ -49,12 +49,16 @@ function getWarrantyCoverage(row) {
   const warrantyMonthValue = row && row.warranty_months_snapshot !== null && row.warranty_months_snapshot !== undefined
     ? row.warranty_months_snapshot
     : row && row.warranty_months;
-  const warrantyMonths = Number(warrantyMonthValue || 0);
+  const baseWarrantyMonths = Number(warrantyMonthValue || 0);
+  const extendedWarrantyMonths = Number(row && row.warranty_package_duration_months || 0);
+  const warrantyMonths = baseWarrantyMonths + extendedWarrantyMonths;
   const warrantyStartDate = getWarrantyStartDate(row);
   const warrantyEndDate = warrantyStartDate ? addMonths(warrantyStartDate, warrantyMonths) : null;
 
   return {
     warrantyMonths,
+    baseWarrantyMonths,
+    extendedWarrantyMonths,
     warrantyStartDate,
     warrantyStartDateIso: toIsoDate(warrantyStartDate),
     warrantyEndDate,
@@ -122,6 +126,8 @@ async function lookupWarranty(serialCode) {
         c.name AS category_name,
         oi.id AS order_item_id,
         oi.warranty_months_snapshot,
+        oi.warranty_package_title,
+        oi.warranty_package_duration_months,
         p.warranty_months,
         o.order_code,
         o.status AS order_status,
@@ -210,6 +216,9 @@ async function lookupWarranty(serialCode) {
     purchase_date: toIsoDate(row.purchase_date),
     warranty_start_date: warrantyCoverage.warrantyStartDateIso,
     warranty_months: warrantyCoverage.warrantyMonths,
+    base_warranty_months: warrantyCoverage.baseWarrantyMonths,
+    extended_warranty_months: warrantyCoverage.extendedWarrantyMonths,
+    warranty_package_title: row.warranty_package_title,
     warranty_end_date: warrantyCoverage.warrantyEndDateIso,
     warranty_status: statusInfo.status,
     warranty_status_label: statusInfo.label,

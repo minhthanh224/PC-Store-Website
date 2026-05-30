@@ -35,6 +35,8 @@ function renderCartPage() {
 
 function renderCartItem(item) {
   const imageFallback = item.fallback_image || getProductImageFallback(item);
+  const itemKey = getCartItemKey(item);
+  const lineUnitPrice = getCartLineUnitPrice(item);
 
   return `
     <article class="cart-item">
@@ -46,18 +48,33 @@ function renderCartItem(item) {
       <div>
         <h2>${escapeHtml(item.name)}</h2>
         <p>SKU: ${escapeHtml(item.sku)}</p>
-        <p>${formatCurrency(item.price)}</p>
+        <p>Giá sản phẩm: ${formatCurrency(item.price)}</p>
+        ${renderCartWarrantyPackage(item)}
       </div>
       <div class="quantity-control">
-        <button type="button" data-action="decrease" data-id="${escapeAttribute(item.product_id)}">-</button>
-        <input type="number" min="1" max="${escapeAttribute(item.available_stock)}" value="${escapeAttribute(item.quantity)}" data-id="${escapeAttribute(item.product_id)}">
-        <button type="button" data-action="increase" data-id="${escapeAttribute(item.product_id)}">+</button>
+        <button type="button" data-action="decrease" data-id="${escapeAttribute(itemKey)}">-</button>
+        <input type="number" min="1" max="${escapeAttribute(item.available_stock)}" value="${escapeAttribute(item.quantity)}" data-id="${escapeAttribute(itemKey)}">
+        <button type="button" data-action="increase" data-id="${escapeAttribute(itemKey)}">+</button>
       </div>
       <div class="cart-line-total">
-        <strong>${formatCurrency(item.price * item.quantity)}</strong>
-        <button class="btn btn-light" type="button" data-action="remove" data-id="${escapeAttribute(item.product_id)}">Xóa</button>
+        <small>${formatCurrency(lineUnitPrice)} x ${escapeHtml(item.quantity)}</small>
+        <strong>${formatCurrency(getCartLineTotal(item))}</strong>
+        <button class="btn btn-light" type="button" data-action="remove" data-id="${escapeAttribute(itemKey)}">Xóa</button>
       </div>
     </article>
+  `;
+}
+
+function renderCartWarrantyPackage(item) {
+  if (!item.warranty_package_id) {
+    return '<p class="cart-warranty-note">Bảo hành mở rộng: Không chọn</p>';
+  }
+
+  return `
+    <div class="cart-warranty-note selected">
+      <strong>${escapeHtml(item.warranty_package_title || "Gói bảo hành mở rộng")}</strong>
+      <span>+${escapeHtml(item.warranty_package_duration_months || 0)} tháng - ${formatCurrency(item.warranty_package_price || 0)}</span>
+    </div>
   `;
 }
 
@@ -100,7 +117,7 @@ function handleCartControl(event) {
   }
 
   const item = getCartItems().find(function (cartItem) {
-    return Number(cartItem.product_id) === Number(productId);
+    return getCartItemKey(cartItem) === String(productId);
   });
 
   if (!item) {

@@ -129,6 +129,10 @@ async function getOrderByCode(req, res) {
         oi.quantity,
         oi.total_price,
         oi.warranty_months_snapshot,
+        oi.warranty_package_id,
+        oi.warranty_package_title,
+        oi.warranty_package_duration_months,
+        oi.warranty_package_price,
         oi.created_at,
         p.slug AS product_slug,
         (
@@ -162,7 +166,10 @@ async function getOrderByCode(req, res) {
         return {
           ...item,
           unit_price: Number(item.unit_price),
-          total_price: Number(item.total_price)
+          total_price: Number(item.total_price),
+          warranty_package_id: item.warranty_package_id ? Number(item.warranty_package_id) : null,
+          warranty_package_duration_months: item.warranty_package_duration_months === null ? null : Number(item.warranty_package_duration_months),
+          warranty_package_price: Number(item.warranty_package_price || 0)
         };
       })
     }

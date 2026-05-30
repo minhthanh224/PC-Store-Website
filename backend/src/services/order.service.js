@@ -13,6 +13,15 @@ function normalizeQuantity(quantity) {
   return number;
 }
 
+function normalizeWarrantyPackageId(value) {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+
+  const number = Number(value);
+  return Number.isInteger(number) && number > 0 ? number : null;
+}
+
 function generateOrderCode() {
   const now = new Date();
   const year = now.getFullYear();
@@ -56,20 +65,38 @@ function normalizeItems(items) {
   items.forEach(function (item) {
     const productId = Number(item.product_id);
     const quantity = normalizeQuantity(item.quantity);
+    const rawWarrantyPackageId = item.warranty_package_id;
+    const hasWarrantyPackageValue = rawWarrantyPackageId !== undefined && rawWarrantyPackageId !== null && rawWarrantyPackageId !== "";
+    const warrantyPackageId = normalizeWarrantyPackageId(item.warranty_package_id);
 
     if (!Number.isInteger(productId) || productId < 1 || quantity === null) {
       return;
     }
 
-    itemMap[productId] = (itemMap[productId] || 0) + quantity;
+    if (hasWarrantyPackageValue && warrantyPackageId === null) {
+      itemMap[`invalid:${productId}:${rawWarrantyPackageId}`] = {
+        product_id: productId,
+        warranty_package_id: null,
+        quantity,
+        invalid_warranty_package_id: true
+      };
+      return;
+    }
+
+    const key = `${productId}:${warrantyPackageId || "none"}`;
+
+    if (!itemMap[key]) {
+      itemMap[key] = {
+        product_id: productId,
+        warranty_package_id: warrantyPackageId,
+        quantity: 0
+      };
+    }
+
+    itemMap[key].quantity += quantity;
   });
 
-  return Object.keys(itemMap).map(function (productId) {
-    return {
-      product_id: Number(productId),
-      quantity: itemMap[productId]
-    };
-  });
+  return Object.values(itemMap);
 }
 
 async function loadProductsForOrder(connection, normalizedItems) {
@@ -113,6 +140,78 @@ async function loadProductsForOrder(connection, normalizedItems) {
   return productMap;
 }
 
+async function loadWarrantyPackagesForOrder(connection, normalizedItems) {
+  const packageItems = normalizedItems.filter(function (item) {
+    return item.warranty_package_id;
+  });
+
+  if (!packageItems.length) {
+    return {};
+  }
+
+  const productIds = Array.from(new Set(packageItems.map(function (item) {
+    return item.product_id;
+  })));
+  const packageIds = Array.from(new Set(packageItems.map(function (item) {
+    return item.warranty_package_id;
+  })));
+  const productPlaceholders = productIds.map(function () {
+    return "?";
+  }).join(", ");
+  const packagePlaceholders = packageIds.map(function () {
+    return "?";
+  }).join(", ");
+
+  const [rows] = await connection.execute(
+    `
+      SELECT
+        pwp.product_id,
+        wp.id AS warranty_package_id,
+        wp.title,
+        wp.duration_months,
+        wp.price
+      FROM product_warranty_packages pwp
+      INNER JOIN warranty_packages wp ON wp.id = pwp.warranty_package_id
+      WHERE pwp.product_id IN (${productPlaceholders})
+        AND wp.id IN (${packagePlaceholders})
+        AND wp.status = 'active'
+    `,
+    productIds.concat(packageIds)
+  );
+
+  return rows.reduce(function (map, row) {
+    map[`${row.product_id}:${row.warranty_package_id}`] = {
+      id: Number(row.warranty_package_id),
+      title: row.title,
+      duration_months: Number(row.duration_months || 0),
+      price: Number(row.price || 0)
+    };
+    return map;
+  }, {});
+}
+
+function resolveWarrantyPackageForItem(item, product, warrantyPackageMap) {
+  if (!item.warranty_package_id) {
+    return null;
+  }
+
+  if (product.product_type === "service") {
+    const error = new Error("Dịch vụ kỹ thuật không áp dụng gói bảo hành mở rộng.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const packageInfo = warrantyPackageMap[`${item.product_id}:${item.warranty_package_id}`];
+
+  if (!packageInfo) {
+    const error = new Error("Gói bảo hành đã chọn không hợp lệ hoặc không còn áp dụng cho sản phẩm.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return packageInfo;
+}
+
 async function createOrder(user, body) {
   const validationError = validateOrderBody(body);
 
@@ -130,12 +229,19 @@ async function createOrder(user, body) {
     throw error;
   }
 
+  if (normalizedItems.some(function (item) { return item.invalid_warranty_package_id; })) {
+    const error = new Error("Gói bảo hành đã chọn không hợp lệ hoặc không còn áp dụng cho sản phẩm.");
+    error.statusCode = 400;
+    throw error;
+  }
+
   const connection = await pool.getConnection();
 
   try {
     await connection.beginTransaction();
 
     const productMap = await loadProductsForOrder(connection, normalizedItems);
+    const warrantyPackageMap = await loadWarrantyPackagesForOrder(connection, normalizedItems);
     let subtotal = 0;
 
     for (const item of normalizedItems) {
@@ -154,7 +260,13 @@ async function createOrder(user, body) {
       }
 
       const unitPrice = product.sale_price || product.base_price;
-      subtotal += unitPrice * item.quantity;
+      const warrantyPackage = resolveWarrantyPackageForItem(item, product, warrantyPackageMap);
+      const warrantyPackagePrice = warrantyPackage ? warrantyPackage.price : 0;
+      item.warranty_package = warrantyPackage;
+      item.unit_price = unitPrice;
+      item.line_unit_price = unitPrice + warrantyPackagePrice;
+      item.total_price = item.line_unit_price * item.quantity;
+      subtotal += item.total_price;
     }
 
     const shippingFee = subtotal >= 3000000 ? 0 : 40000;
@@ -225,7 +337,16 @@ async function createOrder(user, body) {
 
     for (const item of normalizedItems) {
       const product = productMap[item.product_id];
-      const unitPrice = product.sale_price || product.base_price;
+      const unitPrice = item.unit_price;
+      const warrantyPackage = item.warranty_package;
+      const warrantyPackagePrice = warrantyPackage ? warrantyPackage.price : 0;
+      const lineUnitTotal = unitPrice + warrantyPackagePrice;
+      const warrantyColumns = [
+        warrantyPackage ? warrantyPackage.id : null,
+        warrantyPackage ? warrantyPackage.title : null,
+        warrantyPackage ? warrantyPackage.duration_months : null,
+        warrantyPackagePrice
+      ];
 
       if (product.requires_serial) {
         for (let count = 0; count < item.quantity; count += 1) {
@@ -240,9 +361,13 @@ async function createOrder(user, body) {
                 unit_price,
                 quantity,
                 total_price,
-                warranty_months_snapshot
+                warranty_months_snapshot,
+                warranty_package_id,
+                warranty_package_title,
+                warranty_package_duration_months,
+                warranty_package_price
               )
-              VALUES (?, ?, NULL, ?, ?, ?, 1, ?, ?)
+              VALUES (?, ?, NULL, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?)
             `,
             [
               orderId,
@@ -250,8 +375,9 @@ async function createOrder(user, body) {
               product.name,
               product.sku,
               unitPrice,
-              unitPrice,
-              product.warranty_months
+              lineUnitTotal,
+              product.warranty_months,
+              ...warrantyColumns
             ]
           );
         }
@@ -267,9 +393,13 @@ async function createOrder(user, body) {
               unit_price,
               quantity,
               total_price,
-              warranty_months_snapshot
+              warranty_months_snapshot,
+              warranty_package_id,
+              warranty_package_title,
+              warranty_package_duration_months,
+              warranty_package_price
             )
-            VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `,
           [
             orderId,
@@ -278,8 +408,9 @@ async function createOrder(user, body) {
             product.sku,
             unitPrice,
             item.quantity,
-            unitPrice * item.quantity,
-            product.warranty_months
+            item.total_price,
+            product.warranty_months,
+            ...warrantyColumns
           ]
         );
       }

@@ -96,6 +96,7 @@ function renderOrderItem(item) {
         <p>SKU: ${escapeHtml(item.sku_snapshot)}</p>
         <p>Serial: ${item.serial_code ? escapeHtml(item.serial_code) : "Chưa gán Serial"}</p>
         <p>Bảo hành: ${escapeHtml(item.warranty_months_snapshot)} tháng</p>
+        ${renderOrderItemWarrantyPackage(item)}
         ${item.serial_code ? `<a class="text-link" href="warranty-lookup.html?serial=${encodeURIComponent(item.serial_code)}">Tra cứu bảo hành</a>` : ""}
       </div>
       <div>
@@ -103,6 +104,19 @@ function renderOrderItem(item) {
         <strong>${formatCurrency(item.total_price)}</strong>
       </div>
     </article>
+  `;
+}
+
+function renderOrderItemWarrantyPackage(item) {
+  if (!item.warranty_package_id) {
+    return "";
+  }
+
+  return `
+    <div class="order-warranty-package">
+      <strong>${escapeHtml(item.warranty_package_title || "Gói bảo hành mở rộng")}</strong>
+      <span>+${escapeHtml(item.warranty_package_duration_months || 0)} tháng - ${formatCurrency(item.warranty_package_price || 0)}</span>
+    </div>
   `;
 }
 

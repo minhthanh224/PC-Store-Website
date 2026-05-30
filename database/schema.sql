@@ -362,11 +362,16 @@ CREATE TABLE order_items (
   quantity INT NOT NULL DEFAULT 1,
   total_price DECIMAL(12,2) NOT NULL DEFAULT 0.00,
   warranty_months_snapshot INT NOT NULL DEFAULT 0,
+  warranty_package_id BIGINT UNSIGNED NULL,
+  warranty_package_title VARCHAR(180) NULL,
+  warranty_package_duration_months INT NULL,
+  warranty_package_price DECIMAL(12,2) NOT NULL DEFAULT 0.00,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_order_items_order_id (order_id),
   KEY idx_order_items_product_id (product_id),
   KEY idx_order_items_serial_number_id (serial_number_id),
+  KEY idx_order_items_warranty_package_id (warranty_package_id),
   CONSTRAINT fk_order_items_order
     FOREIGN KEY (order_id) REFERENCES orders(id)
     ON DELETE RESTRICT
@@ -378,6 +383,10 @@ CREATE TABLE order_items (
   CONSTRAINT fk_order_items_serial_number
     FOREIGN KEY (serial_number_id) REFERENCES serial_numbers(id)
     ON DELETE RESTRICT
+    ON UPDATE CASCADE,
+  CONSTRAINT fk_order_items_warranty_package
+    FOREIGN KEY (warranty_package_id) REFERENCES warranty_packages(id)
+    ON DELETE SET NULL
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

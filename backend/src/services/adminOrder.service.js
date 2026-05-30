@@ -47,6 +47,9 @@ function normalizeItem(row) {
     quantity: Number(row.quantity),
     total_price: Number(row.total_price),
     warranty_months_snapshot: Number(row.warranty_months_snapshot),
+    warranty_package_id: row.warranty_package_id ? Number(row.warranty_package_id) : null,
+    warranty_package_duration_months: row.warranty_package_duration_months === null ? null : Number(row.warranty_package_duration_months),
+    warranty_package_price: Number(row.warranty_package_price || 0),
     available_serials: []
   };
 }
@@ -214,6 +217,10 @@ async function getOrderDetail(orderCode) {
         oi.quantity,
         oi.total_price,
         oi.warranty_months_snapshot,
+        oi.warranty_package_id,
+        oi.warranty_package_title,
+        oi.warranty_package_duration_months,
+        oi.warranty_package_price,
         oi.created_at,
         p.slug AS product_slug,
         p.requires_serial,

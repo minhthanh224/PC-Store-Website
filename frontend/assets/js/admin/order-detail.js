@@ -166,12 +166,18 @@ function renderAdminOrderItems(items, order) {
               <td>
                 <div class="table-product-cell">
                   <img src="${escapeAttribute(getImageUrl(item.product_image, item))}" alt="${escapeAttribute(item.product_name_snapshot)}" onerror="this.onerror=null;this.src='${escapeAttribute(imageFallback)}'">
-                  <span>${escapeHtml(item.product_name_snapshot)}</span>
+                  <span>
+                    <strong>${escapeHtml(item.product_name_snapshot)}</strong>
+                    ${renderAdminItemWarrantyPackage(item)}
+                  </span>
                 </div>
               </td>
               <td>${escapeHtml(item.sku_snapshot)}</td>
               <td>${escapeHtml(item.quantity)}</td>
-              <td>${formatCurrency(item.unit_price)}</td>
+              <td>
+                ${formatCurrency(item.unit_price)}
+                ${item.warranty_package_id ? `<p class="table-subtext">Gói BH: ${formatCurrency(item.warranty_package_price || 0)}</p>` : ""}
+              </td>
               <td>${formatCurrency(item.total_price)}</td>
               <td>${renderSerialCell(item, order)}</td>
             </tr>
@@ -179,6 +185,19 @@ function renderAdminOrderItems(items, order) {
         }).join("")}
       </tbody>
     </table>
+  `;
+}
+
+function renderAdminItemWarrantyPackage(item) {
+  if (!item.warranty_package_id) {
+    return "";
+  }
+
+  return `
+    <small class="table-subtext">
+      Bảo hành mở rộng: ${escapeHtml(item.warranty_package_title || "Gói bảo hành")}
+      (+${escapeHtml(item.warranty_package_duration_months || 0)} tháng)
+    </small>
   `;
 }
 

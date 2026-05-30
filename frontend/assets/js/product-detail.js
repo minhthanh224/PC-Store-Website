@@ -74,6 +74,7 @@ async function loadProductDetail() {
     detailContainer.className = "product-detail-layout product-detail-layout-pro";
     detailContainer.innerHTML = renderProductDetail(product);
     bindProductGallery();
+    bindWarrantyPackageSelection();
     renderRelatedProducts(product.related_products || []);
     await loadProductReviews(slug);
   } catch (error) {
@@ -510,9 +511,33 @@ function renderWarrantyPackages(packages) {
         <h3>Gói bảo hành mở rộng</h3>
       </div>
       <div class="warranty-package-grid">
+        <button
+          class="warranty-package-card warranty-package-option active"
+          type="button"
+          data-package-id=""
+          data-package-title=""
+          data-package-duration=""
+          data-package-price="0"
+          aria-pressed="true"
+        >
+          <div class="warranty-package-head">
+            <span>Mặc định</span>
+          </div>
+          <h4>Không chọn gói mở rộng</h4>
+          <p>Sử dụng thời hạn bảo hành tiêu chuẩn theo sản phẩm.</p>
+          <strong>+0đ</strong>
+        </button>
         ${visiblePackages.map(function (item) {
           return `
-            <article class="warranty-package-card">
+            <button
+              class="warranty-package-card warranty-package-option"
+              type="button"
+              data-package-id="${escapeAttribute(item.id)}"
+              data-package-title="${escapeAttribute(item.title)}"
+              data-package-duration="${escapeAttribute(item.duration_months || 0)}"
+              data-package-price="${escapeAttribute(item.price || 0)}"
+              aria-pressed="false"
+            >
               <div class="warranty-package-head">
                 <span>+${escapeHtml(item.duration_months || 0)} tháng</span>
                 ${item.package_code ? `<code>${escapeHtml(item.package_code)}</code>` : ""}
@@ -520,13 +545,100 @@ function renderWarrantyPackages(packages) {
               <h4>${escapeHtml(item.title)}</h4>
               <p>${escapeHtml(item.description || `${item.duration_months || 0} tháng bảo hành mở rộng.`)}</p>
               <strong>${formatCurrency(item.price || 0)}</strong>
-            </article>
+            </button>
           `;
         }).join("")}
       </div>
-      <p class="commerce-note">Có thể đăng ký khi mua hàng tại cửa hàng hoặc qua tư vấn viên.</p>
+      <div id="warrantyPackagePriceSummary" class="warranty-price-summary"></div>
+      <p class="commerce-note">Mỗi sản phẩm có thể chọn tối đa một gói bảo hành mở rộng.</p>
       ${packages.length > visiblePackages.length ? `<p class="commerce-note">Hiển thị ${visiblePackages.length} gói phù hợp nhất.</p>` : ""}
     </article>
+  `;
+}
+
+function bindWarrantyPackageSelection() {
+  const selector = document.querySelector(".commerce-warranty-block");
+  const optionButtons = document.querySelectorAll(".warranty-package-option");
+  const actionButtons = document.querySelectorAll(".js-add-cart, .js-buy-now");
+
+  if (!selector || !optionButtons.length || !actionButtons.length) {
+    return;
+  }
+
+  let basePayload = null;
+
+  try {
+    basePayload = JSON.parse(actionButtons[0].dataset.product || "{}");
+  } catch (error) {
+    basePayload = null;
+  }
+
+  if (!basePayload) {
+    return;
+  }
+
+  function getSelectedPackage(button) {
+    const packageId = Number(button.dataset.packageId || 0);
+
+    if (!packageId) {
+      return null;
+    }
+
+    return {
+      id: packageId,
+      title: button.dataset.packageTitle || "",
+      duration_months: Number(button.dataset.packageDuration || 0),
+      price: Number(button.dataset.packagePrice || 0)
+    };
+  }
+
+  function applyPackage(selectedPackage) {
+    const payload = {
+      ...basePayload,
+      warranty_package_id: selectedPackage ? selectedPackage.id : null,
+      warranty_package_title: selectedPackage ? selectedPackage.title : "",
+      warranty_package_duration_months: selectedPackage ? selectedPackage.duration_months : null,
+      warranty_package_price: selectedPackage ? selectedPackage.price : 0,
+      warranty_package: selectedPackage
+    };
+
+    actionButtons.forEach(function (button) {
+      button.dataset.product = JSON.stringify(payload);
+    });
+
+    renderWarrantyPriceSummary(basePayload, selectedPackage);
+  }
+
+  optionButtons.forEach(function (button) {
+    button.addEventListener("click", function () {
+      optionButtons.forEach(function (item) {
+        item.classList.remove("active");
+        item.setAttribute("aria-pressed", "false");
+      });
+
+      button.classList.add("active");
+      button.setAttribute("aria-pressed", "true");
+      applyPackage(getSelectedPackage(button));
+    });
+  });
+
+  applyPackage(null);
+}
+
+function renderWarrantyPriceSummary(productPayload, selectedPackage) {
+  const summary = document.getElementById("warrantyPackagePriceSummary");
+
+  if (!summary) {
+    return;
+  }
+
+  const productPrice = Number(productPayload.price || 0);
+  const packagePrice = selectedPackage ? Number(selectedPackage.price || 0) : 0;
+
+  summary.innerHTML = `
+    <div><span>Giá sản phẩm</span><strong>${formatCurrency(productPrice)}</strong></div>
+    <div><span>Gói bảo hành</span><strong>${packagePrice ? formatCurrency(packagePrice) : "Không chọn"}</strong></div>
+    <div class="total-line"><span>Tạm tính khi thêm vào giỏ</span><strong>${formatCurrency(productPrice + packagePrice)}</strong></div>
   `;
 }
 
