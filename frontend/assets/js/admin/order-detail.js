@@ -1,4 +1,4 @@
-﻿let adminOrderDetailUser = null;
+let adminOrderDetailUser = null;
 let adminOrderCode = "";
 
 document.addEventListener("DOMContentLoaded", initAdminOrderDetail);
@@ -168,6 +168,7 @@ function renderAdminOrderItems(items, order) {
                   <img src="${escapeAttribute(getImageUrl(item.product_image, item))}" alt="${escapeAttribute(item.product_name_snapshot)}" onerror="this.onerror=null;this.src='${escapeAttribute(imageFallback)}'">
                   <span>
                     <strong>${escapeHtml(item.product_name_snapshot)}</strong>
+                    ${renderAdminItemBundleNote(item)}
                     ${renderAdminItemWarrantyPackage(item)}
                   </span>
                 </div>
@@ -185,6 +186,22 @@ function renderAdminOrderItems(items, order) {
         }).join("")}
       </tbody>
     </table>
+  `;
+}
+
+
+function renderAdminItemBundleNote(item) {
+  if (!item.is_bundle_addon) {
+    return "";
+  }
+
+  return `
+    <small class="table-subtext bundle-subtext">
+      Mua kèm: ${escapeHtml(item.bundle_offer_title || "Ưu đãi mua kèm")}
+      ${item.bundle_parent_name_snapshot ? ` · Đi kèm ${escapeHtml(item.bundle_parent_name_snapshot)}` : ""}
+      ${item.original_unit_price ? ` · Giá gốc ${formatCurrency(item.original_unit_price)}` : ""}
+      ${item.bundle_unit_price ? ` · Giá ưu đãi ${formatCurrency(item.bundle_unit_price)}` : ""}
+    </small>
   `;
 }
 

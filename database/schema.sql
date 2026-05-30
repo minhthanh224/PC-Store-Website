@@ -366,12 +366,24 @@ CREATE TABLE order_items (
   warranty_package_title VARCHAR(180) NULL,
   warranty_package_duration_months INT NULL,
   warranty_package_price DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  is_bundle_addon TINYINT(1) NOT NULL DEFAULT 0,
+  bundle_parent_key VARCHAR(120) NULL,
+  bundle_parent_product_id BIGINT UNSIGNED NULL,
+  bundle_parent_name_snapshot VARCHAR(220) NULL,
+  bundle_offer_id BIGINT UNSIGNED NULL,
+  bundle_offer_title VARCHAR(180) NULL,
+  bundle_discount_type VARCHAR(30) NULL,
+  bundle_discount_value DECIMAL(12,2) NULL,
+  original_unit_price DECIMAL(12,2) NULL,
+  bundle_unit_price DECIMAL(12,2) NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_order_items_order_id (order_id),
   KEY idx_order_items_product_id (product_id),
   KEY idx_order_items_serial_number_id (serial_number_id),
   KEY idx_order_items_warranty_package_id (warranty_package_id),
+  KEY idx_order_items_bundle_offer_id (bundle_offer_id),
+  KEY idx_order_items_bundle_parent_product_id (bundle_parent_product_id),
   CONSTRAINT fk_order_items_order
     FOREIGN KEY (order_id) REFERENCES orders(id)
     ON DELETE RESTRICT
@@ -386,6 +398,14 @@ CREATE TABLE order_items (
     ON UPDATE CASCADE,
   CONSTRAINT fk_order_items_warranty_package
     FOREIGN KEY (warranty_package_id) REFERENCES warranty_packages(id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE,
+  CONSTRAINT fk_order_items_bundle_offer
+    FOREIGN KEY (bundle_offer_id) REFERENCES bundle_offers(id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE,
+  CONSTRAINT fk_order_items_bundle_parent_product
+    FOREIGN KEY (bundle_parent_product_id) REFERENCES products(id)
     ON DELETE SET NULL
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

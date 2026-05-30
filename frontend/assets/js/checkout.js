@@ -1,4 +1,4 @@
-﻿document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function () {
   initCheckoutPage();
 });
 
@@ -35,6 +35,7 @@ function renderCheckoutSummary() {
           <div class="checkout-item">
             <span>
               <strong>${escapeHtml(item.name)} x${escapeHtml(item.quantity)}</strong>
+              ${renderCheckoutBundleNote(item)}
               ${renderCheckoutWarrantyPackage(item)}
             </span>
             <strong>${formatCurrency(getCartLineTotal(item))}</strong>
@@ -89,7 +90,11 @@ async function submitCheckout(event) {
         return {
           product_id: item.product_id,
           quantity: item.quantity,
-          warranty_package_id: item.warranty_package_id || null
+          warranty_package_id: item.warranty_package_id || null,
+          cart_item_key: getCartItemKey(item),
+          is_bundle_addon: Boolean(item.is_bundle_addon),
+          bundle_parent_key: item.bundle_parent_key || null,
+          bundle_offer_id: item.bundle_offer_id || null
         };
       })
     });
@@ -99,6 +104,20 @@ async function submitCheckout(event) {
   } catch (error) {
     message.innerHTML = renderError(error.message);
   }
+}
+
+
+function renderCheckoutBundleNote(item) {
+  if (!item.is_bundle_addon) {
+    return "";
+  }
+
+  return `
+    <small class="checkout-bundle-note">
+      Mua kèm ưu đãi${item.bundle_parent_name ? ` với ${escapeHtml(item.bundle_parent_name)}` : ""}
+      ${item.bundle_offer_title ? ` - ${escapeHtml(item.bundle_offer_title)}` : ""}
+    </small>
+  `;
 }
 
 function renderCheckoutWarrantyPackage(item) {

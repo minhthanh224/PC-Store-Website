@@ -1,4 +1,4 @@
-﻿document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function () {
   initOrderDetailPage();
 });
 
@@ -93,6 +93,7 @@ function renderOrderItem(item) {
       >
       <div>
         <strong>${escapeHtml(item.product_name_snapshot)}</strong>
+        ${renderOrderItemBundleNote(item)}
         <p>SKU: ${escapeHtml(item.sku_snapshot)}</p>
         <p>Serial: ${item.serial_code ? escapeHtml(item.serial_code) : "Chưa gán Serial"}</p>
         <p>Bảo hành: ${escapeHtml(item.warranty_months_snapshot)} tháng</p>
@@ -104,6 +105,22 @@ function renderOrderItem(item) {
         <strong>${formatCurrency(item.total_price)}</strong>
       </div>
     </article>
+  `;
+}
+
+
+function renderOrderItemBundleNote(item) {
+  if (!item.is_bundle_addon) {
+    return "";
+  }
+
+  return `
+    <div class="order-bundle-package">
+      <strong>Mua kèm ưu đãi</strong>
+      <span>${item.bundle_parent_name_snapshot ? `Đi kèm: ${escapeHtml(item.bundle_parent_name_snapshot)}` : "Đi kèm sản phẩm chính"}</span>
+      ${item.bundle_offer_title ? `<span>${escapeHtml(item.bundle_offer_title)}</span>` : ""}
+      ${item.original_unit_price ? `<span>Giá gốc: ${formatCurrency(item.original_unit_price)} - Giá ưu đãi: ${formatCurrency(item.bundle_unit_price || item.unit_price)}</span>` : ""}
+    </div>
   `;
 }
 

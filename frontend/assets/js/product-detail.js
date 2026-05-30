@@ -406,6 +406,7 @@ function renderCommercialSections(product, isService) {
       <div class="product-commerce-grid">
         ${blocks.join("")}
       </div>
+      <div id="purchaseOptionsPriceSummary" class="warranty-price-summary purchase-options-summary"></div>
     </section>
   `;
 }
@@ -466,8 +467,21 @@ function renderBundleOffers(bundleOffers) {
         ${visibleOffers.map(function (offer) {
           const addon = offer.addon_product || {};
           const addonFallback = getProductImageFallback(addon);
+          const addonCurrentPrice = getEffectivePrice(addon);
+          const bundleUnitPrice = calculateBundleOfferUnitPrice(offer);
+          const isAvailable = Number(addon.available_stock || 0) > 0 && !isServiceProduct(addon);
+          const offerPayload = escapeAttribute(JSON.stringify(getBundleOfferCartPayload(offer)));
           return `
-            <article class="product-bundle-card">
+            <article class="product-bundle-card bundle-option-card ${isAvailable ? "" : "disabled"}">
+              <label class="bundle-option-toggle">
+                <input
+                  class="bundle-offer-option"
+                  type="checkbox"
+                  data-bundle-offer="${offerPayload}"
+                  ${isAvailable ? "" : "disabled"}
+                >
+                <span>${isAvailable ? "Chọn mua kèm" : "Tạm hết hàng"}</span>
+              </label>
               <a class="bundle-product-image" href="${addon.slug ? `product-detail.html?slug=${encodeURIComponent(addon.slug)}` : "#"}" aria-label="${escapeAttribute(addon.name || "Sản phẩm mua kèm")}">
                 <img
                   src="${escapeAttribute(getImageUrl(addon.primary_image, addon))}"
@@ -483,7 +497,8 @@ function renderBundleOffers(bundleOffers) {
                 <h4>${escapeHtml(addon.name || "Sản phẩm mua kèm")}</h4>
                 <p>${escapeHtml(offer.title || "Ưu đãi mua kèm")}</p>
                 <div class="bundle-price-row">
-                  ${addon.base_price ? `<strong>${formatCurrency(addon.sale_price || addon.base_price)}</strong>` : ""}
+                  <span class="bundle-original-price">${formatCurrency(addonCurrentPrice)}</span>
+                  <strong>${formatCurrency(bundleUnitPrice)}</strong>
                   <span>${escapeHtml(getBundlePriceText(offer))}</span>
                 </div>
               </div>
@@ -492,9 +507,64 @@ function renderBundleOffers(bundleOffers) {
           `;
         }).join("")}
       </div>
+      <p class="commerce-note">Sản phẩm mua kèm sẽ đi theo số lượng sản phẩm chính trong giỏ hàng.</p>
       ${bundleOffers.length > visibleOffers.length ? `<p class="commerce-note">Hiển thị ${visibleOffers.length} gợi ý mua kèm phù hợp nhất.</p>` : ""}
     </article>
   `;
+}
+
+function calculateBundleOfferUnitPrice(offer) {
+  const addon = offer.addon_product || {};
+  const originalPrice = getEffectivePrice(addon);
+
+  if (offer.bundle_price !== null && offer.bundle_price !== undefined) {
+    return Math.max(Number(offer.bundle_price || 0), 0);
+  }
+
+  if (offer.discount_type === "percent" && offer.discount_value) {
+    return Math.max(originalPrice * (1 - Number(offer.discount_value) / 100), 0);
+  }
+
+  if (offer.discount_type === "fixed" && offer.discount_value) {
+    return Math.max(originalPrice - Number(offer.discount_value), 0);
+  }
+
+  return originalPrice;
+}
+
+function getBundleOfferCartPayload(offer) {
+  const addon = offer.addon_product || {};
+  const originalPrice = getEffectivePrice(addon);
+  const bundleUnitPrice = calculateBundleOfferUnitPrice(offer);
+
+  return {
+    id: offer.id,
+    bundle_offer_id: offer.id,
+    title: offer.title || "Mua kèm ưu đãi",
+    discount_type: offer.discount_type || "none",
+    discount_value: offer.discount_value === null || offer.discount_value === undefined ? null : Number(offer.discount_value),
+    bundle_price: offer.bundle_price === null || offer.bundle_price === undefined ? null : Number(offer.bundle_price),
+    original_unit_price: originalPrice,
+    bundle_unit_price: bundleUnitPrice,
+    addon_product: {
+      id: addon.id,
+      product_id: addon.id,
+      slug: addon.slug,
+      name: addon.name,
+      sku: addon.sku,
+      primary_image: addon.primary_image,
+      image: addon.primary_image,
+      fallback_image: getProductImageFallback(addon),
+      price: bundleUnitPrice,
+      base_price: addon.base_price,
+      sale_price: addon.sale_price,
+      requires_serial: Boolean(addon.requires_serial),
+      available_stock: Number(addon.available_stock || 0),
+      product_type: addon.product_type,
+      brand_name: addon.brand_name,
+      category_name: addon.category_name
+    }
+  };
 }
 
 function renderWarrantyPackages(packages) {
@@ -557,15 +627,17 @@ function renderWarrantyPackages(packages) {
 }
 
 function bindWarrantyPackageSelection() {
-  const selector = document.querySelector(".commerce-warranty-block");
   const optionButtons = document.querySelectorAll(".warranty-package-option");
+  const bundleInputs = document.querySelectorAll(".bundle-offer-option");
   const actionButtons = document.querySelectorAll(".js-add-cart, .js-buy-now");
 
-  if (!selector || !optionButtons.length || !actionButtons.length) {
+  if (!actionButtons.length) {
     return;
   }
 
   let basePayload = null;
+  let selectedPackage = null;
+  let selectedBundles = [];
 
   try {
     basePayload = JSON.parse(actionButtons[0].dataset.product || "{}");
@@ -592,21 +664,30 @@ function bindWarrantyPackageSelection() {
     };
   }
 
-  function applyPackage(selectedPackage) {
+  function readBundlePayload(input) {
+    try {
+      return JSON.parse(input.dataset.bundleOffer || "{}");
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function updatePayload() {
     const payload = {
       ...basePayload,
       warranty_package_id: selectedPackage ? selectedPackage.id : null,
       warranty_package_title: selectedPackage ? selectedPackage.title : "",
       warranty_package_duration_months: selectedPackage ? selectedPackage.duration_months : null,
       warranty_package_price: selectedPackage ? selectedPackage.price : 0,
-      warranty_package: selectedPackage
+      warranty_package: selectedPackage,
+      bundle_addons: selectedBundles
     };
 
     actionButtons.forEach(function (button) {
       button.dataset.product = JSON.stringify(payload);
     });
 
-    renderWarrantyPriceSummary(basePayload, selectedPackage);
+    renderPurchaseOptionsSummary(basePayload, selectedPackage, selectedBundles);
   }
 
   optionButtons.forEach(function (button) {
@@ -618,15 +699,36 @@ function bindWarrantyPackageSelection() {
 
       button.classList.add("active");
       button.setAttribute("aria-pressed", "true");
-      applyPackage(getSelectedPackage(button));
+      selectedPackage = getSelectedPackage(button);
+      updatePayload();
     });
   });
 
-  applyPackage(null);
+  bundleInputs.forEach(function (input) {
+    input.addEventListener("change", function () {
+      const payload = readBundlePayload(input);
+
+      if (!payload) {
+        return;
+      }
+
+      const card = input.closest(".bundle-option-card");
+      if (card) {
+        card.classList.toggle("active", input.checked);
+      }
+
+      selectedBundles = Array.from(bundleInputs).filter(function (item) {
+        return item.checked;
+      }).map(readBundlePayload).filter(Boolean);
+      updatePayload();
+    });
+  });
+
+  updatePayload();
 }
 
-function renderWarrantyPriceSummary(productPayload, selectedPackage) {
-  const summary = document.getElementById("warrantyPackagePriceSummary");
+function renderPurchaseOptionsSummary(productPayload, selectedPackage, selectedBundles) {
+  const summary = document.getElementById("purchaseOptionsPriceSummary") || document.getElementById("warrantyPackagePriceSummary");
 
   if (!summary) {
     return;
@@ -634,12 +736,20 @@ function renderWarrantyPriceSummary(productPayload, selectedPackage) {
 
   const productPrice = Number(productPayload.price || 0);
   const packagePrice = selectedPackage ? Number(selectedPackage.price || 0) : 0;
+  const bundleTotal = (selectedBundles || []).reduce(function (total, offer) {
+    return total + Number(offer.bundle_unit_price || offer.bundle_price || 0);
+  }, 0);
 
   summary.innerHTML = `
-    <div><span>Giá sản phẩm</span><strong>${formatCurrency(productPrice)}</strong></div>
+    <div><span>Giá sản phẩm chính</span><strong>${formatCurrency(productPrice)}</strong></div>
     <div><span>Gói bảo hành</span><strong>${packagePrice ? formatCurrency(packagePrice) : "Không chọn"}</strong></div>
-    <div class="total-line"><span>Tạm tính khi thêm vào giỏ</span><strong>${formatCurrency(productPrice + packagePrice)}</strong></div>
+    <div><span>Mua kèm ưu đãi</span><strong>${bundleTotal ? formatCurrency(bundleTotal) : "Không chọn"}</strong></div>
+    <div class="total-line"><span>Tạm tính khi thêm vào giỏ</span><strong>${formatCurrency(productPrice + packagePrice + bundleTotal)}</strong></div>
   `;
+}
+
+function renderWarrantyPriceSummary(productPayload, selectedPackage) {
+  renderPurchaseOptionsSummary(productPayload, selectedPackage, []);
 }
 
 function renderPolicyItem(item) {

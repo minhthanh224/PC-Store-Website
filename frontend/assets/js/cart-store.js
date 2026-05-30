@@ -1,4 +1,4 @@
-﻿const CART_KEY = "se104_cart";
+const CART_KEY = "se104_cart";
 
 function getCartItems() {
   const rawCart = localStorage.getItem(CART_KEY);
@@ -59,8 +59,12 @@ function normalizeCartProduct(product) {
   const warrantyPackage = product.warranty_package || {};
   const warrantyPackageId = product.warranty_package_id || warrantyPackage.id || null;
   const warrantyPackagePrice = Number(product.warranty_package_price || warrantyPackage.price || 0);
-
-  return {
+  const isBundleAddon = Boolean(product.is_bundle_addon);
+  const bundleOffer = product.bundle_offer || {};
+  const parentKey = product.bundle_parent_key || "";
+  const bundleOfferId = product.bundle_offer_id || bundleOffer.id || null;
+  const baseKey = product.cart_item_key || product.item_key || product.key || "";
+  const normalized = {
     product_id: Number(product.product_id),
     slug: product.slug,
     name: product.name,
@@ -72,18 +76,57 @@ function normalizeCartProduct(product) {
     requires_serial: Boolean(product.requires_serial),
     available_stock: Number(product.available_stock || 0),
     product_type: product.product_type,
-    warranty_package_id: warrantyPackageId ? Number(warrantyPackageId) : null,
-    warranty_package_title: product.warranty_package_title || warrantyPackage.title || "",
-    warranty_package_duration_months: product.warranty_package_duration_months || warrantyPackage.duration_months || null,
-    warranty_package_price: warrantyPackagePrice
+    warranty_package_id: isBundleAddon ? null : (warrantyPackageId ? Number(warrantyPackageId) : null),
+    warranty_package_title: isBundleAddon ? "" : (product.warranty_package_title || warrantyPackage.title || ""),
+    warranty_package_duration_months: isBundleAddon ? null : (product.warranty_package_duration_months || warrantyPackage.duration_months || null),
+    warranty_package_price: isBundleAddon ? 0 : warrantyPackagePrice,
+    is_bundle_addon: isBundleAddon,
+    bundle_parent_key: isBundleAddon ? parentKey : null,
+    bundle_parent_name: product.bundle_parent_name || "",
+    bundle_offer_id: isBundleAddon && bundleOfferId ? Number(bundleOfferId) : null,
+    bundle_offer_title: product.bundle_offer_title || bundleOffer.title || "",
+    bundle_discount_type: product.bundle_discount_type || bundleOffer.discount_type || null,
+    bundle_discount_value: product.bundle_discount_value !== undefined ? Number(product.bundle_discount_value || 0) : (bundleOffer.discount_value !== undefined && bundleOffer.discount_value !== null ? Number(bundleOffer.discount_value || 0) : null),
+    original_unit_price: product.original_unit_price !== undefined && product.original_unit_price !== null ? Number(product.original_unit_price) : Number(product.price || 0),
+    bundle_unit_price: product.bundle_unit_price !== undefined && product.bundle_unit_price !== null ? Number(product.bundle_unit_price) : null,
+    bundle_addons: Array.isArray(product.bundle_addons) ? product.bundle_addons : []
   };
+
+  normalized.cart_item_key = baseKey || getCartItemKey(normalized);
+  return normalized;
+}
+
+function getBundleSignature(addons) {
+  if (!Array.isArray(addons) || addons.length === 0) {
+    return "none";
+  }
+
+  return addons.map(function (addon) {
+    return Number(addon.bundle_offer_id || addon.id || addon.offer_id || 0);
+  }).filter(Boolean).sort(function (a, b) {
+    return a - b;
+  }).join("-") || "none";
 }
 
 function getCartItemKey(item) {
-  return `${Number(item.product_id)}:${item.warranty_package_id || "none"}`;
+  if (item.cart_item_key) {
+    return String(item.cart_item_key);
+  }
+
+  if (item.is_bundle_addon) {
+    return `bundle:${item.bundle_parent_key || "parent"}:${Number(item.product_id)}:${item.bundle_offer_id || "none"}`;
+  }
+
+  const warrantyPart = item.warranty_package_id || "none";
+  const bundlePart = getBundleSignature(item.bundle_addons || []);
+  return `main:${Number(item.product_id)}:${warrantyPart}:addons:${bundlePart}`;
 }
 
 function getCartLineUnitPrice(item) {
+  if (item.is_bundle_addon) {
+    return Number(item.bundle_unit_price !== null && item.bundle_unit_price !== undefined ? item.bundle_unit_price : item.price || 0);
+  }
+
   return Number(item.price || 0) + Number(item.warranty_package_price || 0);
 }
 
@@ -91,10 +134,67 @@ function getCartLineTotal(item) {
   return getCartLineUnitPrice(item) * Number(item.quantity || 0);
 }
 
+function getBundleAddonUnitPrice(addon) {
+  const originalPrice = Number(addon.original_unit_price || addon.price || 0);
+
+  if (addon.bundle_unit_price !== undefined && addon.bundle_unit_price !== null) {
+    return Math.max(Number(addon.bundle_unit_price || 0), 0);
+  }
+
+  if (addon.bundle_price !== undefined && addon.bundle_price !== null && addon.bundle_price !== "") {
+    return Math.max(Number(addon.bundle_price || 0), 0);
+  }
+
+  if (addon.discount_type === "percent" && addon.discount_value) {
+    return Math.max(originalPrice * (1 - Number(addon.discount_value) / 100), 0);
+  }
+
+  if (addon.discount_type === "fixed" && addon.discount_value) {
+    return Math.max(originalPrice - Number(addon.discount_value), 0);
+  }
+
+  return originalPrice;
+}
+
+function normalizeBundleAddonPayload(addon, parentItem) {
+  const addonProduct = addon.addon_product || addon.product || addon;
+  const originalUnitPrice = Number(addon.original_unit_price || addon.price || addonProduct.price || addonProduct.sale_price || addonProduct.base_price || 0);
+  const bundleUnitPrice = getBundleAddonUnitPrice({
+    ...addon,
+    original_unit_price: originalUnitPrice
+  });
+
+  return normalizeCartProduct({
+    product_id: addonProduct.id || addonProduct.product_id || addon.addon_product_id,
+    slug: addonProduct.slug,
+    name: addonProduct.name,
+    sku: addonProduct.sku,
+    image: addonProduct.primary_image || addonProduct.image,
+    fallback_image: addonProduct.fallback_image || getProductImageFallback(addonProduct),
+    price: bundleUnitPrice,
+    quantity: parentItem.quantity,
+    requires_serial: Boolean(addonProduct.requires_serial),
+    available_stock: Number(addonProduct.available_stock || 0),
+    product_type: addonProduct.product_type,
+    is_bundle_addon: true,
+    bundle_parent_key: getCartItemKey(parentItem),
+    bundle_parent_name: parentItem.name,
+    bundle_offer_id: addon.bundle_offer_id || addon.id || addon.offer_id,
+    bundle_offer_title: addon.bundle_offer_title || addon.title || "Mua kèm ưu đãi",
+    bundle_discount_type: addon.bundle_discount_type || addon.discount_type || null,
+    bundle_discount_value: addon.bundle_discount_value !== undefined ? addon.bundle_discount_value : addon.discount_value,
+    original_unit_price: originalUnitPrice,
+    bundle_unit_price: bundleUnitPrice,
+    bundle_offer: addon
+  });
+}
+
 function addToCart(product, quantity) {
+  const selectedAddons = Array.isArray(product.bundle_addons) ? product.bundle_addons : [];
   const itemToAdd = normalizeCartProduct({
     ...product,
-    quantity: quantity || 1
+    quantity: quantity || 1,
+    bundle_addons: selectedAddons
   });
 
   if (!itemToAdd.product_id) {
@@ -118,9 +218,26 @@ function addToCart(product, quantity) {
     };
   }
 
+  const mainKey = getCartItemKey(itemToAdd);
+  itemToAdd.cart_item_key = mainKey;
+  const addonItems = selectedAddons.map(function (addon) {
+    return normalizeBundleAddonPayload(addon, itemToAdd);
+  });
+
+  const invalidAddon = addonItems.find(function (addon) {
+    return !addon.product_id || isServiceProduct(addon) || addon.available_stock <= 0 || addon.quantity > addon.available_stock;
+  });
+
+  if (invalidAddon) {
+    return {
+      success: false,
+      message: `Sản phẩm mua kèm ${invalidAddon.name || "đã chọn"} hiện không đủ hàng hoặc không hợp lệ.`
+    };
+  }
+
   const items = getCartItems();
   const existingItem = items.find(function (item) {
-    return getCartItemKey(item) === getCartItemKey(itemToAdd);
+    return getCartItemKey(item) === mainKey && !item.is_bundle_addon;
   });
 
   if (existingItem) {
@@ -133,8 +250,25 @@ function addToCart(product, quantity) {
       };
     }
 
+    const addonOverStock = addonItems.find(function (addon) {
+      return nextQuantity > addon.available_stock;
+    });
+
+    if (addonOverStock) {
+      return {
+        success: false,
+        message: `Sản phẩm mua kèm ${addonOverStock.name} chỉ còn ${addonOverStock.available_stock} sản phẩm khả dụng.`
+      };
+    }
+
     existingItem.quantity = nextQuantity;
     existingItem.available_stock = itemToAdd.available_stock;
+
+    items.forEach(function (item) {
+      if (item.is_bundle_addon && item.bundle_parent_key === mainKey) {
+        item.quantity = nextQuantity;
+      }
+    });
   } else {
     if (itemToAdd.quantity > itemToAdd.available_stock) {
       return {
@@ -144,13 +278,16 @@ function addToCart(product, quantity) {
     }
 
     items.push(itemToAdd);
+    addonItems.forEach(function (addon) {
+      items.push(addon);
+    });
   }
 
   saveCartItems(items);
 
   return {
     success: true,
-    message: "Đã thêm sản phẩm vào giỏ hàng."
+    message: selectedAddons.length ? "Đã thêm sản phẩm và ưu đãi mua kèm vào giỏ hàng." : "Đã thêm sản phẩm vào giỏ hàng."
   };
 }
 
@@ -160,18 +297,44 @@ function updateCartItemQuantity(productIdOrKey, quantity) {
     return getCartItemKey(cartItem) === String(productIdOrKey) || Number(cartItem.product_id) === Number(productIdOrKey);
   });
 
-  if (!item) {
+  if (!item || item.is_bundle_addon) {
     return;
   }
 
   const nextQuantity = Math.max(1, Math.min(Number(quantity), Number(item.available_stock)));
   item.quantity = nextQuantity;
+
+  items.forEach(function (cartItem) {
+    if (cartItem.is_bundle_addon && cartItem.bundle_parent_key === getCartItemKey(item)) {
+      cartItem.quantity = Math.min(nextQuantity, Number(cartItem.available_stock || nextQuantity));
+    }
+  });
+
   saveCartItems(items);
 }
 
 function removeCartItem(productIdOrKey) {
-  const nextItems = getCartItems().filter(function (item) {
-    return getCartItemKey(item) !== String(productIdOrKey) && Number(item.product_id) !== Number(productIdOrKey);
+  const targetKey = String(productIdOrKey);
+  const items = getCartItems();
+  const targetItem = items.find(function (item) {
+    return getCartItemKey(item) === targetKey || Number(item.product_id) === Number(productIdOrKey);
+  });
+
+  if (!targetItem) {
+    saveCartItems(items);
+    return;
+  }
+
+  const nextItems = items.filter(function (item) {
+    if (getCartItemKey(item) === getCartItemKey(targetItem)) {
+      return false;
+    }
+
+    if (!targetItem.is_bundle_addon && item.is_bundle_addon && item.bundle_parent_key === getCartItemKey(targetItem)) {
+      return false;
+    }
+
+    return true;
   });
   saveCartItems(nextItems);
 }

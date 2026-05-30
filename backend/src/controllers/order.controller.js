@@ -133,6 +133,16 @@ async function getOrderByCode(req, res) {
         oi.warranty_package_title,
         oi.warranty_package_duration_months,
         oi.warranty_package_price,
+        oi.is_bundle_addon,
+        oi.bundle_parent_key,
+        oi.bundle_parent_product_id,
+        oi.bundle_parent_name_snapshot,
+        oi.bundle_offer_id,
+        oi.bundle_offer_title,
+        oi.bundle_discount_type,
+        oi.bundle_discount_value,
+        oi.original_unit_price,
+        oi.bundle_unit_price,
         oi.created_at,
         p.slug AS product_slug,
         (
@@ -169,7 +179,13 @@ async function getOrderByCode(req, res) {
           total_price: Number(item.total_price),
           warranty_package_id: item.warranty_package_id ? Number(item.warranty_package_id) : null,
           warranty_package_duration_months: item.warranty_package_duration_months === null ? null : Number(item.warranty_package_duration_months),
-          warranty_package_price: Number(item.warranty_package_price || 0)
+          warranty_package_price: Number(item.warranty_package_price || 0),
+          is_bundle_addon: Boolean(item.is_bundle_addon),
+          bundle_parent_product_id: item.bundle_parent_product_id ? Number(item.bundle_parent_product_id) : null,
+          bundle_offer_id: item.bundle_offer_id ? Number(item.bundle_offer_id) : null,
+          bundle_discount_value: item.bundle_discount_value === null ? null : Number(item.bundle_discount_value),
+          original_unit_price: item.original_unit_price === null ? null : Number(item.original_unit_price),
+          bundle_unit_price: item.bundle_unit_price === null ? null : Number(item.bundle_unit_price)
         };
       })
     }

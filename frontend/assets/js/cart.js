@@ -1,4 +1,4 @@
-﻿document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function () {
   initCartPage();
 });
 
@@ -37,9 +37,10 @@ function renderCartItem(item) {
   const imageFallback = item.fallback_image || getProductImageFallback(item);
   const itemKey = getCartItemKey(item);
   const lineUnitPrice = getCartLineUnitPrice(item);
+  const isBundleAddon = Boolean(item.is_bundle_addon);
 
   return `
-    <article class="cart-item">
+    <article class="cart-item ${isBundleAddon ? "cart-item-bundle-addon" : ""}">
       <img
         src="${escapeAttribute(getImageUrl(item.image, item))}"
         alt="${escapeAttribute(item.name)}"
@@ -48,20 +49,51 @@ function renderCartItem(item) {
       <div>
         <h2>${escapeHtml(item.name)}</h2>
         <p>SKU: ${escapeHtml(item.sku)}</p>
-        <p>Giá sản phẩm: ${formatCurrency(item.price)}</p>
-        ${renderCartWarrantyPackage(item)}
+        ${renderCartBundleNote(item)}
+        ${isBundleAddon ? renderCartBundlePricing(item) : `<p>Giá sản phẩm: ${formatCurrency(item.price)}</p>`}
+        ${!isBundleAddon ? renderCartWarrantyPackage(item) : ""}
       </div>
-      <div class="quantity-control">
-        <button type="button" data-action="decrease" data-id="${escapeAttribute(itemKey)}">-</button>
-        <input type="number" min="1" max="${escapeAttribute(item.available_stock)}" value="${escapeAttribute(item.quantity)}" data-id="${escapeAttribute(itemKey)}">
-        <button type="button" data-action="increase" data-id="${escapeAttribute(itemKey)}">+</button>
-      </div>
+      ${isBundleAddon ? `
+        <div class="quantity-control bundle-quantity-note">
+          <span>x${escapeHtml(item.quantity)}</span>
+          <small>Theo sản phẩm chính</small>
+        </div>
+      ` : `
+        <div class="quantity-control">
+          <button type="button" data-action="decrease" data-id="${escapeAttribute(itemKey)}">-</button>
+          <input type="number" min="1" max="${escapeAttribute(item.available_stock)}" value="${escapeAttribute(item.quantity)}" data-id="${escapeAttribute(itemKey)}">
+          <button type="button" data-action="increase" data-id="${escapeAttribute(itemKey)}">+</button>
+        </div>
+      `}
       <div class="cart-line-total">
         <small>${formatCurrency(lineUnitPrice)} x ${escapeHtml(item.quantity)}</small>
         <strong>${formatCurrency(getCartLineTotal(item))}</strong>
         <button class="btn btn-light" type="button" data-action="remove" data-id="${escapeAttribute(itemKey)}">Xóa</button>
       </div>
     </article>
+  `;
+}
+
+function renderCartBundleNote(item) {
+  if (!item.is_bundle_addon) {
+    return "";
+  }
+
+  return `
+    <div class="cart-bundle-note">
+      <strong>Mua kèm ưu đãi</strong>
+      <span>${item.bundle_parent_name ? `Đi kèm: ${escapeHtml(item.bundle_parent_name)}` : "Đi kèm sản phẩm chính"}</span>
+      ${item.bundle_offer_title ? `<span>${escapeHtml(item.bundle_offer_title)}</span>` : ""}
+    </div>
+  `;
+}
+
+function renderCartBundlePricing(item) {
+  return `
+    <div class="cart-bundle-price-note">
+      ${item.original_unit_price ? `<span>Giá gốc: <del>${formatCurrency(item.original_unit_price)}</del></span>` : ""}
+      <span>Giá mua kèm: <strong>${formatCurrency(getCartLineUnitPrice(item))}</strong></span>
+    </div>
   `;
 }
 
