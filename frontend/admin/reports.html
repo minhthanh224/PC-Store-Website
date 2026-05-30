@@ -34,6 +34,7 @@
               <option value="day">Theo ngày</option>
               <option value="week">Theo tuần</option>
               <option value="month">Theo tháng</option>
+              <option value="year">Theo năm</option>
             </select>
             <button class="btn btn-dark" type="submit">Xem báo cáo</button>
             <button id="reportResetButton" class="btn btn-light" type="button">Làm mới</button>
@@ -106,7 +107,10 @@
           </section>
 
           <section class="admin-panel">
-            <h2>Sản phẩm bán chạy</h2>
+            <div class="report-section-heading">
+              <h2>Sản phẩm bán chạy</h2>
+              <button id="exportBestSelling" class="btn btn-light" type="button">Xuất Excel (CSV)</button>
+            </div>
             <div id="bestSellingReport" class="admin-table-wrap loading-box">Đang tải sản phẩm bán chạy...</div>
           </section>
         </section>
@@ -123,6 +127,13 @@
               <div id="operationsOrderReport" class="admin-table-wrap loading-box">Đang tải đơn hàng...</div>
             </section>
           </div>
+          <section class="admin-panel">
+            <div class="report-section-heading">
+              <h2>Tỷ lệ lỗi theo sản phẩm</h2>
+              <button id="exportWarrantyQuality" class="btn btn-light" type="button">Xuất Excel (CSV)</button>
+            </div>
+            <div id="warrantyQualityReport" class="admin-table-wrap loading-box">Đang tải tỷ lệ lỗi...</div>
+          </section>
         </section>
       </section>
     </main>

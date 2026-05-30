@@ -26,10 +26,10 @@ async function register(req, res) {
   const phone = req.body.phone ? req.body.phone.trim() : null;
   const password = req.body.password || "";
 
-  if (!fullName || !email || !password) {
+  if (!fullName || !email || !phone || !password) {
     res.status(400).json({
       success: false,
-      message: "Vui lòng nhập họ tên, email và mật khẩu."
+      message: "Vui lòng nhập họ tên, số điện thoại, email và mật khẩu."
     });
     return;
   }
@@ -51,14 +51,14 @@ async function register(req, res) {
   }
 
   const [existingUsers] = await pool.execute(
-    "SELECT id FROM users WHERE email = ? LIMIT 1",
-    [email]
+    "SELECT id FROM users WHERE email = ? OR phone = ? LIMIT 1",
+    [email, phone]
   );
 
   if (existingUsers.length > 0) {
     res.status(409).json({
       success: false,
-      message: "Email đã được sử dụng."
+      message: "Email hoặc số điện thoại đã được sử dụng."
     });
     return;
   }

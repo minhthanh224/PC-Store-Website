@@ -54,11 +54,19 @@ async function getOrders(req, res) {
   });
 }
 
+async function getWarrantyQuality(req, res) {
+  res.json({
+    success: true,
+    data: await adminReportService.getWarrantyQualityReport()
+  });
+}
+
 module.exports = {
   getOverview,
   getRevenue,
   getBestSelling,
   getInventory,
   getWarranty,
-  getOrders
+  getOrders,
+  getWarrantyQuality
 };

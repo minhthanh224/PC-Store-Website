@@ -54,6 +54,7 @@ async function loadProductForEdit(id) {
   document.getElementById("productBrand").value = product.brand_id || "";
   document.getElementById("productType").value = product.product_type;
   document.getElementById("productBasePrice").value = product.base_price;
+  document.getElementById("productCostPrice").value = product.cost_price || 0;
   document.getElementById("productSalePrice").value = product.sale_price || "";
   document.getElementById("productWarranty").value = product.warranty_months;
   document.getElementById("productStock").value = product.stock_quantity;
@@ -136,6 +137,7 @@ function collectProductPayload() {
     brand_id: document.getElementById("productBrand").value ? Number(document.getElementById("productBrand").value) : null,
     product_type: document.getElementById("productType").value,
     base_price: Number(document.getElementById("productBasePrice").value || 0),
+    cost_price: Number(document.getElementById("productCostPrice").value || 0),
     sale_price: document.getElementById("productSalePrice").value ? Number(document.getElementById("productSalePrice").value) : null,
     warranty_months: Number(document.getElementById("productWarranty").value || 0),
     requires_serial: document.getElementById("productRequiresSerial").checked,

@@ -4,6 +4,7 @@ const { getWarrantyCoverage } = require("./warranty.service");
 const TICKET_STATUSES = ["received", "repairing", "waiting_parts", "done", "returned", "rejected"];
 const ACTIVE_TICKET_STATUSES = ["received", "repairing", "waiting_parts", "done"];
 const TERMINAL_TICKET_STATUSES = ["returned", "rejected"];
+const HANDLING_METHODS = ["exchange", "send_vendor", "shop_repair", "paid_repair"];
 const ALLOWED_TRANSITIONS = {
   received: ["repairing", "waiting_parts", "rejected"],
   repairing: ["waiting_parts", "done", "rejected"],
@@ -114,6 +115,8 @@ async function getTickets(query) {
         wt.received_date,
         wt.completed_date,
         wt.technician_note,
+        wt.handling_method,
+        wt.service_fee,
         wt.created_at
       FROM warranty_tickets wt
       INNER JOIN serial_numbers sn ON sn.id = wt.serial_number_id
@@ -149,6 +152,8 @@ async function getTicketDetail(ticketCode) {
         wt.customer_phone,
         wt.issue_description,
         wt.technician_note,
+        wt.handling_method,
+        wt.service_fee,
         wt.status,
         wt.received_date,
         wt.completed_date,
@@ -199,6 +204,8 @@ async function getTicketDetail(ticketCode) {
       customer_phone: row.customer_phone,
       issue_description: row.issue_description,
       technician_note: row.technician_note,
+      handling_method: row.handling_method,
+      service_fee: Number(row.service_fee || 0),
       status: row.status,
       received_date: row.received_date,
       completed_date: row.completed_date,
@@ -284,10 +291,12 @@ async function insertTicketWithRetry(connection, values) {
             customer_phone,
             issue_description,
             technician_note,
+            handling_method,
+            service_fee,
             status,
             received_date
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'received', ?)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'received', ?)
         `,
         [
           ticketCode,
@@ -298,6 +307,8 @@ async function insertTicketWithRetry(connection, values) {
           values.customer_phone,
           values.issue_description,
           values.technician_note,
+          values.handling_method,
+          values.service_fee,
           values.received_date
         ]
       );
@@ -326,6 +337,10 @@ async function createTicket(body) {
   }
 
   const connection = await pool.getConnection();
+  const handlingMethod = HANDLING_METHODS.includes(body.handling_method)
+    ? body.handling_method
+    : "shop_repair";
+  const serviceFee = Math.max(Number(body.service_fee || 0), 0);
 
   try {
     await connection.beginTransaction();
@@ -404,6 +419,8 @@ async function createTicket(body) {
       customer_phone: String(body.customer_phone).trim(),
       issue_description: String(body.issue_description).trim(),
       technician_note: body.technician_note ? String(body.technician_note).trim() : null,
+      handling_method: handlingMethod,
+      service_fee: serviceFee,
       received_date: body.received_date || todayIso()
     });
 

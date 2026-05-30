@@ -127,7 +127,9 @@ async function createWarrantyTicket(event) {
       customer_phone: document.getElementById("warrantyCustomerPhone").value.trim(),
       issue_description: document.getElementById("warrantyIssue").value.trim(),
       received_date: document.getElementById("warrantyReceivedDate").value,
-      technician_note: document.getElementById("warrantyNote").value.trim()
+      technician_note: document.getElementById("warrantyNote").value.trim(),
+      handling_method: document.getElementById("warrantyHandlingMethod").value,
+      service_fee: Number(document.getElementById("warrantyServiceFee").value || 0)
     });
 
     document.getElementById("warrantyCreateForm").reset();
@@ -174,6 +176,8 @@ function renderWarrantyTicketDetail(data) {
         <p><strong>Lỗi báo cáo:</strong> ${escapeHtml(getWarrantyDisplayText(ticket.issue_description))}</p>
         <p><strong>Ngày tiếp nhận:</strong> ${escapeHtml(formatDateOnly(ticket.received_date))}</p>
         <p><strong>Ngày hoàn tất:</strong> ${escapeHtml(formatDateOnly(ticket.completed_date))}</p>
+        <p><strong>Phương án xử lý:</strong> ${escapeHtml(getWarrantyHandlingMethodLabel(ticket.handling_method))}</p>
+        <p><strong>Phí dịch vụ:</strong> ${formatCurrency(ticket.service_fee)}</p>
       </section>
       <section>
         <h3>Sản phẩm / Serial</h3>
@@ -297,6 +301,17 @@ function getWarrantyTicketStatusLabel(status) {
   };
 
   return labels[status] || status || "";
+}
+
+function getWarrantyHandlingMethodLabel(method) {
+  const labels = {
+    exchange: "Đổi sản phẩm",
+    send_vendor: "Gửi hãng",
+    shop_repair: "Sửa tại shop",
+    paid_repair: "Sửa tính phí"
+  };
+
+  return labels[method] || method || "";
 }
 
 function getWarrantyDisplayText(value) {

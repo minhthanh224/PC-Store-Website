@@ -38,6 +38,43 @@
       <section id="addressSection" class="account-card account-address-card wide-card">
         <h2>Sổ địa chỉ</h2>
         <div id="addressList" class="address-list loading-box">Đang tải địa chỉ...</div>
+        <form id="addressForm" class="stack-form">
+          <h3>Thêm địa chỉ</h3>
+          <div class="form-grid">
+            <label>Người nhận<input id="addressReceiverName" required></label>
+            <label>Số điện thoại<input id="addressReceiverPhone" required></label>
+            <label>Tỉnh/Thành<input id="addressProvince" required></label>
+            <label>Quận/Huyện<input id="addressDistrict" required></label>
+            <label>Phường/Xã<input id="addressWard" required></label>
+          </div>
+          <label>Địa chỉ chi tiết<input id="addressLine" required></label>
+          <label class="checkbox-row"><input id="addressDefault" type="checkbox"> Đặt làm địa chỉ mặc định</label>
+          <button class="btn btn-primary" type="submit">Thêm địa chỉ</button>
+          <div id="addressMessage"></div>
+        </form>
+      </section>
+      <section class="account-card wide-card">
+        <h2>Cập nhật hồ sơ</h2>
+        <form id="profileForm" class="stack-form">
+          <div class="form-grid">
+            <label>Họ tên<input id="profileFullName" required></label>
+            <label>Số điện thoại<input id="profilePhone" type="tel" required></label>
+          </div>
+          <button class="btn btn-primary" type="submit">Lưu hồ sơ</button>
+          <div id="profileMessage"></div>
+        </form>
+      </section>
+      <section class="account-card wide-card">
+        <h2>Đổi mật khẩu</h2>
+        <form id="passwordForm" class="stack-form">
+          <div class="form-grid">
+            <label>Mật khẩu hiện tại<input id="currentPassword" type="password" required></label>
+            <label>Mật khẩu mới<input id="newPassword" type="password" minlength="6" required></label>
+            <label>Xác nhận mật khẩu mới<input id="confirmPassword" type="password" minlength="6" required></label>
+          </div>
+          <button class="btn btn-primary" type="submit">Đổi mật khẩu</button>
+          <div id="passwordMessage"></div>
+        </form>
       </section>
     </div>
   </main>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tài khoản - AeroTech</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <aside id="adminSidebar" class="admin-sidebar"></aside>
+    <main class="admin-main">
+      <header id="adminTopbar" class="admin-topbar"></header>
+      <section class="admin-content">
+        <div class="admin-page-heading">
+          <p class="eyebrow">Accounts</p>
+          <h1>Quản lý tài khoản</h1>
+          <p class="page-subtitle">Tạo tài khoản nhân viên, phân quyền và khóa tài khoản.</p>
+        </div>
+        <section class="admin-panel">
+          <h2 id="userFormTitle">Tạo tài khoản</h2>
+          <form id="userForm" class="admin-form">
+            <input id="userId" type="hidden">
+            <div class="admin-form-grid">
+              <label>Họ tên<input id="userFullName" required></label>
+              <label>Email<input id="userEmail" type="email" required></label>
+              <label>Số điện thoại<input id="userPhone" type="tel"></label>
+              <label>Mật khẩu<input id="userPassword" type="password" minlength="6"></label>
+              <label>Vai trò<select id="userRole">
+                <option value="customer">Khách hàng</option>
+                <option value="sales">Nhân viên bán hàng</option>
+                <option value="technician">Kỹ thuật viên</option>
+                <option value="admin">Quản trị viên</option>
+              </select></label>
+              <label>Trạng thái<select id="userStatus">
+                <option value="active">Hoạt động</option>
+                <option value="inactive">Đã khóa</option>
+              </select></label>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-primary" type="submit">Lưu tài khoản</button>
+              <button id="resetUserForm" class="btn btn-light" type="button">Tạo mới</button>
+            </div>
+          </form>
+          <div id="userMessage"></div>
+        </section>
+        <section class="admin-panel">
+          <h2>Danh sách tài khoản</h2>
+          <form id="userFilterForm" class="admin-filter-bar">
+            <input id="userKeyword" type="search" placeholder="Tìm họ tên, email, số điện thoại">
+            <select id="userRoleFilter"><option value="">Tất cả vai trò</option><option value="customer">Khách hàng</option><option value="sales">Bán hàng</option><option value="technician">Kỹ thuật</option><option value="admin">Quản trị</option></select>
+            <select id="userStatusFilter"><option value="">Tất cả trạng thái</option><option value="active">Hoạt động</option><option value="inactive">Đã khóa</option></select>
+            <button class="btn btn-dark" type="submit">Lọc</button>
+          </form>
+          <div id="userTable" class="admin-table-wrap loading-box">Đang tải tài khoản...</div>
+        </section>
+      </section>
+    </main>
+  </div>
+  <script src="../assets/js/config.js"></script><script src="../assets/js/api.js"></script><script src="../assets/js/utils.js"></script><script src="../assets/js/auth.js"></script><script src="../assets/js/admin/admin-api.js"></script><script src="../assets/js/admin/admin-layout.js"></script><script src="../assets/js/admin/users.js"></script>
+</body>
+</html>

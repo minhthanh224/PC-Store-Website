@@ -35,7 +35,8 @@ CREATE TABLE users (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  UNIQUE KEY uk_users_email (email)
+  UNIQUE KEY uk_users_email (email),
+  UNIQUE KEY uk_users_phone (phone)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE customer_addresses (
@@ -100,6 +101,7 @@ CREATE TABLE products (
   short_description VARCHAR(500) NULL,
   description TEXT NULL,
   base_price DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  cost_price DECIMAL(12,2) NOT NULL DEFAULT 0.00,
   sale_price DECIMAL(12,2) NULL,
   warranty_months INT NOT NULL DEFAULT 0,
   requires_serial TINYINT(1) NOT NULL DEFAULT 0,
@@ -190,7 +192,7 @@ CREATE TABLE orders (
   address_line VARCHAR(255) NOT NULL,
   payment_method ENUM('cod', 'bank_transfer') NOT NULL DEFAULT 'cod',
   payment_status ENUM('unpaid', 'paid', 'refunded') NOT NULL DEFAULT 'unpaid',
-  status ENUM('pending', 'approved', 'shipping', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
+  status ENUM('pending', 'approved', 'shipping', 'completed', 'cancelled', 'returned') NOT NULL DEFAULT 'pending',
   subtotal_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
   shipping_fee DECIMAL(12,2) NOT NULL DEFAULT 0.00,
   discount_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
@@ -248,6 +250,8 @@ CREATE TABLE warranty_tickets (
   customer_phone VARCHAR(30) NOT NULL,
   issue_description TEXT NOT NULL,
   technician_note TEXT NULL,
+  handling_method ENUM('exchange', 'send_vendor', 'shop_repair', 'paid_repair') NOT NULL DEFAULT 'shop_repair',
+  service_fee DECIMAL(12,2) NOT NULL DEFAULT 0.00,
   status ENUM('received', 'repairing', 'waiting_parts', 'done', 'returned', 'rejected') NOT NULL DEFAULT 'received',
   received_date DATE NOT NULL,
   completed_date DATE NULL,

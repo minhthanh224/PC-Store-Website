@@ -79,6 +79,12 @@ async function getOverview(query) {
       `
         SELECT
           COALESCE(SUM(o.total_amount), 0) AS total_revenue,
+          COALESCE(SUM((
+            SELECT SUM((oi.unit_price - p.cost_price) * oi.quantity)
+            FROM order_items oi
+            INNER JOIN products p ON p.id = oi.product_id
+            WHERE oi.order_id = o.id
+          )), 0) AS estimated_profit,
           COUNT(*) AS completed_order_count
         FROM orders o
         WHERE o.status = 'completed'
@@ -126,6 +132,7 @@ async function getOverview(query) {
 
   return {
     total_revenue: Number(revenue.total_revenue),
+    estimated_profit: Number(revenue.estimated_profit),
     completed_order_count: Number(revenue.completed_order_count),
     pending_order_count: Number(pendingOrders.pending_order_count),
     total_products_sold: Number(productsSold.total_products_sold),
@@ -135,11 +142,13 @@ async function getOverview(query) {
 }
 
 async function getRevenue(query) {
-  const allowedGroups = ["day", "week", "month"];
+  const allowedGroups = ["day", "week", "month", "year"];
   const groupBy = allowedGroups.includes(query.groupBy) ? query.groupBy : "day";
   const labelExpression = groupBy === "month"
     ? "DATE_FORMAT(o.created_at, '%Y-%m')"
-    : groupBy === "week"
+    : groupBy === "year"
+      ? "DATE_FORMAT(o.created_at, '%Y')"
+      : groupBy === "week"
       ? "DATE_FORMAT(DATE_SUB(DATE(o.created_at), INTERVAL WEEKDAY(o.created_at) DAY), '%Y-%m-%d')"
       : "DATE(o.created_at)";
   const dateFilter = getDateFilter(query, "o");
@@ -303,6 +312,39 @@ async function getWarrantyReport() {
   };
 }
 
+async function getWarrantyQualityReport() {
+  const [rows] = await pool.execute(
+    `
+      SELECT
+        b.name AS brand_name,
+        p.name AS product_name,
+        p.sku,
+        COUNT(DISTINCT CASE WHEN o.status = 'completed' THEN sn.id END) AS sold_count,
+        COUNT(DISTINCT wt.serial_number_id) AS faulty_count
+      FROM products p
+      LEFT JOIN brands b ON b.id = p.brand_id
+      LEFT JOIN serial_numbers sn ON sn.product_id = p.id
+      LEFT JOIN order_items oi ON oi.serial_number_id = sn.id
+      LEFT JOIN orders o ON o.id = oi.order_id
+      LEFT JOIN warranty_tickets wt ON wt.serial_number_id = sn.id
+      GROUP BY p.id, b.name
+      HAVING sold_count > 0
+      ORDER BY faulty_count / sold_count DESC, faulty_count DESC, p.name ASC
+    `
+  );
+
+  return rows.map(function (row) {
+    const soldCount = Number(row.sold_count);
+    const faultyCount = Number(row.faulty_count);
+    return {
+      ...row,
+      sold_count: soldCount,
+      faulty_count: faultyCount,
+      failure_rate: soldCount ? Number(((faultyCount / soldCount) * 100).toFixed(2)) : 0
+    };
+  });
+}
+
 async function getOrderReport() {
   const [rows] = await pool.execute(
     `
@@ -332,5 +374,6 @@ module.exports = {
   getBestSelling,
   getInventoryReport,
   getWarrantyReport,
+  getWarrantyQualityReport,
   getOrderReport
 };
