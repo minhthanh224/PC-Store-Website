@@ -74,9 +74,9 @@
             <div class="admin-import-header">
               <div>
                 <h2>Import sản phẩm hàng loạt</h2>
-                <p>Tải lên file .zip chứa products.csv, product_images.csv, product_specs.csv và thư mục images/.</p>
+                <p>Tải lên file .zip chứa catalog, ảnh, thông số, ưu đãi, combo và gói bảo hành mở rộng.</p>
               </div>
-              <span class="admin-import-badge">Phase 1</span>
+              <span class="admin-import-badge">Import V2</span>
             </div>
 
             <div class="import-step-list" aria-label="Quy trình import">
@@ -91,6 +91,36 @@
               <div class="import-step-item">
                 <span>3</span>
                 <strong>Xác nhận import</strong>
+              </div>
+            </div>
+
+            <div class="import-mode-panel" aria-label="Chế độ import">
+              <label class="import-mode-card">
+                <input type="radio" name="productImportMode" value="strict" checked>
+                <span>
+                  <strong>Strict mode</strong>
+                  <small>Update theo SKU, chặn nếu slug đã thuộc SKU khác.</small>
+                </span>
+              </label>
+              <label class="import-mode-card">
+                <input type="radio" name="productImportMode" value="updateBySlug">
+                <span>
+                  <strong>Cập nhật theo slug</strong>
+                  <small>Dùng khi catalog mới đổi SKU nhưng vẫn giữ slug cũ. Hệ thống giữ SKU trong DB để bảo toàn liên kết.</small>
+                </span>
+              </label>
+              <label class="import-mode-card import-mode-danger">
+                <input type="radio" name="productImportMode" value="replaceCatalog">
+                <span>
+                  <strong>Reset catalog trước khi import</strong>
+                  <small>Chỉ dùng cho demo/dev. Bị chặn ở production và khi còn dữ liệu nghiệp vụ liên quan sản phẩm.</small>
+                </span>
+              </label>
+              <div id="replaceCatalogConfirmWrap" class="import-reset-confirm" hidden>
+                <label>
+                  Nhập RESET CATALOG để xác nhận
+                  <input id="replaceCatalogConfirmInput" type="text" autocomplete="off" placeholder="RESET CATALOG">
+                </label>
               </div>
             </div>
 
@@ -112,9 +142,16 @@
                   <span>products.csv</span>
                   <span>product_images.csv</span>
                   <span>product_specs.csv</span>
+                  <span>product_highlights.csv</span>
+                  <span>commitments.csv</span>
+                  <span>promotions.csv</span>
+                  <span>product_promotions.csv</span>
+                  <span>bundle_offers.csv</span>
+                  <span>warranty_packages.csv</span>
+                  <span>product_warranty_packages.csv</span>
                   <span>images/</span>
                 </div>
-                <p>Các file nâng cao như promotions.csv, bundle_offers.csv sẽ được bỏ qua nếu phase hiện tại chưa hỗ trợ.</p>
+                <p>File nâng cao có trong zip sẽ được validate và import. File vắng mặt chỉ được cảnh báo nhẹ.</p>
               </aside>
             </div>
 

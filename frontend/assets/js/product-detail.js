@@ -109,7 +109,10 @@ function renderProductDetail(product) {
   const comparePayload = escapeAttribute(JSON.stringify(getCompareProductPayload(cartProduct)));
   const isService = isServiceProduct(product);
   const quickSpecs = getQuickSpecs(product);
-  const highlights = deriveProductHighlights(product, quickSpecs);
+  const importedHighlights = normalizeImportedHighlights(product.highlights || []);
+  const highlights = importedHighlights.length ? importedHighlights : deriveProductHighlights(product, quickSpecs);
+  const commitments = normalizeImportedCommitments(product.commitments || []);
+  const policyItems = commitments.length ? commitments : POLICY_ITEMS;
 
   return `
     <section class="product-gallery product-gallery-pro">
@@ -122,6 +125,9 @@ function renderProductDetail(product) {
     </section>
 
     ${renderProductHighlights(highlights)}
+    ${renderProductPromotions(product.promotions || [])}
+    ${renderBundleOffers(product.bundle_offers || [])}
+    ${renderWarrantyPackages(product.warranty_packages || [])}
 
     <section class="description-panel product-description-panel">
       <div class="detail-section-heading">
@@ -145,7 +151,7 @@ function renderProductDetail(product) {
         <h2>Chính sách mua hàng tại AeroTech</h2>
       </div>
       <div class="product-policy-grid">
-        ${POLICY_ITEMS.map(renderPolicyItem).join("")}
+        ${policyItems.map(renderPolicyItem).join("")}
       </div>
     </section>
   `;
@@ -376,6 +382,93 @@ function renderProductHighlights(highlights) {
   `;
 }
 
+function renderProductPromotions(promotions) {
+  if (!promotions.length) {
+    return "";
+  }
+
+  return `
+    <section class="product-offer-panel">
+      <div class="detail-section-heading">
+        <span>Ưu đãi</span>
+        <h2>Ưu đãi đi kèm</h2>
+      </div>
+      <div class="product-offer-grid">
+        ${promotions.map(function (promotion) {
+          return `
+            <article class="product-offer-card">
+              <span>${escapeHtml(promotion.promo_code || "PROMO")}</span>
+              <div>
+                <h3>${escapeHtml(promotion.title)}</h3>
+                <p>${escapeHtml(promotion.description || getPromotionSummary(promotion))}</p>
+              </div>
+            </article>
+          `;
+        }).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderBundleOffers(bundleOffers) {
+  if (!bundleOffers.length) {
+    return "";
+  }
+
+  return `
+    <section class="product-offer-panel">
+      <div class="detail-section-heading">
+        <span>Combo</span>
+        <h2>Mua kèm ưu đãi</h2>
+      </div>
+      <div class="product-bundle-list">
+        ${bundleOffers.map(function (offer) {
+          const addon = offer.addon_product || {};
+          return `
+            <article class="product-bundle-card">
+              <div>
+                <h3>${escapeHtml(offer.title)}</h3>
+                <p>${escapeHtml(addon.name || "Sản phẩm mua kèm")}</p>
+                <strong>${escapeHtml(getBundlePriceText(offer))}</strong>
+              </div>
+              ${addon.slug ? `<a class="btn btn-outline" href="product-detail.html?slug=${encodeURIComponent(addon.slug)}">Xem sản phẩm</a>` : ""}
+            </article>
+          `;
+        }).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderWarrantyPackages(packages) {
+  if (!packages.length) {
+    return "";
+  }
+
+  return `
+    <section class="product-offer-panel">
+      <div class="detail-section-heading">
+        <span>Bảo hành</span>
+        <h2>Gói bảo hành mở rộng</h2>
+      </div>
+      <div class="product-offer-grid">
+        ${packages.map(function (item) {
+          return `
+            <article class="product-offer-card">
+              <span>${escapeHtml(item.package_code || "BH")}</span>
+              <div>
+                <h3>${escapeHtml(item.title)}</h3>
+                <p>${escapeHtml(item.description || `${item.duration_months || 0} tháng bảo hành mở rộng.`)}</p>
+                <strong>${formatCurrency(item.price || 0)}</strong>
+              </div>
+            </article>
+          `;
+        }).join("")}
+      </div>
+    </section>
+  `;
+}
+
 function renderPolicyItem(item) {
   return `
     <article class="product-policy-card">
@@ -386,6 +479,62 @@ function renderPolicyItem(item) {
       </div>
     </article>
   `;
+}
+
+function normalizeImportedHighlights(highlights) {
+  return highlights.map(function (item) {
+    return {
+      code: item.icon || "★",
+      title: item.title,
+      description: item.description || ""
+    };
+  }).filter(function (item) {
+    return item.title;
+  });
+}
+
+function normalizeImportedCommitments(commitments) {
+  return commitments.map(function (item) {
+    return {
+      code: item.icon || "✓",
+      title: item.title,
+      description: item.description || ""
+    };
+  }).filter(function (item) {
+    return item.title;
+  });
+}
+
+function getPromotionSummary(promotion) {
+  if (promotion.discount_type === "percent" && promotion.discount_value) {
+    return `Giảm ${promotion.discount_value}% theo chương trình.`;
+  }
+
+  if (promotion.discount_type === "fixed" && promotion.discount_value) {
+    return `Giảm ${formatCurrency(promotion.discount_value)} theo chương trình.`;
+  }
+
+  if (promotion.discount_type === "gift") {
+    return "Tặng kèm quà/ưu đãi theo chương trình.";
+  }
+
+  return "Ưu đãi áp dụng theo chính sách AeroTech.";
+}
+
+function getBundlePriceText(offer) {
+  if (offer.bundle_price !== null && offer.bundle_price !== undefined) {
+    return `Giá combo: ${formatCurrency(offer.bundle_price)}`;
+  }
+
+  if (offer.discount_type === "percent" && offer.discount_value) {
+    return `Giảm ${offer.discount_value}% khi mua kèm`;
+  }
+
+  if (offer.discount_type === "fixed" && offer.discount_value) {
+    return `Giảm ${formatCurrency(offer.discount_value)} khi mua kèm`;
+  }
+
+  return "Ưu đãi mua kèm";
 }
 
 function renderSpecsTable(groups) {

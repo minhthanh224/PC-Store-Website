@@ -511,6 +511,156 @@ async function getRelatedProducts(productId, categoryId) {
   return productsWithSpecs.map(formatProduct);
 }
 
+async function getProductHighlights(productId) {
+  const [rows] = await pool.execute(
+    `
+      SELECT id, title, description, icon, sort_order
+      FROM product_highlights
+      WHERE product_id = ?
+      ORDER BY sort_order ASC, id ASC
+    `,
+    [productId]
+  );
+
+  return rows;
+}
+
+async function getProductCommitments(product) {
+  const [rows] = await pool.execute(
+    `
+      SELECT id, scope_type, scope_value, title, description, icon, sort_order
+      FROM commitments
+      WHERE scope_type = 'global'
+        OR (scope_type = 'product' AND scope_value IN (?, ?))
+        OR (scope_type = 'category' AND scope_value IN (?, ?))
+      ORDER BY sort_order ASC, id ASC
+    `,
+    [
+      product.sku,
+      String(product.id),
+      product.category ? product.category.slug : "",
+      product.category ? product.category.name : ""
+    ]
+  );
+
+  return rows;
+}
+
+async function getProductPromotions(productId) {
+  const [rows] = await pool.execute(
+    `
+      SELECT
+        pr.id,
+        pr.promo_code,
+        pr.title,
+        pr.description,
+        pr.promo_type,
+        pr.discount_type,
+        pr.discount_value,
+        pr.start_date,
+        pr.end_date,
+        pp.sort_order
+      FROM product_promotions pp
+      INNER JOIN promotions pr ON pr.id = pp.promotion_id
+      WHERE pp.product_id = ?
+        AND pr.status = 'active'
+        AND (pr.start_date IS NULL OR pr.start_date <= CURRENT_DATE())
+        AND (pr.end_date IS NULL OR pr.end_date >= CURRENT_DATE())
+      ORDER BY pp.sort_order ASC, pr.id ASC
+    `,
+    [productId]
+  );
+
+  return rows.map(function (promotion) {
+    return {
+      ...promotion,
+      discount_value: promotion.discount_value === null ? null : Number(promotion.discount_value)
+    };
+  });
+}
+
+async function getBundleOffers(productId) {
+  const [rows] = await pool.execute(
+    `
+      SELECT
+        bo.id,
+        bo.title,
+        bo.discount_type,
+        bo.discount_value,
+        bo.bundle_price,
+        bo.sort_order,
+        p.id AS addon_product_id,
+        p.name AS addon_name,
+        p.slug AS addon_slug,
+        p.sku AS addon_sku,
+        p.base_price AS addon_base_price,
+        p.sale_price AS addon_sale_price,
+        (
+          SELECT pi.image_url
+          FROM product_images pi
+          WHERE pi.product_id = p.id
+          ORDER BY pi.is_primary DESC, pi.sort_order ASC, pi.id ASC
+          LIMIT 1
+        ) AS addon_primary_image
+      FROM bundle_offers bo
+      INNER JOIN products p ON p.id = bo.addon_product_id
+      WHERE bo.main_product_id = ?
+        AND bo.status = 'active'
+        AND p.status = 'active'
+      ORDER BY bo.sort_order ASC, bo.id ASC
+    `,
+    [productId]
+  );
+
+  return rows.map(function (offer) {
+    return {
+      id: offer.id,
+      title: offer.title,
+      discount_type: offer.discount_type,
+      discount_value: offer.discount_value === null ? null : Number(offer.discount_value),
+      bundle_price: offer.bundle_price === null ? null : Number(offer.bundle_price),
+      sort_order: offer.sort_order,
+      addon_product: {
+        id: offer.addon_product_id,
+        name: offer.addon_name,
+        slug: offer.addon_slug,
+        sku: offer.addon_sku,
+        base_price: Number(offer.addon_base_price || 0),
+        sale_price: offer.addon_sale_price === null ? null : Number(offer.addon_sale_price),
+        primary_image: offer.addon_primary_image || null
+      }
+    };
+  });
+}
+
+async function getWarrantyPackages(productId) {
+  const [rows] = await pool.execute(
+    `
+      SELECT
+        wp.id,
+        wp.package_code,
+        wp.title,
+        wp.duration_months,
+        wp.price,
+        wp.description,
+        pwp.sort_order
+      FROM product_warranty_packages pwp
+      INNER JOIN warranty_packages wp ON wp.id = pwp.warranty_package_id
+      WHERE pwp.product_id = ?
+        AND wp.status = 'active'
+      ORDER BY pwp.sort_order ASC, wp.id ASC
+    `,
+    [productId]
+  );
+
+  return rows.map(function (item) {
+    return {
+      ...item,
+      price: Number(item.price || 0)
+    };
+  });
+}
+
 async function getProductBySlug(slug) {
   const [rows] = await pool.execute(
     `
@@ -527,17 +677,27 @@ async function getProductBySlug(slug) {
 
   const productWithSpecs = await attachShortSpecs(rows);
   const product = formatProduct(productWithSpecs[0]);
-  const [images, specs, relatedProducts] = await Promise.all([
+  const [images, specs, relatedProducts, highlights, commitments, promotions, bundleOffers, warrantyPackages] = await Promise.all([
     getProductImages(product.id),
     getProductSpecs(product.id),
-    getRelatedProducts(product.id, product.category.id)
+    getRelatedProducts(product.id, product.category.id),
+    getProductHighlights(product.id),
+    getProductCommitments(product),
+    getProductPromotions(product.id),
+    getBundleOffers(product.id),
+    getWarrantyPackages(product.id)
   ]);
 
   return {
     ...product,
     images,
     specs,
-    related_products: relatedProducts
+    related_products: relatedProducts,
+    highlights,
+    commitments,
+    promotions,
+    bundle_offers: bundleOffers,
+    warranty_packages: warrantyPackages
   };
 }
 

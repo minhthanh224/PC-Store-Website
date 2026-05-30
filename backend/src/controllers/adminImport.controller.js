@@ -11,7 +11,7 @@ function requireZipFile(req) {
 async function previewProductImport(req, res) {
   requireZipFile(req);
 
-  const analysis = await productImportService.analyzeZip(req.file.buffer);
+  const analysis = await productImportService.analyzeZip(req.file.buffer, req.body);
 
   res.json({
     success: true,
@@ -22,7 +22,7 @@ async function previewProductImport(req, res) {
 async function commitProductImport(req, res) {
   requireZipFile(req);
 
-  const result = await productImportService.importProducts(req.file.buffer);
+  const result = await productImportService.importProducts(req.file.buffer, req.body);
 
   if (!result.canCommit) {
     res.status(400).json({

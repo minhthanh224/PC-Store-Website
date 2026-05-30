@@ -9018,6 +9018,7 @@ video {
 .product-detail-layout-pro .product-gallery-pro,
 .product-detail-layout-pro .product-info-panel-pro,
 .product-detail-layout-pro .product-highlights-panel,
+.product-detail-layout-pro .product-offer-panel,
 .product-detail-layout-pro .product-description-panel,
 .product-detail-layout-pro .product-specification-panel,
 .product-detail-layout-pro .product-policy-panel,
@@ -9295,6 +9296,7 @@ video {
 }
 
 .product-highlights-panel,
+.product-offer-panel,
 .product-description-panel,
 .product-specification-panel,
 .product-policy-panel {
@@ -9315,6 +9317,7 @@ video {
 }
 
 .product-highlight-grid,
+.product-offer-grid,
 .product-policy-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -9322,6 +9325,7 @@ video {
 }
 
 .product-highlight-card,
+.product-offer-card,
 .product-policy-card {
   display: flex;
   gap: 12px;
@@ -9332,6 +9336,7 @@ video {
 }
 
 .product-highlight-card > span,
+.product-offer-card > span,
 .product-policy-card > span {
   width: 42px;
   height: 42px;
@@ -9347,6 +9352,7 @@ video {
 }
 
 .product-highlight-card h3,
+.product-offer-card h3,
 .product-policy-card h3 {
   margin: 0 0 5px;
   color: var(--color-text);
@@ -9354,11 +9360,49 @@ video {
 }
 
 .product-highlight-card p,
+.product-offer-card p,
 .product-policy-card p,
 .product-description-panel p {
   margin: 0;
   color: var(--color-muted);
   line-height: 1.62;
+}
+
+.product-offer-card strong {
+  display: inline-block;
+  margin-top: 7px;
+  color: var(--color-text);
+}
+
+.product-bundle-list {
+  display: grid;
+  gap: 12px;
+}
+
+.product-bundle-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 14px;
+  background: #f8fafc;
+}
+
+.product-bundle-card h3 {
+  margin: 0 0 5px;
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
+.product-bundle-card p {
+  margin: 0 0 6px;
+  color: var(--color-muted);
+}
+
+.product-bundle-card strong {
+  color: var(--color-text);
 }
 
 .spec-group-list {
@@ -9527,6 +9571,7 @@ video {
   }
 
   .product-highlight-grid,
+  .product-offer-grid,
   .product-policy-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -9555,6 +9600,7 @@ video {
   }
 
   .detail-price-box,
+  .product-bundle-card,
   .review-login-box {
     flex-direction: column;
     align-items: stretch;
@@ -9568,6 +9614,7 @@ video {
   .detail-actions-pro,
   .quick-spec-grid,
   .product-highlight-grid,
+  .product-offer-grid,
   .product-policy-grid,
   .review-overview {
     grid-template-columns: 1fr;

@@ -14,6 +14,13 @@ DROP TABLE IF EXISTS warranty_tickets;
 DROP TABLE IF EXISTS order_items;
 DROP TABLE IF EXISTS orders;
 DROP TABLE IF EXISTS serial_numbers;
+DROP TABLE IF EXISTS product_warranty_packages;
+DROP TABLE IF EXISTS warranty_packages;
+DROP TABLE IF EXISTS bundle_offers;
+DROP TABLE IF EXISTS product_promotions;
+DROP TABLE IF EXISTS promotions;
+DROP TABLE IF EXISTS commitments;
+DROP TABLE IF EXISTS product_highlights;
 DROP TABLE IF EXISTS product_specs;
 DROP TABLE IF EXISTS product_images;
 DROP TABLE IF EXISTS products;
@@ -159,6 +166,136 @@ CREATE TABLE product_specs (
   KEY idx_product_specs_filter (filter_enabled, spec_key),
   CONSTRAINT fk_product_specs_product
     FOREIGN KEY (product_id) REFERENCES products(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE product_highlights (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  product_id BIGINT UNSIGNED NOT NULL,
+  title VARCHAR(180) NOT NULL,
+  description TEXT NULL,
+  icon VARCHAR(80) NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_product_highlights_product_id (product_id),
+  CONSTRAINT fk_product_highlights_product
+    FOREIGN KEY (product_id) REFERENCES products(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE commitments (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  scope_type ENUM('global', 'category', 'product') NOT NULL DEFAULT 'global',
+  scope_value VARCHAR(180) NULL,
+  title VARCHAR(180) NOT NULL,
+  description TEXT NULL,
+  icon VARCHAR(80) NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_commitments_scope (scope_type, scope_value)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE promotions (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  promo_code VARCHAR(80) NOT NULL,
+  title VARCHAR(180) NOT NULL,
+  description TEXT NULL,
+  promo_type ENUM('voucher', 'gift', 'installment', 'event', 'bundle') NOT NULL DEFAULT 'event',
+  discount_type ENUM('percent', 'fixed', 'gift', 'none') NOT NULL DEFAULT 'none',
+  discount_value DECIMAL(12,2) NULL,
+  start_date DATE NULL,
+  end_date DATE NULL,
+  status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_promotions_code (promo_code),
+  KEY idx_promotions_status_dates (status, start_date, end_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE product_promotions (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  product_id BIGINT UNSIGNED NOT NULL,
+  promotion_id BIGINT UNSIGNED NOT NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_product_promotions_product_promotion (product_id, promotion_id),
+  KEY idx_product_promotions_product_id (product_id),
+  KEY idx_product_promotions_promotion_id (promotion_id),
+  CONSTRAINT fk_product_promotions_product
+    FOREIGN KEY (product_id) REFERENCES products(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT fk_product_promotions_promotion
+    FOREIGN KEY (promotion_id) REFERENCES promotions(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE bundle_offers (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  main_product_id BIGINT UNSIGNED NOT NULL,
+  addon_product_id BIGINT UNSIGNED NOT NULL,
+  title VARCHAR(180) NOT NULL,
+  discount_type ENUM('percent', 'fixed', 'none') NOT NULL DEFAULT 'none',
+  discount_value DECIMAL(12,2) NULL,
+  bundle_price DECIMAL(12,2) NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_bundle_offers_main_product_id (main_product_id),
+  KEY idx_bundle_offers_addon_product_id (addon_product_id),
+  KEY idx_bundle_offers_status (status),
+  CONSTRAINT fk_bundle_offers_main_product
+    FOREIGN KEY (main_product_id) REFERENCES products(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT fk_bundle_offers_addon_product
+    FOREIGN KEY (addon_product_id) REFERENCES products(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE warranty_packages (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  package_code VARCHAR(80) NOT NULL,
+  title VARCHAR(180) NOT NULL,
+  duration_months INT NOT NULL DEFAULT 0,
+  price DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  description TEXT NULL,
+  status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_warranty_packages_code (package_code),
+  KEY idx_warranty_packages_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE product_warranty_packages (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  product_id BIGINT UNSIGNED NOT NULL,
+  warranty_package_id BIGINT UNSIGNED NOT NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_product_warranty_packages_product_package (product_id, warranty_package_id),
+  KEY idx_product_warranty_packages_product_id (product_id),
+  KEY idx_product_warranty_packages_package_id (warranty_package_id),
+  CONSTRAINT fk_product_warranty_packages_product
+    FOREIGN KEY (product_id) REFERENCES products(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT fk_product_warranty_packages_package
+    FOREIGN KEY (warranty_package_id) REFERENCES warranty_packages(id)
     ON DELETE CASCADE
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

@@ -19,6 +19,10 @@ async function initAdminProducts() {
   document.getElementById("productImportFile").addEventListener("change", handleProductImportFileChange);
   document.getElementById("previewProductImportBtn").addEventListener("click", previewProductImport);
   document.getElementById("commitProductImportBtn").addEventListener("click", commitProductImport);
+  document.querySelectorAll("input[name='productImportMode']").forEach(function (input) {
+    input.addEventListener("change", handleProductImportModeChange);
+  });
+  document.getElementById("replaceCatalogConfirmInput").addEventListener("input", updateProductImportModeState);
   document.getElementById("focusProductImportBtn").addEventListener("click", function () {
     document.getElementById("productImportPanel").scrollIntoView({ behavior: "smooth", block: "start" });
     document.getElementById("productImportUploadBox").focus({ preventScroll: true });
@@ -28,6 +32,7 @@ async function initAdminProducts() {
     loadAdminProducts();
   });
   updateProductImportFileMeta();
+  updateProductImportModeState();
   setProductTab("list");
   await loadAdminProducts();
 }
@@ -206,26 +211,75 @@ function getProductImportFile() {
   return input && input.files && input.files[0] ? input.files[0] : null;
 }
 
+function getProductImportOptions() {
+  const selectedMode = document.querySelector("input[name='productImportMode']:checked");
+  const importMode = selectedMode ? selectedMode.value : "strict";
+  const confirmReset = document.getElementById("replaceCatalogConfirmInput").value.trim();
+
+  return {
+    importMode,
+    confirmReset
+  };
+}
+
+function isProductImportModeValid(options) {
+  return options.importMode !== "replaceCatalog" || options.confirmReset === "RESET CATALOG";
+}
+
 function getProductImportFormData() {
   const file = getProductImportFile();
+  const options = getProductImportOptions();
 
   if (!file) {
     showProductImportAlert("warning", "Vui lòng chọn file .zip để import.");
     return null;
   }
 
+  if (!isProductImportModeValid(options)) {
+    showProductImportAlert("warning", "Vui lòng nhập RESET CATALOG để dùng chế độ reset catalog.");
+    return null;
+  }
+
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("importMode", options.importMode);
+  formData.append("confirmReset", options.confirmReset);
   return formData;
 }
 
 function handleProductImportFileChange() {
+  resetProductImportPreviewState();
+  updateProductImportFileMeta();
+}
+
+function handleProductImportModeChange() {
+  resetProductImportPreviewState();
+  updateProductImportModeState();
+}
+
+function resetProductImportPreviewState() {
   latestProductImportPreview = null;
   document.getElementById("commitProductImportBtn").disabled = true;
   document.getElementById("viewProductListAfterImportBtn").hidden = true;
   document.getElementById("productImportPreview").innerHTML = "";
   document.getElementById("productImportMessage").innerHTML = "";
-  updateProductImportFileMeta();
+}
+
+function updateProductImportModeState() {
+  const options = getProductImportOptions();
+  const confirmWrap = document.getElementById("replaceCatalogConfirmWrap");
+  const previewButton = document.getElementById("previewProductImportBtn");
+  const commitButton = document.getElementById("commitProductImportBtn");
+  const modeIsValid = isProductImportModeValid(options);
+
+  confirmWrap.hidden = options.importMode !== "replaceCatalog";
+  previewButton.disabled = !modeIsValid;
+
+  if (!latestProductImportPreview || !latestProductImportPreview.canCommit || !modeIsValid) {
+    commitButton.disabled = true;
+  } else {
+    commitButton.disabled = false;
+  }
 }
 
 function updateProductImportFileMeta() {
@@ -311,6 +365,7 @@ async function previewProductImport() {
     showProductImportAlert("error", error.message);
   } finally {
     previewButton.disabled = false;
+    updateProductImportModeState();
   }
 }
 
@@ -349,31 +404,71 @@ function renderProductImportPreview(data) {
 
   const errors = data.errors || [];
   const warnings = data.warnings || [];
-  const skippedOptionalFiles = data.skippedOptionalFiles || [];
+  const skippedFiles = data.skippedFiles || data.skippedOptionalFiles || [];
 
   return `
     <div class="import-preview-summary">
+      <article><span>Chế độ</span><strong>${escapeHtml(getImportModeLabel(data.importMode || "strict"))}</strong></article>
       <article><span>Tổng sản phẩm</span><strong>${escapeHtml(data.totalProducts || 0)}</strong></article>
       <article><span>Sản phẩm mới</span><strong>${escapeHtml(data.createCount || 0)}</strong></article>
-      <article><span>Cập nhật</span><strong>${escapeHtml(data.updateCount || 0)}</strong></article>
+      <article><span>Cập nhật SKU</span><strong>${escapeHtml(data.updateBySkuCount || data.updateCount || 0)}</strong></article>
+      <article><span>Cập nhật slug</span><strong>${escapeHtml(data.updateBySlugCount || 0)}</strong></article>
       <article><span>Ảnh</span><strong>${escapeHtml(data.imageCount || 0)}</strong></article>
       <article><span>Thông số</span><strong>${escapeHtml(data.specCount || 0)}</strong></article>
+      <article><span>Highlights</span><strong>${escapeHtml(data.highlightCount || 0)}</strong></article>
+      <article><span>Commitments</span><strong>${escapeHtml(data.commitmentCount || 0)}</strong></article>
+      <article><span>Promotions</span><strong>${escapeHtml(data.promotionCount || 0)}</strong></article>
+      <article><span>Product promos</span><strong>${escapeHtml(data.productPromotionCount || 0)}</strong></article>
+      <article><span>Bundles</span><strong>${escapeHtml(data.bundleOfferCount || 0)}</strong></article>
+      <article><span>Warranty packs</span><strong>${escapeHtml(data.warrantyPackageCount || 0)}</strong></article>
+      <article><span>Product warranty</span><strong>${escapeHtml(data.productWarrantyPackageCount || 0)}</strong></article>
       <article class="${errors.length ? "has-errors" : ""}"><span>Lỗi</span><strong>${escapeHtml(errors.length)}</strong></article>
       <article class="${warnings.length ? "has-warnings" : ""}"><span>Cảnh báo</span><strong>${escapeHtml(warnings.length)}</strong></article>
     </div>
+    ${renderImportConflictSummary(data.conflictSummary)}
     ${renderImportSampleProducts(data.sampleProducts || [])}
     ${renderImportIssueList("Lỗi cần sửa", errors, "error")}
     ${renderImportIssueList("Cảnh báo", warnings, "warning")}
-    ${skippedOptionalFiles.length ? `
+    ${skippedFiles.length ? `
       <div class="import-preview-list">
-        <h3>Optional file bị bỏ qua</h3>
+        <h3>File bị bỏ qua</h3>
         <ul>
-          ${skippedOptionalFiles.map(function (item) {
+          ${skippedFiles.map(function (item) {
             return `<li><strong>${escapeHtml(item.file)}</strong>: ${escapeHtml(item.reason)}</li>`;
           }).join("")}
         </ul>
       </div>
     ` : ""}
+  `;
+}
+
+function getImportModeLabel(mode) {
+  if (mode === "updateBySlug") {
+    return "Cập nhật theo slug";
+  }
+
+  if (mode === "replaceCatalog") {
+    return "Reset catalog";
+  }
+
+  return "Strict";
+}
+
+function renderImportConflictSummary(conflictSummary) {
+  if (!conflictSummary || !Array.isArray(conflictSummary.slugConflicts) || !conflictSummary.slugConflicts.length) {
+    return "";
+  }
+
+  return `
+    <div class="import-preview-list has-warnings">
+      <h3>Slug conflict</h3>
+      <ul>
+        ${conflictSummary.slugConflicts.slice(0, 20).map(function (item) {
+          return `<li><strong>${escapeHtml(item.slug)}</strong>: CSV SKU ${escapeHtml(item.csvSku)} / DB SKU ${escapeHtml(item.dbSku)}</li>`;
+        }).join("")}
+      </ul>
+      ${conflictSummary.slugConflicts.length > 20 ? `<p>Và ${escapeHtml(conflictSummary.slugConflicts.length - 20)} conflict khác.</p>` : ""}
+    </div>
   `;
 }
 
