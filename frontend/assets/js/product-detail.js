@@ -112,7 +112,7 @@ function renderProductDetail(product) {
   const importedHighlights = normalizeImportedHighlights(product.highlights || []);
   const highlights = importedHighlights.length ? importedHighlights : deriveProductHighlights(product, quickSpecs);
   const commitments = normalizeImportedCommitments(product.commitments || []);
-  const policyItems = commitments.length ? commitments : POLICY_ITEMS;
+  const policyItems = (commitments.length ? commitments : POLICY_ITEMS).slice(0, 6);
 
   return `
     <section class="product-gallery product-gallery-pro">
@@ -124,10 +124,8 @@ function renderProductDetail(product) {
       ${renderQuickSpecs(quickSpecs)}
     </section>
 
+    ${renderCommercialSections(product, isService)}
     ${renderProductHighlights(highlights)}
-    ${renderProductPromotions(product.promotions || [])}
-    ${renderBundleOffers(product.bundle_offers || [])}
-    ${renderWarrantyPackages(product.warranty_packages || [])}
 
     <section class="description-panel product-description-panel">
       <div class="detail-section-heading">
@@ -148,7 +146,7 @@ function renderProductDetail(product) {
     <section class="product-policy-panel">
       <div class="detail-section-heading">
         <span>Cam kết</span>
-        <h2>Chính sách mua hàng tại AeroTech</h2>
+        <h2>Cam kết từ AeroTech</h2>
       </div>
       <div class="product-policy-grid">
         ${policyItems.map(renderPolicyItem).join("")}
@@ -355,7 +353,9 @@ function renderQuickSpecs(quickSpecs) {
 }
 
 function renderProductHighlights(highlights) {
-  if (!highlights.length) {
+  const visibleHighlights = highlights.slice(0, 6);
+
+  if (!visibleHighlights.length) {
     return "";
   }
 
@@ -366,10 +366,10 @@ function renderProductHighlights(highlights) {
         <h2>Điểm nổi bật sản phẩm</h2>
       </div>
       <div class="product-highlight-grid">
-        ${highlights.map(function (item) {
+        ${visibleHighlights.map(function (item) {
           return `
             <article class="product-highlight-card">
-              <span>${escapeHtml(item.code)}</span>
+              <span>${escapeHtml(getCompactIconText(item.code, "AT"))}</span>
               <div>
                 <h3>${escapeHtml(item.title)}</h3>
                 <p>${escapeHtml(item.description)}</p>
@@ -382,31 +382,69 @@ function renderProductHighlights(highlights) {
   `;
 }
 
+function renderCommercialSections(product, isService) {
+  const promotions = normalizePromotions(product.promotions || []);
+  const warrantyPackages = isService ? [] : normalizeWarrantyPackages(product.warranty_packages || []);
+  const bundleOffers = normalizeBundleOffers(product.bundle_offers || []);
+  const blocks = [
+    renderProductPromotions(promotions),
+    renderWarrantyPackages(warrantyPackages),
+    renderBundleOffers(bundleOffers)
+  ].filter(Boolean);
+
+  if (!blocks.length) {
+    return "";
+  }
+
+  return `
+    <section class="product-commerce-panel">
+      <div class="detail-section-heading">
+        <span>Ưu đãi & dịch vụ</span>
+        <h2>Thông tin mua hàng mở rộng</h2>
+      </div>
+      <div class="product-commerce-grid">
+        ${blocks.join("")}
+      </div>
+    </section>
+  `;
+}
+
 function renderProductPromotions(promotions) {
   if (!promotions.length) {
     return "";
   }
 
+  const visiblePromotions = promotions.slice(0, 4);
+
   return `
-    <section class="product-offer-panel">
-      <div class="detail-section-heading">
-        <span>Ưu đãi</span>
-        <h2>Ưu đãi đi kèm</h2>
+    <article class="commerce-block commerce-promotions-block">
+      <div class="commerce-block-heading">
+        <span>Khuyến mãi</span>
+        <h3>Ưu đãi đi kèm</h3>
       </div>
-      <div class="product-offer-grid">
-        ${promotions.map(function (promotion) {
+      <div class="promotion-list">
+        ${visiblePromotions.map(function (promotion) {
           return `
-            <article class="product-offer-card">
-              <span>${escapeHtml(promotion.promo_code || "PROMO")}</span>
+            <article class="promotion-card">
+              <div class="promotion-card-head">
+                <span class="promotion-type-badge">${escapeHtml(getPromotionTypeLabel(promotion.promo_type))}</span>
+                ${promotion.promo_code ? `<code>${escapeHtml(promotion.promo_code)}</code>` : ""}
+              </div>
               <div>
                 <h3>${escapeHtml(promotion.title)}</h3>
                 <p>${escapeHtml(promotion.description || getPromotionSummary(promotion))}</p>
+                <div class="commerce-meta-row">
+                  <span>${escapeHtml(getPromotionDiscountText(promotion))}</span>
+                  ${getPromotionDateRange(promotion) ? `<span>${escapeHtml(getPromotionDateRange(promotion))}</span>` : ""}
+                </div>
               </div>
             </article>
           `;
         }).join("")}
       </div>
-    </section>
+      <p class="commerce-note">Ưu đãi áp dụng theo điều kiện từng chương trình.</p>
+      ${promotions.length > visiblePromotions.length ? `<p class="commerce-note">Hiển thị ${visiblePromotions.length} ưu đãi nổi bật nhất.</p>` : ""}
+    </article>
   `;
 }
 
@@ -415,28 +453,46 @@ function renderBundleOffers(bundleOffers) {
     return "";
   }
 
+  const visibleOffers = bundleOffers.slice(0, 4);
+
   return `
-    <section class="product-offer-panel">
-      <div class="detail-section-heading">
+    <article class="commerce-block commerce-bundle-block">
+      <div class="commerce-block-heading">
         <span>Combo</span>
-        <h2>Mua kèm ưu đãi</h2>
+        <h3>Mua kèm ưu đãi</h3>
       </div>
       <div class="product-bundle-list">
-        ${bundleOffers.map(function (offer) {
+        ${visibleOffers.map(function (offer) {
           const addon = offer.addon_product || {};
+          const addonFallback = getProductImageFallback(addon);
           return `
             <article class="product-bundle-card">
-              <div>
-                <h3>${escapeHtml(offer.title)}</h3>
-                <p>${escapeHtml(addon.name || "Sản phẩm mua kèm")}</p>
-                <strong>${escapeHtml(getBundlePriceText(offer))}</strong>
+              <a class="bundle-product-image" href="${addon.slug ? `product-detail.html?slug=${encodeURIComponent(addon.slug)}` : "#"}" aria-label="${escapeAttribute(addon.name || "Sản phẩm mua kèm")}">
+                <img
+                  src="${escapeAttribute(getImageUrl(addon.primary_image, addon))}"
+                  alt="${escapeAttribute(addon.name || "Sản phẩm mua kèm")}"
+                  onerror="this.onerror=null;this.src='${escapeAttribute(addonFallback)}'"
+                >
+              </a>
+              <div class="bundle-product-body">
+                <div class="bundle-product-meta">
+                  ${addon.sku ? `<span>${escapeHtml(addon.sku)}</span>` : ""}
+                  ${addon.category_name ? `<span>${escapeHtml(addon.category_name)}</span>` : ""}
+                </div>
+                <h4>${escapeHtml(addon.name || "Sản phẩm mua kèm")}</h4>
+                <p>${escapeHtml(offer.title || "Ưu đãi mua kèm")}</p>
+                <div class="bundle-price-row">
+                  ${addon.base_price ? `<strong>${formatCurrency(addon.sale_price || addon.base_price)}</strong>` : ""}
+                  <span>${escapeHtml(getBundlePriceText(offer))}</span>
+                </div>
               </div>
               ${addon.slug ? `<a class="btn btn-outline" href="product-detail.html?slug=${encodeURIComponent(addon.slug)}">Xem sản phẩm</a>` : ""}
             </article>
           `;
         }).join("")}
       </div>
-    </section>
+      ${bundleOffers.length > visibleOffers.length ? `<p class="commerce-note">Hiển thị ${visibleOffers.length} gợi ý mua kèm phù hợp nhất.</p>` : ""}
+    </article>
   `;
 }
 
@@ -445,27 +501,32 @@ function renderWarrantyPackages(packages) {
     return "";
   }
 
+  const visiblePackages = packages.slice(0, 4);
+
   return `
-    <section class="product-offer-panel">
-      <div class="detail-section-heading">
+    <article class="commerce-block commerce-warranty-block">
+      <div class="commerce-block-heading">
         <span>Bảo hành</span>
-        <h2>Gói bảo hành mở rộng</h2>
+        <h3>Gói bảo hành mở rộng</h3>
       </div>
-      <div class="product-offer-grid">
-        ${packages.map(function (item) {
+      <div class="warranty-package-grid">
+        ${visiblePackages.map(function (item) {
           return `
-            <article class="product-offer-card">
-              <span>${escapeHtml(item.package_code || "BH")}</span>
-              <div>
-                <h3>${escapeHtml(item.title)}</h3>
-                <p>${escapeHtml(item.description || `${item.duration_months || 0} tháng bảo hành mở rộng.`)}</p>
-                <strong>${formatCurrency(item.price || 0)}</strong>
+            <article class="warranty-package-card">
+              <div class="warranty-package-head">
+                <span>+${escapeHtml(item.duration_months || 0)} tháng</span>
+                ${item.package_code ? `<code>${escapeHtml(item.package_code)}</code>` : ""}
               </div>
+              <h4>${escapeHtml(item.title)}</h4>
+              <p>${escapeHtml(item.description || `${item.duration_months || 0} tháng bảo hành mở rộng.`)}</p>
+              <strong>${formatCurrency(item.price || 0)}</strong>
             </article>
           `;
         }).join("")}
       </div>
-    </section>
+      <p class="commerce-note">Có thể đăng ký khi mua hàng tại cửa hàng hoặc qua tư vấn viên.</p>
+      ${packages.length > visiblePackages.length ? `<p class="commerce-note">Hiển thị ${visiblePackages.length} gói phù hợp nhất.</p>` : ""}
+    </article>
   `;
 }
 
@@ -482,11 +543,12 @@ function renderPolicyItem(item) {
 }
 
 function normalizeImportedHighlights(highlights) {
-  return highlights.map(function (item) {
+  return highlights.slice().sort(sortBySortOrder).map(function (item) {
     return {
       code: item.icon || "★",
       title: item.title,
-      description: item.description || ""
+      description: item.description || "",
+      sort_order: Number(item.sort_order || 0)
     };
   }).filter(function (item) {
     return item.title;
@@ -494,15 +556,109 @@ function normalizeImportedHighlights(highlights) {
 }
 
 function normalizeImportedCommitments(commitments) {
-  return commitments.map(function (item) {
+  const seen = new Set();
+
+  return commitments.slice().sort(function (a, b) {
+    const scopeDiff = getCommitmentScopePriority(a.scope_type) - getCommitmentScopePriority(b.scope_type);
+
+    if (scopeDiff !== 0) {
+      return scopeDiff;
+    }
+
+    return sortBySortOrder(a, b);
+  }).map(function (item) {
     return {
       code: item.icon || "✓",
       title: item.title,
-      description: item.description || ""
+      description: item.description || "",
+      scope_type: item.scope_type || "global",
+      sort_order: Number(item.sort_order || 0)
     };
   }).filter(function (item) {
-    return item.title;
+    if (!item.title) {
+      return false;
+    }
+
+    const key = `${normalizeSpecKey(item.title)}|${normalizeSpecKey(item.description)}`;
+
+    if (seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+    return true;
   });
+}
+
+function normalizePromotions(promotions) {
+  return promotions.slice().sort(sortBySortOrder).filter(function (promotion) {
+    return promotion && promotion.title;
+  });
+}
+
+function normalizeBundleOffers(bundleOffers) {
+  return bundleOffers.slice().sort(sortBySortOrder).filter(function (offer) {
+    return offer && offer.addon_product && offer.addon_product.slug;
+  });
+}
+
+function normalizeWarrantyPackages(packages) {
+  return packages.slice().sort(sortBySortOrder).filter(function (item) {
+    return item && item.title;
+  });
+}
+
+function sortBySortOrder(a, b) {
+  const orderDiff = Number(a.sort_order || 0) - Number(b.sort_order || 0);
+
+  if (orderDiff !== 0) {
+    return orderDiff;
+  }
+
+  return Number(a.id || 0) - Number(b.id || 0);
+}
+
+function getCommitmentScopePriority(scopeType) {
+  const priorities = {
+    product: 1,
+    category: 2,
+    global: 3
+  };
+
+  return priorities[scopeType] || 4;
+}
+
+function getCompactIconText(value, fallback) {
+  const raw = String(value || fallback || "AT").trim();
+  const iconMap = {
+    cpu: "CPU",
+    gpu: "GPU",
+    ram: "RAM",
+    storage: "SSD",
+    ssd: "SSD",
+    display: "4K",
+    screen: "4K",
+    warranty: "BH",
+    shield: "BH",
+    gift: "ƯĐ",
+    service: "DV",
+    official: "CH",
+    support: "KT",
+    delivery: "GH"
+  };
+  const normalized = normalizeSpecKey(raw);
+
+  if (iconMap[normalized]) {
+    return iconMap[normalized];
+  }
+
+  if (raw.length <= 4) {
+    return raw.toUpperCase();
+  }
+
+  return raw.split(/\s+/).map(function (part) {
+    return part.charAt(0);
+  }).join("").slice(0, 4).toUpperCase() || fallback || "AT";
 }
 
 function getPromotionSummary(promotion) {
@@ -519,6 +675,71 @@ function getPromotionSummary(promotion) {
   }
 
   return "Ưu đãi áp dụng theo chính sách AeroTech.";
+}
+
+function getPromotionTypeLabel(type) {
+  const labels = {
+    voucher: "Voucher",
+    gift: "Quà tặng",
+    installment: "Trả góp",
+    event: "Sự kiện",
+    bundle: "Combo"
+  };
+
+  return labels[type] || "Ưu đãi";
+}
+
+function getPromotionDiscountText(promotion) {
+  if (promotion.discount_type === "percent" && promotion.discount_value) {
+    return `Giảm ${promotion.discount_value}%`;
+  }
+
+  if (promotion.discount_type === "fixed" && promotion.discount_value) {
+    return `Giảm ${formatCurrency(promotion.discount_value)}`;
+  }
+
+  if (promotion.discount_type === "gift") {
+    return "Quà tặng kèm";
+  }
+
+  return "Theo điều kiện chương trình";
+}
+
+function getPromotionDateRange(promotion) {
+  const start = formatDateOnly(promotion.start_date);
+  const end = formatDateOnly(promotion.end_date);
+
+  if (start && end) {
+    return `${start} - ${end}`;
+  }
+
+  if (end) {
+    return `Đến ${end}`;
+  }
+
+  if (start) {
+    return `Từ ${start}`;
+  }
+
+  return "";
+}
+
+function formatDateOnly(value) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  }).format(date);
 }
 
 function getBundlePriceText(offer) {

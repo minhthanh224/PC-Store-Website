@@ -528,12 +528,26 @@ async function getProductHighlights(productId) {
 async function getProductCommitments(product) {
   const [rows] = await pool.execute(
     `
-      SELECT id, scope_type, scope_value, title, description, icon, sort_order
+      SELECT
+        id,
+        scope_type,
+        scope_value,
+        title,
+        description,
+        icon,
+        sort_order
       FROM commitments
       WHERE scope_type = 'global'
         OR (scope_type = 'product' AND scope_value IN (?, ?))
         OR (scope_type = 'category' AND scope_value IN (?, ?))
-      ORDER BY sort_order ASC, id ASC
+      ORDER BY
+        CASE scope_type
+          WHEN 'product' THEN 1
+          WHEN 'category' THEN 2
+          ELSE 3
+        END ASC,
+        sort_order ASC,
+        id ASC
     `,
     [
       product.sku,
@@ -593,17 +607,24 @@ async function getBundleOffers(productId) {
         p.name AS addon_name,
         p.slug AS addon_slug,
         p.sku AS addon_sku,
+        p.product_type AS addon_product_type,
         p.base_price AS addon_base_price,
         p.sale_price AS addon_sale_price,
+        b.name AS addon_brand_name,
+        c.name AS addon_category_name,
+        c.slug AS addon_category_slug,
         (
           SELECT pi.image_url
           FROM product_images pi
           WHERE pi.product_id = p.id
           ORDER BY pi.is_primary DESC, pi.sort_order ASC, pi.id ASC
           LIMIT 1
-        ) AS addon_primary_image
+        ) AS addon_primary_image,
+        ${getAvailableStockExpression("p")} AS addon_available_stock
       FROM bundle_offers bo
       INNER JOIN products p ON p.id = bo.addon_product_id
+      LEFT JOIN brands b ON b.id = p.brand_id
+      INNER JOIN categories c ON c.id = p.category_id
       WHERE bo.main_product_id = ?
         AND bo.status = 'active'
         AND p.status = 'active'
@@ -625,9 +646,14 @@ async function getBundleOffers(productId) {
         name: offer.addon_name,
         slug: offer.addon_slug,
         sku: offer.addon_sku,
+        product_type: offer.addon_product_type,
         base_price: Number(offer.addon_base_price || 0),
         sale_price: offer.addon_sale_price === null ? null : Number(offer.addon_sale_price),
-        primary_image: offer.addon_primary_image || null
+        primary_image: offer.addon_primary_image || null,
+        brand_name: offer.addon_brand_name || null,
+        category_name: offer.addon_category_name || null,
+        category_slug: offer.addon_category_slug || null,
+        available_stock: Number(offer.addon_available_stock || 0)
       }
     };
   });
