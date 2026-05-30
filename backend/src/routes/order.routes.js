@@ -1,5 +1,6 @@
 const express = require("express");
 const {
+  previewPromotion,
   createOrder,
   getMyOrders,
   getOrderByCode
@@ -13,6 +14,7 @@ const router = express.Router();
 router.use(authMiddleware);
 router.use(roleMiddleware(["customer"]));
 
+router.post("/promotion-preview", asyncHandler(previewPromotion));
 router.post("/", asyncHandler(createOrder));
 router.get("/my", asyncHandler(getMyOrders));
 router.get("/:orderCode", asyncHandler(getOrderByCode));

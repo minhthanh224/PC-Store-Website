@@ -1,6 +1,22 @@
 const pool = require("../config/database");
 const orderService = require("../services/order.service");
 
+async function previewPromotion(req, res) {
+  try {
+    const preview = await orderService.previewPromotion(req.user, req.body);
+
+    res.json({
+      success: true,
+      data: preview
+    });
+  } catch (error) {
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || "Không thể kiểm tra mã ưu đãi."
+    });
+  }
+}
+
 async function createOrder(req, res) {
   try {
     const order = await orderService.createOrder(req.user, req.body);
@@ -97,6 +113,9 @@ async function getOrderByCode(req, res) {
         subtotal_amount,
         shipping_fee,
         discount_amount,
+        promotion_id,
+        promotion_code_snapshot,
+        promotion_title_snapshot,
         total_amount,
         note,
         created_at,
@@ -170,6 +189,7 @@ async function getOrderByCode(req, res) {
         subtotal_amount: Number(order.subtotal_amount),
         shipping_fee: Number(order.shipping_fee),
         discount_amount: Number(order.discount_amount),
+        promotion_id: order.promotion_id ? Number(order.promotion_id) : null,
         total_amount: Number(order.total_amount)
       },
       items: items.map(function (item) {
@@ -193,6 +213,7 @@ async function getOrderByCode(req, res) {
 }
 
 module.exports = {
+  previewPromotion,
   createOrder,
   getMyOrders,
   getOrderByCode

@@ -113,12 +113,30 @@ function renderCartWarrantyPackage(item) {
 function renderCartSummary() {
   const subtotal = getCartSubtotal();
   const shipping = getEstimatedShipping(subtotal);
-  const total = subtotal + shipping;
+  const promotion = getCartPromotion();
+  const discount = promotion ? Number(promotion.discount_amount || 0) : 0;
+  const total = Math.max(subtotal + shipping - discount, 0);
 
   return `
     <h2>Tổng đơn hàng</h2>
     <div class="summary-row"><span>Tạm tính</span><strong>${formatCurrency(subtotal)}</strong></div>
     <div class="summary-row"><span>Phí giao hàng</span><strong>${formatCurrency(shipping)}</strong></div>
+    ${promotion ? `<div class="summary-row discount-row"><span>Mã ${escapeHtml(promotion.code)}</span><strong>-${formatCurrency(discount)}</strong></div>` : ""}
+    <div class="cart-promotion-box">
+      <label for="cartPromotionCode">Mã ưu đãi</label>
+      <div class="promotion-input-row">
+        <input id="cartPromotionCode" type="text" value="${escapeAttribute(promotion ? promotion.code : "")}" placeholder="Nhập mã ưu đãi">
+        <button id="applyCartPromotionBtn" class="btn btn-light" type="button">Áp dụng</button>
+      </div>
+      ${promotion ? `
+        <div class="promotion-applied-note">
+          <strong>${escapeHtml(promotion.title || promotion.code)}</strong>
+          <span>Đã giảm ${formatCurrency(discount)}</span>
+          <button id="removeCartPromotionBtn" type="button">Bỏ mã</button>
+        </div>
+      ` : ""}
+      <div id="cartPromotionMessage" class="promotion-message"></div>
+    </div>
     <div class="summary-row total-line"><span>Tổng cộng</span><strong>${formatCurrency(total)}</strong></div>
     <a class="btn btn-primary" href="checkout.html">Tiến hành đặt hàng</a>
     <button id="clearCartBtn" class="btn btn-light" type="button">Xóa giỏ hàng</button>
@@ -131,12 +149,61 @@ function bindCartPageEvents() {
     element.addEventListener("change", handleCartControl);
   });
 
+  const applyPromotionButton = document.getElementById("applyCartPromotionBtn");
+  if (applyPromotionButton) {
+    applyPromotionButton.addEventListener("click", applyCartPromotion);
+  }
+
+  const removePromotionButton = document.getElementById("removeCartPromotionBtn");
+  if (removePromotionButton) {
+    removePromotionButton.addEventListener("click", function () {
+      clearCartPromotion();
+      renderCartPage();
+    });
+  }
+
   const clearButton = document.getElementById("clearCartBtn");
   if (clearButton) {
     clearButton.addEventListener("click", function () {
       clearCart();
       renderCartPage();
     });
+  }
+}
+
+async function applyCartPromotion() {
+  const input = document.getElementById("cartPromotionCode");
+  const message = document.getElementById("cartPromotionMessage");
+  const code = input ? input.value.trim() : "";
+
+  if (!code) {
+    if (message) message.innerHTML = renderError("Vui lòng nhập mã ưu đãi.");
+    return;
+  }
+
+  if (!isLoggedIn()) {
+    if (message) message.innerHTML = renderError("Bạn cần đăng nhập để áp dụng mã ưu đãi.");
+    return;
+  }
+
+  try {
+    if (message) message.innerHTML = renderLoading("Đang kiểm tra mã ưu đãi...");
+    const response = await authPost("/orders/promotion-preview", {
+      promotion_code: code,
+      items: getCartOrderItemsPayload()
+    });
+    saveCartPromotion({
+      code: response.data.promotion.code,
+      title: response.data.promotion.title,
+      description: response.data.promotion.description,
+      discount_amount: response.data.discount_amount,
+      eligible_subtotal: response.data.eligible_subtotal,
+      total_amount: response.data.total_amount
+    });
+    renderCartPage();
+  } catch (error) {
+    clearCartPromotion();
+    if (message) message.innerHTML = renderError(error.message);
   }
 }
 

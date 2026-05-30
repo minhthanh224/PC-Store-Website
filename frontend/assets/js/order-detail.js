@@ -75,9 +75,25 @@ function renderOrderDetail(order, items) {
     <section class="order-money-box">
       <div><span>Tạm tính</span><strong>${formatCurrency(order.subtotal_amount)}</strong></div>
       <div><span>Phí giao hàng</span><strong>${formatCurrency(order.shipping_fee)}</strong></div>
+      ${renderOrderPromotionSummary(order)}
       <div><span>Giảm giá</span><strong>${formatCurrency(order.discount_amount)}</strong></div>
       <div class="total-line"><span>Tổng cộng</span><strong>${formatCurrency(order.total_amount)}</strong></div>
     </section>
+  `;
+}
+
+
+function renderOrderPromotionSummary(order) {
+  if (!order.promotion_code_snapshot) {
+    return "";
+  }
+
+  return `
+    <div class="order-promotion-summary">
+      <span>Mã ưu đãi</span>
+      <strong>${escapeHtml(order.promotion_code_snapshot)}</strong>
+    </div>
+    ${order.promotion_title_snapshot ? `<div><span>Chương trình</span><strong>${escapeHtml(order.promotion_title_snapshot)}</strong></div>` : ""}
   `;
 }
 
@@ -109,6 +125,7 @@ function renderOrderItem(item) {
 }
 
 
+
 function renderOrderItemBundleNote(item) {
   if (!item.is_bundle_addon) {
     return "";
@@ -123,6 +140,7 @@ function renderOrderItemBundleNote(item) {
     </div>
   `;
 }
+
 
 function renderOrderItemWarrantyPackage(item) {
   if (!item.warranty_package_id) {

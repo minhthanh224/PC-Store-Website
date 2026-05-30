@@ -10392,3 +10392,79 @@ body.has-compare-bar {
     justify-content: center;
   }
 }
+
+/* Promotion / voucher UI */
+.cart-promotion-box,
+.checkout-promotion-box {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0;
+  padding: 14px;
+  border: 1px solid rgba(15, 98, 254, 0.14);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(15, 98, 254, 0.06), rgba(255, 255, 255, 0.92));
+}
+
+.cart-promotion-box label,
+.checkout-promotion-box label {
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+}
+
+.promotion-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.promotion-input-row input {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  border-radius: 12px;
+  padding: 0 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.promotion-applied-note {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(16, 185, 129, 0.1);
+  color: #065f46;
+}
+
+.promotion-applied-note button {
+  justify-self: start;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #0f62fe;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.promotion-message:empty {
+  display: none;
+}
+
+.discount-row strong {
+  color: #047857;
+}
+
+.order-promotion-summary strong {
+  color: #0f62fe;
+}
+
+@media (max-width: 520px) {
+  .promotion-input-row {
+    grid-template-columns: 1fr;
+  }
+
+  .promotion-input-row .btn {
+    width: 100%;
+  }
+}

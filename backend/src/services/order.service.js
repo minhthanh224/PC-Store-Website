@@ -35,6 +35,16 @@ function normalizeCartItemKey(value) {
   return value === undefined || value === null || value === "" ? "" : String(value);
 }
 
+function normalizePromotionCode(value) {
+  const code = String(value || "").trim().toUpperCase();
+
+  if (!code) {
+    return null;
+  }
+
+  return code.replace(/\s+/g, "");
+}
+
 function isBundleAddonItem(item) {
   return item.is_bundle_addon === true || item.is_bundle_addon === 1 || item.is_bundle_addon === "1" || item.is_bundle_addon === "true";
 }
@@ -336,6 +346,241 @@ function calculateBundleUnitPrice(addonProduct, bundleOffer) {
   return originalPrice;
 }
 
+function isPromotionCurrentlyActive(promotion) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (promotion.start_date) {
+    const startDate = new Date(promotion.start_date);
+    startDate.setHours(0, 0, 0, 0);
+
+    if (startDate > today) {
+      return false;
+    }
+  }
+
+  if (promotion.end_date) {
+    const endDate = new Date(promotion.end_date);
+    endDate.setHours(23, 59, 59, 999);
+
+    if (endDate < today) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+async function loadPromotionForOrder(connection, promotionCode) {
+  if (!promotionCode) {
+    return null;
+  }
+
+  const [promotions] = await connection.execute(
+    `
+      SELECT
+        id,
+        promo_code,
+        title,
+        description,
+        promo_type,
+        discount_type,
+        discount_value,
+        start_date,
+        end_date,
+        status
+      FROM promotions
+      WHERE UPPER(promo_code) = ?
+        AND status = 'active'
+      LIMIT 1
+    `,
+    [promotionCode]
+  );
+
+  if (!promotions.length) {
+    const error = new Error("Mã ưu đãi không tồn tại hoặc đã ngừng áp dụng.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const promotion = promotions[0];
+
+  if (!isPromotionCurrentlyActive(promotion)) {
+    const error = new Error("Mã ưu đãi chưa đến thời gian áp dụng hoặc đã hết hạn.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (promotion.promo_type === "bundle") {
+    const error = new Error("Ưu đãi mua kèm được áp dụng qua sản phẩm mua kèm, không dùng như mã giảm giá đơn hàng.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (!['percent', 'fixed'].includes(promotion.discount_type)) {
+    const error = new Error("Chương trình ưu đãi này không phải mã giảm giá trực tiếp cho đơn hàng.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const [linkedProducts] = await connection.execute(
+    `
+      SELECT product_id
+      FROM product_promotions
+      WHERE promotion_id = ?
+    `,
+    [promotion.id]
+  );
+
+  const productIds = new Set(linkedProducts.map(function (row) {
+    return Number(row.product_id);
+  }));
+
+  return {
+    id: Number(promotion.id),
+    promo_code: promotion.promo_code,
+    title: promotion.title,
+    description: promotion.description,
+    promo_type: promotion.promo_type,
+    discount_type: promotion.discount_type,
+    discount_value: promotion.discount_value === null ? null : Number(promotion.discount_value),
+    start_date: promotion.start_date,
+    end_date: promotion.end_date,
+    product_ids: productIds
+  };
+}
+
+function calculatePromotionEligibleSubtotal(normalizedItems, promotion) {
+  if (!promotion) {
+    return 0;
+  }
+
+  return normalizedItems.reduce(function (total, item) {
+    if (item.is_bundle_addon) {
+      return total;
+    }
+
+    if (promotion.product_ids.size > 0 && !promotion.product_ids.has(Number(item.product_id))) {
+      return total;
+    }
+
+    return total + (Number(item.unit_price || 0) * Number(item.quantity || 0));
+  }, 0);
+}
+
+function calculatePromotionDiscountAmount(promotion, eligibleSubtotal) {
+  if (!promotion) {
+    return 0;
+  }
+
+  if (eligibleSubtotal <= 0) {
+    const error = new Error("Mã ưu đãi không áp dụng cho sản phẩm nào trong giỏ hàng.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (promotion.discount_type === "percent") {
+    return Math.min(Math.round(eligibleSubtotal * Number(promotion.discount_value || 0) / 100), eligibleSubtotal);
+  }
+
+  if (promotion.discount_type === "fixed") {
+    return Math.min(Number(promotion.discount_value || 0), eligibleSubtotal);
+  }
+
+  return 0;
+}
+
+async function resolvePromotionForOrder(connection, promotionCode, normalizedItems) {
+  const promotion = await loadPromotionForOrder(connection, promotionCode);
+
+  if (!promotion) {
+    return {
+      promotion: null,
+      eligibleSubtotal: 0,
+      discountAmount: 0
+    };
+  }
+
+  const eligibleSubtotal = calculatePromotionEligibleSubtotal(normalizedItems, promotion);
+  const discountAmount = calculatePromotionDiscountAmount(promotion, eligibleSubtotal);
+
+  return {
+    promotion,
+    eligibleSubtotal,
+    discountAmount
+  };
+}
+
+function getEstimatedShippingFee(subtotal) {
+  return subtotal >= 3000000 ? 0 : 40000;
+}
+
+async function priceAndValidateOrderItems(connection, normalizedItems) {
+  const productMap = await loadProductsForOrder(connection, normalizedItems);
+  const warrantyPackageMap = await loadWarrantyPackagesForOrder(connection, normalizedItems);
+  const bundleOfferMap = await loadBundleOffersForOrder(connection, normalizedItems);
+  const parentItemMap = normalizedItems.reduce(function (map, item) {
+    if (!item.is_bundle_addon && item.cart_item_key) {
+      map[item.cart_item_key] = item;
+    }
+    return map;
+  }, {});
+  const quantityByProduct = new Map();
+  let subtotal = 0;
+
+  for (const item of normalizedItems) {
+    const product = productMap[item.product_id];
+
+    if (!product) {
+      const error = new Error("Một sản phẩm trong giỏ hàng không còn khả dụng.");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    if (item.is_bundle_addon) {
+      const parentItem = parentItemMap[item.bundle_parent_key];
+      const parentProduct = parentItem ? productMap[parentItem.product_id] : null;
+      const bundleOffer = validateBundleAddonItem(item, parentItem, product, bundleOfferMap);
+      const originalUnitPrice = getProductCurrentPrice(product);
+      const bundleUnitPrice = calculateBundleUnitPrice(product, bundleOffer);
+
+      item.bundle_parent_product_id = parentProduct ? parentProduct.id : parentItem.product_id;
+      item.bundle_parent_name_snapshot = parentProduct ? parentProduct.name : "Sản phẩm chính";
+      item.bundle_offer = bundleOffer;
+      item.unit_price = bundleUnitPrice;
+      item.line_unit_price = bundleUnitPrice;
+      item.total_price = bundleUnitPrice * item.quantity;
+      item.original_unit_price = originalUnitPrice;
+      item.bundle_unit_price = bundleUnitPrice;
+    } else {
+      const unitPrice = getProductCurrentPrice(product);
+      const warrantyPackage = resolveWarrantyPackageForItem(item, product, warrantyPackageMap);
+      const warrantyPackagePrice = warrantyPackage ? warrantyPackage.price : 0;
+
+      item.warranty_package = warrantyPackage;
+      item.unit_price = unitPrice;
+      item.line_unit_price = unitPrice + warrantyPackagePrice;
+      item.total_price = item.line_unit_price * item.quantity;
+    }
+
+    const currentQuantity = quantityByProduct.get(item.product_id) || 0;
+    quantityByProduct.set(item.product_id, currentQuantity + item.quantity);
+    subtotal += item.total_price;
+  }
+
+  for (const [productId, quantity] of quantityByProduct.entries()) {
+    const product = productMap[productId];
+
+    if (product.available_stock < quantity) {
+      const error = new Error(`Sản phẩm ${product.name} không đủ hàng khả dụng. Hiện chỉ còn ${product.available_stock} sản phẩm.`);
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+
+  return { productMap, subtotal };
+}
+
 function validateBundleAddonItem(item, parentItem, addonProduct, bundleOfferMap) {
   if (!parentItem) {
     const error = new Error("Sản phẩm mua kèm cần có sản phẩm chính trong giỏ hàng.");
@@ -406,71 +651,12 @@ async function createOrder(user, body) {
   try {
     await connection.beginTransaction();
 
-    const productMap = await loadProductsForOrder(connection, normalizedItems);
-    const warrantyPackageMap = await loadWarrantyPackagesForOrder(connection, normalizedItems);
-    const bundleOfferMap = await loadBundleOffersForOrder(connection, normalizedItems);
-    const parentItemMap = normalizedItems.reduce(function (map, item) {
-      if (!item.is_bundle_addon && item.cart_item_key) {
-        map[item.cart_item_key] = item;
-      }
-      return map;
-    }, {});
-    const quantityByProduct = new Map();
-    let subtotal = 0;
-
-    for (const item of normalizedItems) {
-      const product = productMap[item.product_id];
-
-      if (!product) {
-        const error = new Error("Một sản phẩm trong giỏ hàng không còn khả dụng.");
-        error.statusCode = 400;
-        throw error;
-      }
-
-      if (item.is_bundle_addon) {
-        const parentItem = parentItemMap[item.bundle_parent_key];
-        const parentProduct = parentItem ? productMap[parentItem.product_id] : null;
-        const bundleOffer = validateBundleAddonItem(item, parentItem, product, bundleOfferMap);
-        const originalUnitPrice = getProductCurrentPrice(product);
-        const bundleUnitPrice = calculateBundleUnitPrice(product, bundleOffer);
-
-        item.bundle_parent_product_id = parentProduct ? parentProduct.id : parentItem.product_id;
-        item.bundle_parent_name_snapshot = parentProduct ? parentProduct.name : "Sản phẩm chính";
-        item.bundle_offer = bundleOffer;
-        item.unit_price = bundleUnitPrice;
-        item.line_unit_price = bundleUnitPrice;
-        item.total_price = bundleUnitPrice * item.quantity;
-        item.original_unit_price = originalUnitPrice;
-        item.bundle_unit_price = bundleUnitPrice;
-      } else {
-        const unitPrice = getProductCurrentPrice(product);
-        const warrantyPackage = resolveWarrantyPackageForItem(item, product, warrantyPackageMap);
-        const warrantyPackagePrice = warrantyPackage ? warrantyPackage.price : 0;
-
-        item.warranty_package = warrantyPackage;
-        item.unit_price = unitPrice;
-        item.line_unit_price = unitPrice + warrantyPackagePrice;
-        item.total_price = item.line_unit_price * item.quantity;
-      }
-
-      const currentQuantity = quantityByProduct.get(item.product_id) || 0;
-      quantityByProduct.set(item.product_id, currentQuantity + item.quantity);
-      subtotal += item.total_price;
-    }
-
-    for (const [productId, quantity] of quantityByProduct.entries()) {
-      const product = productMap[productId];
-
-      if (product.available_stock < quantity) {
-        const error = new Error(`Sản phẩm ${product.name} không đủ hàng khả dụng. Hiện chỉ còn ${product.available_stock} sản phẩm.`);
-        error.statusCode = 400;
-        throw error;
-      }
-    }
-
-    const shippingFee = subtotal >= 3000000 ? 0 : 40000;
-    const discountAmount = 0;
-    const totalAmount = subtotal + shippingFee - discountAmount;
+    const { productMap, subtotal } = await priceAndValidateOrderItems(connection, normalizedItems);
+    const promotionCode = normalizePromotionCode(body.promotion_code || body.promo_code);
+    const promotionResult = await resolvePromotionForOrder(connection, promotionCode, normalizedItems);
+    const shippingFee = getEstimatedShippingFee(subtotal);
+    const discountAmount = promotionResult.discountAmount;
+    const totalAmount = Math.max(subtotal + shippingFee - discountAmount, 0);
     let orderCode = generateOrderCode();
     let inserted = false;
     let orderId = null;
@@ -495,10 +681,13 @@ async function createOrder(user, body) {
               subtotal_amount,
               shipping_fee,
               discount_amount,
+              promotion_id,
+              promotion_code_snapshot,
+              promotion_title_snapshot,
               total_amount,
               note
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'unpaid', 'pending', ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'unpaid', 'pending', ?, ?, ?, ?, ?, ?, ?)
           `,
           [
             orderCode,
@@ -514,6 +703,9 @@ async function createOrder(user, body) {
             subtotal,
             shippingFee,
             discountAmount,
+            promotionResult.promotion ? promotionResult.promotion.id : null,
+            promotionResult.promotion ? promotionResult.promotion.promo_code : null,
+            promotionResult.promotion ? promotionResult.promotion.title : null,
             totalAmount,
             body.note ? String(body.note).trim() : null
           ]
@@ -658,6 +850,12 @@ async function createOrder(user, body) {
       subtotal_amount: subtotal,
       shipping_fee: shippingFee,
       discount_amount: discountAmount,
+      promotion: promotionResult.promotion ? {
+        id: promotionResult.promotion.id,
+        code: promotionResult.promotion.promo_code,
+        title: promotionResult.promotion.title,
+        eligible_subtotal: promotionResult.eligibleSubtotal
+      } : null,
       total_amount: totalAmount
     };
   } catch (error) {
@@ -668,6 +866,64 @@ async function createOrder(user, body) {
   }
 }
 
+async function previewPromotion(user, body) {
+  const normalizedItems = normalizeItems(Array.isArray(body.items) ? body.items : []);
+  const promotionCode = normalizePromotionCode(body.promotion_code || body.promo_code);
+
+  if (!normalizedItems.length) {
+    const error = new Error("Giỏ hàng không có sản phẩm hợp lệ.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (!promotionCode) {
+    const error = new Error("Vui lòng nhập mã ưu đãi.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (normalizedItems.some(function (item) { return item.invalid_warranty_package_id; })) {
+    const error = new Error("Gói bảo hành đã chọn không hợp lệ hoặc không còn áp dụng cho sản phẩm.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (normalizedItems.some(function (item) { return item.invalid_bundle_offer_id; })) {
+    const error = new Error("Ưu đãi mua kèm không hợp lệ hoặc đã hết hiệu lực.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const connection = await pool.getConnection();
+
+  try {
+    const { subtotal } = await priceAndValidateOrderItems(connection, normalizedItems);
+    const promotionResult = await resolvePromotionForOrder(connection, promotionCode, normalizedItems);
+    const shippingFee = getEstimatedShippingFee(subtotal);
+    const totalAmount = Math.max(subtotal + shippingFee - promotionResult.discountAmount, 0);
+
+    return {
+      subtotal_amount: subtotal,
+      shipping_fee: shippingFee,
+      discount_amount: promotionResult.discountAmount,
+      eligible_subtotal: promotionResult.eligibleSubtotal,
+      total_amount: totalAmount,
+      promotion: promotionResult.promotion ? {
+        id: promotionResult.promotion.id,
+        code: promotionResult.promotion.promo_code,
+        title: promotionResult.promotion.title,
+        description: promotionResult.promotion.description,
+        promo_type: promotionResult.promotion.promo_type,
+        discount_type: promotionResult.promotion.discount_type,
+        discount_value: promotionResult.promotion.discount_value
+      } : null
+    };
+  } finally {
+    connection.release();
+  }
+}
+
 module.exports = {
-  createOrder
+  createOrder,
+  previewPromotion
 };

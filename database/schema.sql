@@ -337,6 +337,9 @@ CREATE TABLE orders (
   subtotal_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
   shipping_fee DECIMAL(12,2) NOT NULL DEFAULT 0.00,
   discount_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  promotion_id BIGINT UNSIGNED NULL,
+  promotion_code_snapshot VARCHAR(80) NULL,
+  promotion_title_snapshot VARCHAR(180) NULL,
   total_amount DECIMAL(12,2) NOT NULL DEFAULT 0.00,
   note TEXT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -345,6 +348,11 @@ CREATE TABLE orders (
   UNIQUE KEY uk_orders_order_code (order_code),
   KEY idx_orders_user_id (user_id),
   KEY idx_orders_status (status),
+  KEY idx_orders_promotion_id (promotion_id),
+  CONSTRAINT fk_orders_promotion
+    FOREIGN KEY (promotion_id) REFERENCES promotions(id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE,
   CONSTRAINT fk_orders_user
     FOREIGN KEY (user_id) REFERENCES users(id)
     ON DELETE RESTRICT

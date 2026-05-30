@@ -1,4 +1,5 @@
 const CART_KEY = "se104_cart";
+const CART_PROMOTION_KEY = "se104_cart_promotion";
 
 function getCartItems() {
   const rawCart = localStorage.getItem(CART_KEY);
@@ -22,6 +23,54 @@ function saveCartItems(items) {
 
 function clearCart() {
   saveCartItems([]);
+  clearCartPromotion();
+}
+
+function getCartPromotion() {
+  const rawPromotion = localStorage.getItem(CART_PROMOTION_KEY);
+
+  if (!rawPromotion) {
+    return null;
+  }
+
+  try {
+    const promotion = JSON.parse(rawPromotion);
+
+    if (!promotion || !promotion.code) {
+      return null;
+    }
+
+    return {
+      code: String(promotion.code || "").trim().toUpperCase(),
+      title: promotion.title || "",
+      description: promotion.description || "",
+      discount_amount: Number(promotion.discount_amount || 0),
+      eligible_subtotal: Number(promotion.eligible_subtotal || 0),
+      total_amount: promotion.total_amount === undefined ? null : Number(promotion.total_amount || 0)
+    };
+  } catch (error) {
+    return null;
+  }
+}
+
+function saveCartPromotion(promotion) {
+  if (!promotion || !promotion.code) {
+    clearCartPromotion();
+    return;
+  }
+
+  localStorage.setItem(CART_PROMOTION_KEY, JSON.stringify({
+    code: String(promotion.code || "").trim().toUpperCase(),
+    title: promotion.title || "",
+    description: promotion.description || "",
+    discount_amount: Number(promotion.discount_amount || 0),
+    eligible_subtotal: Number(promotion.eligible_subtotal || 0),
+    total_amount: promotion.total_amount === undefined ? null : Number(promotion.total_amount || 0)
+  }));
+}
+
+function clearCartPromotion() {
+  localStorage.removeItem(CART_PROMOTION_KEY);
 }
 
 function getCartCount() {
@@ -284,6 +333,7 @@ function addToCart(product, quantity) {
   }
 
   saveCartItems(items);
+  clearCartPromotion();
 
   return {
     success: true,
@@ -311,6 +361,7 @@ function updateCartItemQuantity(productIdOrKey, quantity) {
   });
 
   saveCartItems(items);
+  clearCartPromotion();
 }
 
 function removeCartItem(productIdOrKey) {
@@ -337,6 +388,21 @@ function removeCartItem(productIdOrKey) {
     return true;
   });
   saveCartItems(nextItems);
+  clearCartPromotion();
+}
+
+function getCartOrderItemsPayload() {
+  return getCartItems().map(function (item) {
+    return {
+      product_id: item.product_id,
+      quantity: item.quantity,
+      warranty_package_id: item.warranty_package_id || null,
+      cart_item_key: getCartItemKey(item),
+      is_bundle_addon: Boolean(item.is_bundle_addon),
+      bundle_parent_key: item.bundle_parent_key || null,
+      bundle_offer_id: item.bundle_offer_id || null
+    };
+  });
 }
 
 function readProductPayload(button) {
