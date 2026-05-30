@@ -129,8 +129,9 @@ function getOrderStatusLabel(status) {
     pending: "Chờ duyệt",
     approved: "Đã duyệt",
     shipping: "Đang giao",
-    completed: "Hoàn thành",
-    cancelled: "Đã hủy"
+      completed: "Hoàn thành",
+      cancelled: "Đã hủy",
+      returned: "Hoàn hàng"
   };
 
   return labels[status] || status;

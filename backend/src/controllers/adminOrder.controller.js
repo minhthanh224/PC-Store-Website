@@ -31,6 +31,11 @@ async function updateOrderStatus(req, res) {
   });
 }
 
+async function updatePaymentStatus(req, res) {
+  const result = await adminOrderService.updatePaymentStatus(req.params.orderCode, req.body.payment_status);
+  res.json({ success: true, message: result.message, data: { payment_status: result.payment_status } });
+}
+
 async function assignSerial(req, res) {
   const result = await adminOrderService.assignSerial(
     req.params.orderCode,
@@ -57,6 +62,7 @@ module.exports = {
   getOrders,
   getOrderDetail,
   updateOrderStatus,
+  updatePaymentStatus,
   assignSerial,
   unassignSerial
 };

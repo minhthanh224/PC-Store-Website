@@ -129,6 +129,23 @@ function buildProductFilters(query) {
     params.push(query.brand);
   }
 
+  [
+    ["cpu", "cpu"],
+    ["ram", "ram"],
+    ["vga", "vga"]
+  ].forEach(function ([queryKey, specKey]) {
+    if (query[queryKey]) {
+      where.push(`EXISTS (
+        SELECT 1
+        FROM product_specs filter_spec
+        WHERE filter_spec.product_id = p.id
+          AND LOWER(filter_spec.spec_key) LIKE ?
+          AND LOWER(filter_spec.spec_value) LIKE ?
+      )`);
+      params.push(`%${specKey}%`, `%${String(query[queryKey]).trim().toLowerCase()}%`);
+    }
+  });
+
   if (query.productType && PRODUCT_TYPES.includes(query.productType)) {
     where.push("p.product_type = ?");
     params.push(query.productType);
@@ -401,6 +418,23 @@ async function createProductReview(slug, userId, body) {
   if (products.length === 0) {
     const error = new Error("Không tìm thấy sản phẩm đang bán.");
     error.statusCode = 404;
+    throw error;
+  }
+
+  const [purchases] = await pool.execute(
+    `
+      SELECT oi.id
+      FROM order_items oi
+      INNER JOIN orders o ON o.id = oi.order_id
+      WHERE oi.product_id = ? AND o.user_id = ? AND o.status = 'completed'
+      LIMIT 1
+    `,
+    [products[0].id, userId]
+  );
+
+  if (purchases.length === 0) {
+    const error = new Error("Chỉ khách hàng đã mua sản phẩm mới có thể gửi đánh giá.");
+    error.statusCode = 403;
     throw error;
   }
 

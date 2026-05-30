@@ -12,6 +12,7 @@ async function initCheckoutPage() {
     return;
   }
   await prefillCustomerInfo();
+  document.getElementById("checkoutSavedAddress").addEventListener("change", applySavedAddress);
   document.getElementById("checkoutForm").addEventListener("submit", submitCheckout);
 }
 
@@ -48,14 +49,45 @@ function renderCheckoutSummary() {
 
 async function prefillCustomerInfo() {
   try {
-    const response = await authGet("/account/profile");
-    const user = response.data.user;
+    const [profileResponse, addressesResponse] = await Promise.all([
+      authGet("/account/profile"),
+      authGet("/account/addresses")
+    ]);
+    const user = profileResponse.data.user;
+    const addresses = addressesResponse.data || [];
     document.getElementById("checkoutName").value = getSafeDisplayName(user);
     document.getElementById("checkoutPhone").value = user.phone || "";
     document.getElementById("checkoutEmail").value = user.email || "";
+    document.getElementById("checkoutSavedAddress").innerHTML = `
+      <option value="">Nhập địa chỉ mới</option>
+      ${addresses.map(function (address) {
+        return `<option value="${escapeAttribute(address.id)}">${escapeHtml(address.receiver_name)} - ${escapeHtml(address.address_line)}, ${escapeHtml(address.district)}</option>`;
+      }).join("")}
+    `;
+    window.checkoutAddresses = addresses;
+    const defaultAddress = addresses.find(function (address) { return address.is_default; });
+    if (defaultAddress) {
+      document.getElementById("checkoutSavedAddress").value = String(defaultAddress.id);
+      fillCheckoutAddress(defaultAddress);
+    }
   } catch (error) {
     document.getElementById("checkoutMessage").innerHTML = renderError(error.message);
   }
+}
+
+function applySavedAddress() {
+  const id = Number(document.getElementById("checkoutSavedAddress").value);
+  const address = (window.checkoutAddresses || []).find(function (item) { return item.id === id; });
+  if (address) fillCheckoutAddress(address);
+}
+
+function fillCheckoutAddress(address) {
+  document.getElementById("checkoutName").value = address.receiver_name || "";
+  document.getElementById("checkoutPhone").value = address.receiver_phone || "";
+  document.getElementById("checkoutProvince").value = address.province || "";
+  document.getElementById("checkoutDistrict").value = address.district || "";
+  document.getElementById("checkoutWard").value = address.ward || "";
+  document.getElementById("checkoutAddress").value = address.address_line || "";
 }
 
 async function submitCheckout(event) {

@@ -1,4 +1,5 @@
 const pool = require("../config/database");
+const bcrypt = require("bcryptjs");
 const { formatUser } = require("./auth.controller");
 
 async function getProfile(req, res) {
@@ -147,9 +148,73 @@ async function createAddress(req, res) {
   }
 }
 
+async function changePassword(req, res) {
+  const currentPassword = req.body.current_password || "";
+  const newPassword = req.body.new_password || "";
+  const confirmPassword = req.body.confirm_password || "";
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    res.status(400).json({
+      success: false,
+      message: "Vui lòng nhập đầy đủ mật khẩu hiện tại và mật khẩu mới."
+    });
+    return;
+  }
+
+  if (newPassword.length < 6) {
+    res.status(400).json({
+      success: false,
+      message: "Mật khẩu mới phải có ít nhất 6 ký tự."
+    });
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    res.status(400).json({
+      success: false,
+      message: "Xác nhận mật khẩu mới không khớp."
+    });
+    return;
+  }
+
+  const [users] = await pool.execute(
+    "SELECT password_hash FROM users WHERE id = ? LIMIT 1",
+    [req.user.id]
+  );
+  const passwordMatches = users.length > 0 &&
+    await bcrypt.compare(currentPassword, users[0].password_hash);
+
+  if (!passwordMatches) {
+    res.status(400).json({
+      success: false,
+      message: "Mật khẩu hiện tại không chính xác."
+    });
+    return;
+  }
+
+  if (await bcrypt.compare(newPassword, users[0].password_hash)) {
+    res.status(400).json({
+      success: false,
+      message: "Mật khẩu mới phải khác mật khẩu hiện tại."
+    });
+    return;
+  }
+
+  await pool.execute(
+    "UPDATE users SET password_hash = ? WHERE id = ?",
+    [await bcrypt.hash(newPassword, 10), req.user.id]
+  );
+
+  res.json({
+    success: true,
+    message: "Đổi mật khẩu thành công."
+  });
+}
+
 module.exports = {
   getProfile,
   updateProfile,
   getAddresses,
-  createAddress
+  createAddress,
+  changePassword
 };

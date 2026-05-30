@@ -5,7 +5,8 @@ const {
   getBestSelling,
   getInventory,
   getWarranty,
-  getOrders
+  getOrders,
+  getWarrantyQuality
 } = require("../controllers/adminReport.controller");
 const { requireAuth } = require("../middlewares/auth.middleware");
 const { requireRoles } = require("../middlewares/role.middleware");
@@ -22,5 +23,6 @@ router.get("/best-selling", asyncHandler(getBestSelling));
 router.get("/inventory", asyncHandler(getInventory));
 router.get("/warranty", asyncHandler(getWarranty));
 router.get("/orders", asyncHandler(getOrders));
+router.get("/warranty-quality", asyncHandler(getWarrantyQuality));
 
 module.exports = router;

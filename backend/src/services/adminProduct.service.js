@@ -20,6 +20,7 @@ const adminProductSelect = `
     p.short_description,
     p.description,
     p.base_price,
+    p.cost_price,
     p.sale_price,
     p.warranty_months,
     p.requires_serial,
@@ -83,6 +84,7 @@ function formatAdminProduct(product) {
   return {
     ...product,
     base_price: Number(product.base_price),
+    cost_price: Number(product.cost_price || 0),
     sale_price: product.sale_price === null ? null : Number(product.sale_price),
     requires_serial: Boolean(product.requires_serial),
     is_featured: Boolean(product.is_featured),
@@ -130,6 +132,7 @@ function normalizeProductBody(body) {
     short_description: body.short_description ? body.short_description.trim() : null,
     description: body.description ? body.description.trim() : null,
     base_price: toPrice(body.base_price, "Giá bán", false),
+    cost_price: toPrice(body.cost_price || 0, "Giá nhập", false),
     sale_price: toPrice(body.sale_price, "Giá khuyến mãi", true),
     warranty_months: toInteger(body.warranty_months || 0, "Bảo hành", 0),
     requires_serial: requiresSerial ? 1 : 0,
@@ -397,9 +400,9 @@ async function createProduct(body) {
       `
         INSERT INTO products (
           category_id, brand_id, sku, slug, name, product_type, short_description, description,
-          base_price, sale_price, warranty_months, requires_serial, stock_quantity, status, is_featured
+          base_price, cost_price, sale_price, warranty_months, requires_serial, stock_quantity, status, is_featured
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         product.category_id,
@@ -411,6 +414,7 @@ async function createProduct(body) {
         product.short_description,
         product.description,
         product.base_price,
+        product.cost_price,
         product.sale_price,
         product.warranty_months,
         product.requires_serial,
@@ -463,6 +467,7 @@ async function updateProduct(id, body) {
           short_description = ?,
           description = ?,
           base_price = ?,
+          cost_price = ?,
           sale_price = ?,
           warranty_months = ?,
           requires_serial = ?,
@@ -481,6 +486,7 @@ async function updateProduct(id, body) {
         product.short_description,
         product.description,
         product.base_price,
+        product.cost_price,
         product.sale_price,
         product.warranty_months,
         product.requires_serial,

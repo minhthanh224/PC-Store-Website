@@ -140,6 +140,9 @@ function syncFiltersFromUrl() {
   setSelectValue("filterProductType", productType, getListingProductTypeLabel(productType));
   document.getElementById("filterMinPrice").value = params.get("minPrice") || "";
   document.getElementById("filterMaxPrice").value = params.get("maxPrice") || "";
+  document.getElementById("filterCpu").value = params.get("cpu") || "";
+  document.getElementById("filterRam").value = params.get("ram") || "";
+  document.getElementById("filterVga").value = params.get("vga") || "";
   document.getElementById("filterRequiresSerial").value = params.get("requiresSerial") || "";
   document.getElementById("sortSelect").value = params.get("sort") || "newest";
 }
@@ -152,6 +155,9 @@ function getFilterValues(extraValues) {
     productType: document.getElementById("filterProductType").value,
     minPrice: document.getElementById("filterMinPrice").value,
     maxPrice: document.getElementById("filterMaxPrice").value,
+    cpu: document.getElementById("filterCpu").value.trim(),
+    ram: document.getElementById("filterRam").value.trim(),
+    vga: document.getElementById("filterVga").value.trim(),
     requiresSerial: document.getElementById("filterRequiresSerial").value,
     sort: document.getElementById("sortSelect").value,
     page: extraValues && extraValues.page ? extraValues.page : new URLSearchParams(window.location.search).get("page")
@@ -276,6 +282,9 @@ function buildProductApiParams(sourceParams) {
     "productType",
     "minPrice",
     "maxPrice",
+    "cpu",
+    "ram",
+    "vga",
     "requiresSerial",
     "sort",
     "page",

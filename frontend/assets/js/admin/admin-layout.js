@@ -26,6 +26,8 @@ function renderAdminLayout(activeKey, user) {
         ${["admin", "sales", "technician"].includes(user.role) ? renderAdminNavLink("orders", "\u0110\u01a1n h\u00e0ng", "orders.html", activeKey, "\u25c7") : ""}
         ${["admin", "technician"].includes(user.role) ? renderAdminNavLink("warranty", "B\u1ea3o h\u00e0nh", "warranty.html", activeKey, "\u271a") : ""}
         ${user.role === "admin" ? renderAdminNavLink("reports", "B\u00e1o c\u00e1o", "reports.html", activeKey, "\u25a4") : ""}
+        ${user.role === "admin" ? renderAdminNavLink("users", "T\u00e0i kho\u1ea3n", "users.html", activeKey, "\u2637") : ""}
+        ${user.role === "admin" ? renderAdminNavLink("reviews", "\u0110\u00e1nh gi\u00e1", "reviews.html", activeKey, "\u2605") : ""}
         <a class="admin-nav-home" href="../index.html"><span>${escapeHtml("\u2197")}</span>V\u1ec1 trang ch\u1ee7</a>
         <button id="adminLogoutBtn" class="admin-nav-logout" type="button"><span>${escapeHtml("\u00d7")}</span>\u0110\u0103ng xu\u1ea5t</button>
       </nav>

@@ -27,6 +27,9 @@ function bindAccountEvents() {
     clearAuthSession();
     window.location.href = "index.html";
   });
+  document.getElementById("profileForm").addEventListener("submit", saveProfile);
+  document.getElementById("addressForm").addEventListener("submit", saveAddress);
+  document.getElementById("passwordForm").addEventListener("submit", savePassword);
 }
 
 async function loadProfile() {
@@ -37,6 +40,8 @@ async function loadProfile() {
     const user = response.data.user;
     const displayName = getSafeDisplayName(user);
     localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+    document.getElementById("profileFullName").value = user.full_name || "";
+    document.getElementById("profilePhone").value = user.phone || "";
     container.className = "account-card account-profile-card";
     container.innerHTML = `
       <h2>Thông tin tài khoản</h2>
@@ -51,6 +56,55 @@ async function loadProfile() {
     `;
   } catch (error) {
     container.innerHTML = renderError(error.message);
+  }
+}
+
+async function saveProfile(event) {
+  event.preventDefault();
+  try {
+    const response = await authPut("/account/profile", {
+      full_name: document.getElementById("profileFullName").value.trim(),
+      phone: document.getElementById("profilePhone").value.trim()
+    });
+    document.getElementById("profileMessage").innerHTML = `<div class="state-box state-success">${escapeHtml(response.message)}</div>`;
+    await loadProfile();
+  } catch (error) {
+    document.getElementById("profileMessage").innerHTML = renderError(error.message);
+  }
+}
+
+async function saveAddress(event) {
+  event.preventDefault();
+  try {
+    const response = await authPost("/account/addresses", {
+      receiver_name: document.getElementById("addressReceiverName").value.trim(),
+      receiver_phone: document.getElementById("addressReceiverPhone").value.trim(),
+      province: document.getElementById("addressProvince").value.trim(),
+      district: document.getElementById("addressDistrict").value.trim(),
+      ward: document.getElementById("addressWard").value.trim(),
+      address_line: document.getElementById("addressLine").value.trim(),
+      is_default: document.getElementById("addressDefault").checked
+    });
+    event.target.reset();
+    document.getElementById("addressMessage").innerHTML = `<div class="state-box state-success">${escapeHtml(response.message)}</div>`;
+    await loadAddresses();
+  } catch (error) {
+    document.getElementById("addressMessage").innerHTML = renderError(error.message);
+  }
+}
+
+async function savePassword(event) {
+  event.preventDefault();
+  try {
+    const response = await authPut("/auth/password", {
+      current_password: document.getElementById("currentPassword").value,
+      new_password: document.getElementById("newPassword").value,
+      confirm_password: document.getElementById("confirmPassword").value
+    });
+    event.target.reset();
+    document.getElementById("passwordMessage").innerHTML = `<div class="state-box state-success">${escapeHtml(response.message)}</div>`;
+  } catch (error) {
+    document.getElementById("passwordMessage").innerHTML = renderError(error.message);
   }
 }
 

@@ -110,7 +110,10 @@ function renderAdminOrderRow(order) {
       </td>
       <td>${escapeHtml(formatDateTime(order.created_at))}</td>
       <td><strong>${formatCurrency(order.total_amount)}</strong></td>
-      <td>${escapeHtml(getPaymentMethodLabel(order.payment_method))}</td>
+      <td>
+        <span>${escapeHtml(getPaymentMethodLabel(order.payment_method))}</span>
+        ${["admin", "sales"].includes(adminOrderUser.role) ? `<select class="js-payment-status" data-code="${escapeAttribute(order.order_code)}"><option value="unpaid" ${order.payment_status === "unpaid" ? "selected" : ""}>Chưa thanh toán</option><option value="paid" ${order.payment_status === "paid" ? "selected" : ""}>Đã thanh toán</option><option value="refunded" ${order.payment_status === "refunded" ? "selected" : ""}>Đã hoàn tiền</option></select>` : ""}
+      </td>
       <td><span class="status-badge ${escapeAttribute(order.status)}">${escapeHtml(getOrderStatusLabel(order.status))}</span></td>
       <td>
         <div class="serial-progress ${missingSerials > 0 ? "warning" : "good"}">
@@ -146,7 +149,11 @@ function renderQuickOrderActions(order, missingSerials) {
   }
 
   if (order.status === "shipping") {
-    return `<button class="btn btn-primary js-order-status" type="button" data-code="${escapeAttribute(order.order_code)}" data-status="completed">Hoàn thành</button>`;
+    return `<button class="btn btn-primary js-order-status" type="button" data-code="${escapeAttribute(order.order_code)}" data-status="completed">Hoàn thành</button><button class="btn btn-outline js-order-status" type="button" data-code="${escapeAttribute(order.order_code)}" data-status="returned">Hoàn hàng</button>`;
+  }
+
+  if (order.status === "completed") {
+    return `<button class="btn btn-outline js-order-status" type="button" data-code="${escapeAttribute(order.order_code)}" data-status="returned">Hoàn hàng</button>`;
   }
 
   return "";
@@ -157,7 +164,7 @@ function bindAdminOrderActions() {
     button.addEventListener("click", async function () {
       const nextStatus = button.dataset.status;
 
-      if (nextStatus === "cancelled" && !confirm("Bạn chắc chắn muốn hủy đơn hàng này?")) {
+      if (["cancelled", "returned"].includes(nextStatus) && !confirm("Bạn chắc chắn muốn cập nhật trạng thái ngoại lệ cho đơn hàng này?")) {
         return;
       }
 
@@ -169,6 +176,17 @@ function bindAdminOrderActions() {
         await loadAdminOrders();
       } catch (error) {
         showAdminMessage("adminOrderMessage", "error", error.message);
+      }
+    });
+  });
+  document.querySelectorAll(".js-payment-status").forEach(function (select) {
+    select.addEventListener("change", async function () {
+      try {
+        const response = await adminPatch(`/admin/orders/${encodeURIComponent(select.dataset.code)}/payment-status`, { payment_status: select.value });
+        showAdminMessage("adminOrderMessage", "success", response.message);
+      } catch (error) {
+        showAdminMessage("adminOrderMessage", "error", error.message);
+        await loadAdminOrders();
       }
     });
   });

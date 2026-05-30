@@ -3,7 +3,8 @@ const {
   getProfile,
   updateProfile,
   getAddresses,
-  createAddress
+  createAddress,
+  changePassword
 } = require("../controllers/account.controller");
 const authMiddleware = require("../middlewares/auth.middleware");
 const roleMiddleware = require("../middlewares/role.middleware");
@@ -18,5 +19,6 @@ router.get("/profile", asyncHandler(getProfile));
 router.put("/profile", asyncHandler(updateProfile));
 router.get("/addresses", asyncHandler(getAddresses));
 router.post("/addresses", asyncHandler(createAddress));
+router.put("/password", asyncHandler(changePassword));
 
 module.exports = router;

@@ -6,6 +6,8 @@ const inventoryReportState = {
   rows: [],
   page: 1
 };
+let bestSellingExportRows = [];
+let warrantyQualityExportRows = [];
 
 async function initReportsPage() {
   const user = await requireAdminRole(["admin"]);
@@ -87,6 +89,17 @@ function bindReportFilters() {
       renderInventoryTable();
     });
   }
+
+  document.getElementById("exportBestSelling").addEventListener("click", function () {
+    exportCsv("bao-cao-ban-chay.csv", ["Sản phẩm", "SKU", "Số lượng", "Doanh thu"], bestSellingExportRows.map(function (row) {
+      return [row.product_name, row.sku, row.total_quantity, row.total_revenue];
+    }));
+  });
+  document.getElementById("exportWarrantyQuality").addEventListener("click", function () {
+    exportCsv("bao-cao-ty-le-loi.csv", ["Thương hiệu", "Sản phẩm", "SKU", "Đã bán", "Bảo hành", "Tỷ lệ lỗi (%)"], warrantyQualityExportRows.map(function (row) {
+      return [row.brand_name, row.product_name, row.sku, row.sold_count, row.faulty_count, row.failure_rate];
+    }));
+  });
 }
 
 async function loadReports() {
@@ -100,13 +113,14 @@ async function loadReports() {
   setReportLoading();
 
   try {
-    const [overview, revenue, bestSelling, inventory, warranty, orders] = await Promise.all([
+    const [overview, revenue, bestSelling, inventory, warranty, orders, warrantyQuality] = await Promise.all([
       adminGet(`/admin/reports/overview${suffix}`),
       adminGet(`/admin/reports/revenue${suffix}`),
       adminGet(`/admin/reports/best-selling${suffix}`),
       adminGet("/admin/reports/inventory"),
       adminGet("/admin/reports/warranty"),
-      adminGet("/admin/reports/orders")
+      adminGet("/admin/reports/orders"),
+      adminGet("/admin/reports/warranty-quality")
     ]);
 
     renderOverview(overview.data);
@@ -118,6 +132,7 @@ async function loadReports() {
     renderWarranty(warranty.data || {}, "operationsWarrantyReport");
     renderOrders(orders.data || {}, "orderReport");
     renderOrders(orders.data || {}, "operationsOrderReport");
+    renderWarrantyQuality(warrantyQuality.data || []);
     showAdminMessage("reportMessage", "success", "Đã cập nhật báo cáo.");
   } catch (error) {
     showAdminMessage("reportMessage", "error", error.message);
@@ -137,6 +152,7 @@ function setReportLoading() {
   setReportBoxLoading("operationsWarrantyReport", "Đang tải bảo hành...", "admin-table-wrap loading-box");
   setReportBoxLoading("orderReport", "Đang tải đơn hàng...", "admin-table-wrap loading-box");
   setReportBoxLoading("operationsOrderReport", "Đang tải đơn hàng...", "admin-table-wrap loading-box");
+  setReportBoxLoading("warrantyQualityReport", "Đang tải tỷ lệ lỗi...", "admin-table-wrap loading-box");
 
   document.getElementById("inventoryReportSummary").innerHTML = "";
   document.getElementById("inventoryReportPagination").innerHTML = "";
@@ -157,6 +173,7 @@ function renderOverview(data) {
   container.className = "admin-card-grid";
   container.innerHTML = `
     ${renderReportCard("Doanh thu", formatCurrency(data.total_revenue))}
+    ${renderReportCard("Lợi nhuận ước tính", formatCurrency(data.estimated_profit))}
     ${renderReportCard("Đơn hoàn thành", data.completed_order_count)}
     ${renderReportCard("Đơn chờ duyệt", data.pending_order_count)}
     ${renderReportCard("Sản phẩm đã bán", data.total_products_sold)}
@@ -205,6 +222,7 @@ function renderRevenue(rows, containerId) {
 
 function renderBestSelling(products) {
   const container = document.getElementById("bestSellingReport");
+  bestSellingExportRows = products;
 
   if (!products.length) {
     container.className = "";
@@ -239,6 +257,41 @@ function renderBestSelling(products) {
       </tbody>
     </table>
   `;
+}
+
+function renderWarrantyQuality(rows) {
+  const container = document.getElementById("warrantyQualityReport");
+  warrantyQualityExportRows = rows;
+  container.className = "admin-table-wrap";
+
+  if (!rows.length) {
+    container.innerHTML = renderEmpty("Chưa có dữ liệu lỗi bảo hành.");
+    return;
+  }
+
+  container.innerHTML = `
+    <table class="admin-table">
+      <thead><tr><th>Thương hiệu</th><th>Sản phẩm</th><th>SKU</th><th>Đã bán</th><th>Bảo hành</th><th>Tỷ lệ lỗi</th></tr></thead>
+      <tbody>${rows.map(function (row) {
+        return `<tr><td>${escapeHtml(row.brand_name || "")}</td><td>${escapeHtml(row.product_name)}</td><td>${escapeHtml(row.sku)}</td><td>${escapeHtml(row.sold_count)}</td><td>${escapeHtml(row.faulty_count)}</td><td>${escapeHtml(row.failure_rate)}%</td></tr>`;
+      }).join("")}</tbody>
+    </table>
+  `;
+}
+
+function exportCsv(fileName, headers, rows) {
+  const quote = function (value) {
+    return `"${String(value === null || value === undefined ? "" : value).replace(/"/g, '""')}"`;
+  };
+  const csv = [headers].concat(rows).map(function (row) {
+    return row.map(quote).join(",");
+  }).join("\r\n");
+  const link = document.createElement("a");
+
+  link.href = URL.createObjectURL(new Blob(["\ufeff", csv], { type: "text/csv;charset=utf-8" }));
+  link.download = fileName;
+  link.click();
+  URL.revokeObjectURL(link.href);
 }
 
 function renderInventory(products) {
@@ -414,7 +467,7 @@ function renderWarranty(data, containerId) {
 
 function renderOrders(data, containerId) {
   const container = document.getElementById(containerId);
-  const statuses = ["pending", "approved", "shipping", "completed", "cancelled"];
+  const statuses = ["pending", "approved", "shipping", "completed", "cancelled", "returned"];
 
   container.className = "report-status-list";
   container.innerHTML = `

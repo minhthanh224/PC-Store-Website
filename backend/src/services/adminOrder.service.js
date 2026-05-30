@@ -1,12 +1,14 @@
 const pool = require("../config/database");
 
-const ORDER_STATUSES = ["pending", "approved", "shipping", "completed", "cancelled"];
+const ORDER_STATUSES = ["pending", "approved", "shipping", "completed", "cancelled", "returned"];
 const PAYMENT_METHODS = ["cod", "bank_transfer"];
-const FINAL_STATUSES = ["completed", "cancelled"];
+const PAYMENT_STATUSES = ["unpaid", "paid", "refunded"];
+const FINAL_STATUSES = ["cancelled", "returned"];
 const ALLOWED_TRANSITIONS = {
   pending: ["approved", "cancelled"],
   approved: ["shipping", "cancelled"],
-  shipping: ["completed"]
+  shipping: ["completed", "returned"],
+  completed: ["returned"]
 };
 
 function createError(message, statusCode) {
@@ -65,6 +67,7 @@ function getWorkflowInfo(order, items) {
     can_cancel: order.status === "pending" || order.status === "approved",
     can_ship: order.status === "approved" && missingSerialCount === 0,
     can_complete: order.status === "shipping" && missingSerialCount === 0,
+    can_return: order.status === "shipping" || order.status === "completed",
     missing_serial_count: missingSerialCount
   };
 }
@@ -321,6 +324,18 @@ async function releaseAssignedSerials(connection, orderId) {
   );
 }
 
+async function markAssignedSerialsReturned(connection, orderId) {
+  await connection.execute(
+    `
+      UPDATE serial_numbers sn
+      INNER JOIN order_items oi ON oi.serial_number_id = sn.id
+      SET sn.status = 'returned'
+      WHERE oi.order_id = ?
+    `,
+    [orderId]
+  );
+}
+
 async function updateOrderStatus(orderCode, nextStatus) {
   if (!ORDER_STATUSES.includes(nextStatus)) {
     throw createError("Trạng thái đơn hàng không hợp lệ.", 400);
@@ -367,6 +382,9 @@ async function updateOrderStatus(orderCode, nextStatus) {
     if (nextStatus === "cancelled") {
       await releaseAssignedSerials(connection, order.id);
     }
+    if (nextStatus === "returned") {
+      await markAssignedSerialsReturned(connection, order.id);
+    }
 
     await connection.execute(
       `
@@ -389,6 +407,26 @@ async function updateOrderStatus(orderCode, nextStatus) {
   } finally {
     connection.release();
   }
+}
+
+async function updatePaymentStatus(orderCode, paymentStatus) {
+  if (!PAYMENT_STATUSES.includes(paymentStatus)) {
+    throw createError("Trạng thái thanh toán không hợp lệ.", 400);
+  }
+
+  const [result] = await pool.execute(
+    "UPDATE orders SET payment_status = ? WHERE order_code = ?",
+    [paymentStatus, orderCode]
+  );
+
+  if (!result.affectedRows) {
+    throw createError("Không tìm thấy đơn hàng.", 404);
+  }
+
+  return {
+    message: "Cập nhật trạng thái thanh toán thành công.",
+    payment_status: paymentStatus
+  };
 }
 
 async function assignSerial(orderCode, itemId, serialNumberId) {
@@ -608,5 +646,6 @@ module.exports = {
   getOrderDetail,
   updateOrderStatus,
   assignSerial,
-  unassignSerial
+  unassignSerial,
+  updatePaymentStatus
 };

@@ -29,6 +29,13 @@
               <label>Tên khách hàng<input id="warrantyCustomerName" required></label>
               <label>Số điện thoại<input id="warrantyCustomerPhone" required></label>
               <label>Ngày tiếp nhận<input id="warrantyReceivedDate" type="date"></label>
+              <label>Phương án xử lý<select id="warrantyHandlingMethod">
+                <option value="shop_repair">Sửa tại shop</option>
+                <option value="exchange">Đổi sản phẩm</option>
+                <option value="send_vendor">Gửi hãng</option>
+                <option value="paid_repair">Sửa tính phí</option>
+              </select></label>
+              <label>Phí dịch vụ<input id="warrantyServiceFee" type="number" min="0" value="0"></label>
             </div>
             <label>Lỗi khách báo<textarea id="warrantyIssue" required></textarea></label>
             <label>Ghi chú kỹ thuật<textarea id="warrantyNote"></textarea></label>

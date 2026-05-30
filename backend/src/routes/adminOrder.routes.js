@@ -3,6 +3,7 @@ const {
   getOrders,
   getOrderDetail,
   updateOrderStatus,
+  updatePaymentStatus,
   assignSerial,
   unassignSerial
 } = require("../controllers/adminOrder.controller");
@@ -17,6 +18,7 @@ router.use(requireAuth);
 router.get("/", requireRoles("admin", "sales", "technician"), asyncHandler(getOrders));
 router.get("/:orderCode", requireRoles("admin", "sales", "technician"), asyncHandler(getOrderDetail));
 router.patch("/:orderCode/status", requireRoles("admin", "sales"), asyncHandler(updateOrderStatus));
+router.patch("/:orderCode/payment-status", requireRoles("admin", "sales"), asyncHandler(updatePaymentStatus));
 router.post("/:orderCode/items/:itemId/assign-serial", requireRoles("admin", "technician"), asyncHandler(assignSerial));
 router.patch("/:orderCode/items/:itemId/unassign-serial", requireRoles("admin"), asyncHandler(unassignSerial));
 
