@@ -1,4 +1,4 @@
-﻿async function apiRequest(endpoint, options) {
+async function apiRequest(endpoint, options) {
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, options || {});
     const text = await response.text();
@@ -39,6 +39,17 @@ async function apiPost(endpoint, body, options) {
 async function apiPut(endpoint, body, options) {
   return apiRequest(endpoint, {
     method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(options && options.headers ? options.headers : {})
+    },
+    body: JSON.stringify(body || {})
+  });
+}
+
+async function apiPatch(endpoint, body, options) {
+  return apiRequest(endpoint, {
+    method: "PATCH",
     headers: {
       "Content-Type": "application/json",
       ...(options && options.headers ? options.headers : {})

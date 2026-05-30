@@ -359,6 +359,33 @@ CREATE TABLE orders (
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE order_events (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  order_id BIGINT UNSIGNED NOT NULL,
+  actor_user_id BIGINT UNSIGNED NULL,
+  actor_name VARCHAR(150) NULL,
+  actor_role VARCHAR(50) NULL,
+  event_type ENUM('created', 'status_changed', 'note', 'serial_assigned', 'serial_unassigned') NOT NULL DEFAULT 'note',
+  from_status ENUM('pending', 'approved', 'shipping', 'completed', 'cancelled') NULL,
+  to_status ENUM('pending', 'approved', 'shipping', 'completed', 'cancelled') NULL,
+  note TEXT NULL,
+  customer_visible TINYINT(1) NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_order_events_order_id (order_id),
+  KEY idx_order_events_actor_user_id (actor_user_id),
+  KEY idx_order_events_event_type (event_type),
+  KEY idx_order_events_customer_visible (customer_visible),
+  CONSTRAINT fk_order_events_order
+    FOREIGN KEY (order_id) REFERENCES orders(id)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE,
+  CONSTRAINT fk_order_events_actor_user
+    FOREIGN KEY (actor_user_id) REFERENCES users(id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE order_items (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   order_id BIGINT UNSIGNED NOT NULL,

@@ -1,4 +1,4 @@
-﻿const PLACEHOLDER_IMAGE =
+const PLACEHOLDER_IMAGE =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='480' viewBox='0 0 640 480'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' x2='1' y1='0' y2='1'%3E%3Cstop stop-color='%23070b14'/%3E%3Cstop offset='1' stop-color='%23111827'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='640' height='480' fill='url(%23g)'/%3E%3Crect x='82' y='92' width='476' height='292' rx='22' fill='%230b1120' stroke='%23263244'/%3E%3Cpath d='M166 324h308l-95-108-63 70-46-50z' fill='%2306eaff' opacity='.72'/%3E%3Ccircle cx='238' cy='184' r='34' fill='%238b5cf6' opacity='.45'/%3E%3Ctext x='320' y='425' text-anchor='middle' font-family='Arial' font-size='31' font-weight='700' fill='%23f8fafc'%3EAeroTech%3C/text%3E%3C/svg%3E";
 
 const PRODUCT_FALLBACK_DEFINITIONS = {
@@ -287,6 +287,10 @@ function renderLoading(message) {
 
 function renderError(message) {
   return `<div class="state-box state-error">${escapeHtml(message)}</div>`;
+}
+
+function renderSuccess(message) {
+  return `<div class="state-box state-success">${escapeHtml(message)}</div>`;
 }
 
 function renderEmpty(message) {

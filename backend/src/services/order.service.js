@@ -49,6 +49,54 @@ function isBundleAddonItem(item) {
   return item.is_bundle_addon === true || item.is_bundle_addon === 1 || item.is_bundle_addon === "1" || item.is_bundle_addon === "true";
 }
 
+function getActorSnapshot(user) {
+  if (!user) {
+    return {
+      actor_user_id: null,
+      actor_name: null,
+      actor_role: null
+    };
+  }
+
+  return {
+    actor_user_id: user.id || null,
+    actor_name: user.full_name || user.email || null,
+    actor_role: user.role || null
+  };
+}
+
+async function recordOrderEvent(connection, orderId, actor, event) {
+  const actorSnapshot = getActorSnapshot(actor);
+
+  await connection.execute(
+    `
+      INSERT INTO order_events (
+        order_id,
+        actor_user_id,
+        actor_name,
+        actor_role,
+        event_type,
+        from_status,
+        to_status,
+        note,
+        customer_visible
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+    [
+      orderId,
+      actorSnapshot.actor_user_id,
+      actorSnapshot.actor_name,
+      actorSnapshot.actor_role,
+      event.event_type || "note",
+      event.from_status || null,
+      event.to_status || null,
+      event.note || null,
+      event.customer_visible ? 1 : 0
+    ]
+  );
+}
+
 function generateOrderCode() {
   const now = new Date();
   const year = now.getFullYear();
@@ -725,6 +773,13 @@ async function createOrder(user, body) {
       error.statusCode = 500;
       throw error;
     }
+
+    await recordOrderEvent(connection, orderId, user, {
+      event_type: "created",
+      to_status: "pending",
+      note: "Khách hàng tạo đơn hàng.",
+      customer_visible: true
+    });
 
     for (const item of normalizedItems) {
       const product = productMap[item.product_id];

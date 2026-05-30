@@ -40,6 +40,64 @@ function normalizeOrder(row) {
   };
 }
 
+function getActorSnapshot(actor) {
+  if (!actor) {
+    return {
+      actor_user_id: null,
+      actor_name: null,
+      actor_role: null
+    };
+  }
+
+  return {
+    actor_user_id: actor.id || null,
+    actor_name: actor.full_name || actor.email || null,
+    actor_role: actor.role || null
+  };
+}
+
+async function recordOrderEvent(connection, orderId, actor, event) {
+  const actorSnapshot = getActorSnapshot(actor);
+
+  await connection.execute(
+    `
+      INSERT INTO order_events (
+        order_id,
+        actor_user_id,
+        actor_name,
+        actor_role,
+        event_type,
+        from_status,
+        to_status,
+        note,
+        customer_visible
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+    [
+      orderId,
+      actorSnapshot.actor_user_id,
+      actorSnapshot.actor_name,
+      actorSnapshot.actor_role,
+      event.event_type || "note",
+      event.from_status || null,
+      event.to_status || null,
+      event.note || null,
+      event.customer_visible ? 1 : 0
+    ]
+  );
+}
+
+function normalizeOrderEvent(row) {
+  return {
+    ...row,
+    id: Number(row.id),
+    order_id: Number(row.order_id),
+    actor_user_id: row.actor_user_id ? Number(row.actor_user_id) : null,
+    customer_visible: Boolean(row.customer_visible)
+  };
+}
+
 function normalizeItem(row) {
   return {
     ...row,
@@ -306,9 +364,31 @@ async function getOrderDetail(orderCode) {
     }
   });
 
+  const [historyRows] = await pool.execute(
+    `
+      SELECT
+        id,
+        order_id,
+        actor_user_id,
+        actor_name,
+        actor_role,
+        event_type,
+        from_status,
+        to_status,
+        note,
+        customer_visible,
+        created_at
+      FROM order_events
+      WHERE order_id = ?
+      ORDER BY created_at ASC, id ASC
+    `,
+    [order.id]
+  );
+
   return {
     order,
     items,
+    history: historyRows.map(normalizeOrderEvent),
     workflow: getWorkflowInfo(order, items)
   };
 }
@@ -403,7 +483,7 @@ async function decrementNonSerializedStockOnCompletion(connection, orderId) {
   }
 }
 
-async function updateOrderStatus(orderCode, nextStatus) {
+async function updateOrderStatus(orderCode, nextStatus, actor, note) {
   if (!ORDER_STATUSES.includes(nextStatus)) {
     throw createError("Trạng thái đơn hàng không hợp lệ.", 400);
   }
@@ -463,6 +543,14 @@ async function updateOrderStatus(orderCode, nextStatus) {
       [nextStatus, order.id]
     );
 
+    await recordOrderEvent(connection, order.id, actor, {
+      event_type: "status_changed",
+      from_status: order.status,
+      to_status: nextStatus,
+      note: note ? String(note).trim() : null,
+      customer_visible: true
+    });
+
     await connection.commit();
 
     return {
@@ -477,7 +565,7 @@ async function updateOrderStatus(orderCode, nextStatus) {
   }
 }
 
-async function assignSerial(orderCode, itemId, serialNumberId) {
+async function assignSerial(orderCode, itemId, serialNumberId, actor) {
   const parsedItemId = Number(itemId);
   const parsedSerialId = Number(serialNumberId);
 
@@ -590,6 +678,12 @@ async function assignSerial(orderCode, itemId, serialNumberId) {
       [parsedSerialId]
     );
 
+    await recordOrderEvent(connection, order.id, actor, {
+      event_type: "serial_assigned",
+      note: `Gán Serial cho sản phẩm trong đơn hàng.`,
+      customer_visible: false
+    });
+
     await connection.commit();
 
     return {
@@ -603,7 +697,7 @@ async function assignSerial(orderCode, itemId, serialNumberId) {
   }
 }
 
-async function unassignSerial(orderCode, itemId) {
+async function unassignSerial(orderCode, itemId, actor) {
   const parsedItemId = Number(itemId);
 
   if (!Number.isInteger(parsedItemId) || parsedItemId < 1) {
@@ -676,10 +770,67 @@ async function unassignSerial(orderCode, itemId) {
       [parsedItemId]
     );
 
+    await recordOrderEvent(connection, order.id, actor, {
+      event_type: "serial_unassigned",
+      note: "Gỡ Serial khỏi sản phẩm trong đơn hàng.",
+      customer_visible: false
+    });
+
     await connection.commit();
 
     return {
       message: "Gỡ Serial khỏi sản phẩm thành công."
+    };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+async function addInternalNote(orderCode, actor, body) {
+  const note = String((body && body.note) || "").trim();
+  const customerVisible = Boolean(body && body.customer_visible);
+
+  if (!note) {
+    throw createError("Vui lòng nhập nội dung ghi chú.", 400);
+  }
+
+  if (note.length > 2000) {
+    throw createError("Ghi chú không được vượt quá 2000 ký tự.", 400);
+  }
+
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const [orders] = await connection.execute(
+      `
+        SELECT id
+        FROM orders
+        WHERE order_code = ?
+        LIMIT 1
+        FOR UPDATE
+      `,
+      [orderCode]
+    );
+
+    if (orders.length === 0) {
+      throw createError("Không tìm thấy đơn hàng.", 404);
+    }
+
+    await recordOrderEvent(connection, orders[0].id, actor, {
+      event_type: "note",
+      note,
+      customer_visible: customerVisible
+    });
+
+    await connection.commit();
+
+    return {
+      message: "Thêm ghi chú đơn hàng thành công."
     };
   } catch (error) {
     await connection.rollback();
@@ -694,5 +845,6 @@ module.exports = {
   getOrderDetail,
   updateOrderStatus,
   assignSerial,
-  unassignSerial
+  unassignSerial,
+  addInternalNote
 };

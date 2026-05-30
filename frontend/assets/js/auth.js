@@ -1,4 +1,4 @@
-﻿const AUTH_TOKEN_KEY = "se104_auth_token";
+const AUTH_TOKEN_KEY = "se104_auth_token";
 const AUTH_USER_KEY = "se104_auth_user";
 const STAFF_ROLES = ["admin", "sales", "technician"];
 
@@ -86,6 +86,12 @@ async function authPost(endpoint, body) {
 
 async function authPut(endpoint, body) {
   return apiPut(endpoint, body, {
+    headers: getAuthHeaders()
+  });
+}
+
+async function authPatch(endpoint, body) {
+  return apiPatch(endpoint, body, {
     headers: getAuthHeaders()
   });
 }

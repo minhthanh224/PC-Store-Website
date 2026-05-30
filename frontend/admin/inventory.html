@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
@@ -50,10 +50,52 @@
             <button class="btn btn-primary" type="submit">Thêm Serial</button>
           </form>
           <div id="serialMessage"></div>
+
+          <div class="admin-subpanel serial-import-panel">
+            <div class="admin-import-header compact">
+              <div>
+                <h2>Import Serial hàng loạt</h2>
+                <p>Upload file CSV để nhập nhiều serial cùng lúc. Dùng cột <strong>product_sku</strong>, <strong>serial_code</strong>, <strong>import_date</strong>, <strong>note</strong>.</p>
+              </div>
+              <span class="admin-import-badge">CSV</span>
+            </div>
+            <div class="serial-import-layout">
+              <div class="import-upload-column">
+                <label id="serialImportUploadBox" class="import-upload-box serial-import-upload-box" for="serialImportFile">
+                  <span class="import-upload-icon" aria-hidden="true">CSV</span>
+                  <span class="import-upload-main">Chọn file serial .csv</span>
+                  <span class="import-upload-sub">Ví dụ header: product_sku,serial_code,import_date,note</span>
+                  <span class="import-upload-button">Chọn file</span>
+                </label>
+                <input id="serialImportFile" class="import-file-input" type="file" accept=".csv,text/csv">
+                <div id="serialImportFileMeta" class="import-file-meta">Chưa chọn file CSV.</div>
+              </div>
+              <aside class="import-required-files serial-import-guide">
+                <h3>Quy tắc import</h3>
+                <ul>
+                  <li>SKU phải thuộc sản phẩm có quản lý Serial.</li>
+                  <li>Serial không được trùng trong file hoặc trong database.</li>
+                  <li>Serial import mới luôn ở trạng thái <strong>Trong kho</strong>.</li>
+                  <li>Ngày nhập dùng định dạng YYYY-MM-DD.</li>
+                </ul>
+              </aside>
+            </div>
+            <div class="admin-import-actions serial-import-actions">
+              <button id="previewSerialImportBtn" class="btn btn-dark" type="button">Kiểm tra dữ liệu</button>
+              <button id="commitSerialImportBtn" class="btn btn-primary" type="button" disabled>Xác nhận import</button>
+            </div>
+            <div id="serialImportPreview" class="admin-import-preview"></div>
+          </div>
         </section>
 
         <section id="inventorySerialsPanel" class="admin-panel admin-tab-panel" data-tab-panel="serials" hidden>
-          <h2>Danh sách Serial</h2>
+          <div class="admin-section-heading-inline">
+            <div>
+              <h2>Danh sách Serial</h2>
+              <p>Theo dõi và xuất danh sách serial theo bộ lọc hiện tại.</p>
+            </div>
+            <button id="exportSerialsBtn" class="btn btn-outline" type="button">Xuất CSV</button>
+          </div>
           <form id="serialFilterForm" class="admin-filter-bar">
             <input id="serialKeyword" type="search" placeholder="Tìm Serial, sản phẩm, SKU">
             <select id="serialStatus">
@@ -64,6 +106,7 @@
               <option value="returned">Đã trả</option>
             </select>
             <button class="btn btn-dark" type="submit">Lọc</button>
+            <button id="resetSerialFilterBtn" class="btn btn-light" type="button">Làm mới</button>
           </form>
           <div id="serialTable" class="admin-table-wrap loading-box">Đang tải Serial...</div>
         </section>

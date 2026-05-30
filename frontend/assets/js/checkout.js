@@ -2,6 +2,8 @@ document.addEventListener("DOMContentLoaded", function () {
   initCheckoutPage();
 });
 
+let checkoutSavedAddresses = [];
+
 async function initCheckoutPage() {
   if (!requireLogin("checkout.html")) {
     return;
@@ -13,6 +15,7 @@ async function initCheckoutPage() {
   }
   await refreshSavedCheckoutPromotion();
   await prefillCustomerInfo();
+  await loadCheckoutAddresses();
   document.getElementById("checkoutForm").addEventListener("submit", submitCheckout);
 }
 
@@ -142,6 +145,83 @@ async function prefillCustomerInfo() {
   } catch (error) {
     document.getElementById("checkoutMessage").innerHTML = renderError(error.message);
   }
+}
+
+async function loadCheckoutAddresses() {
+  const box = document.getElementById("savedAddressBox");
+
+  if (!box) {
+    return;
+  }
+
+  try {
+    const response = await authGet("/account/addresses");
+    checkoutSavedAddresses = response.data || [];
+
+    if (!checkoutSavedAddresses.length) {
+      box.className = "saved-address-box";
+      box.innerHTML = `
+        <div class="saved-address-empty">
+          <strong>Chưa có địa chỉ đã lưu</strong>
+          <span>Bạn có thể nhập địa chỉ mới bên dưới hoặc thêm địa chỉ trong trang tài khoản.</span>
+        </div>
+      `;
+      return;
+    }
+
+    const defaultAddress = checkoutSavedAddresses.find(function (address) { return address.is_default; }) || checkoutSavedAddresses[0];
+    box.className = "saved-address-box";
+    box.innerHTML = `
+      <label for="savedAddressSelect">Địa chỉ đã lưu</label>
+      <div class="saved-address-select-row">
+        <select id="savedAddressSelect">
+          <option value="">Nhập địa chỉ mới</option>
+          ${checkoutSavedAddresses.map(function (address) {
+            return `
+              <option value="${escapeAttribute(address.id)}" ${Number(address.id) === Number(defaultAddress.id) ? "selected" : ""}>
+                ${escapeHtml(address.receiver_name)} - ${escapeHtml(address.receiver_phone)} - ${escapeHtml(formatCheckoutAddressLine(address))}${address.is_default ? " (Mặc định)" : ""}
+              </option>
+            `;
+          }).join("")}
+        </select>
+        <a class="btn btn-light" href="account.html#addressSection">Quản lý địa chỉ</a>
+      </div>
+      <p class="saved-address-note">Chọn địa chỉ đã lưu để tự động điền thông tin nhận hàng.</p>
+    `;
+
+    document.getElementById("savedAddressSelect").addEventListener("change", function (event) {
+      const selectedAddress = checkoutSavedAddresses.find(function (address) {
+        return String(address.id) === String(event.target.value);
+      });
+
+      if (selectedAddress) {
+        fillCheckoutAddress(selectedAddress);
+      }
+    });
+
+    fillCheckoutAddress(defaultAddress);
+  } catch (error) {
+    box.className = "saved-address-box";
+    box.innerHTML = renderError(error.message);
+  }
+}
+
+function fillCheckoutAddress(address) {
+  document.getElementById("checkoutName").value = address.receiver_name || "";
+  document.getElementById("checkoutPhone").value = address.receiver_phone || "";
+  document.getElementById("checkoutProvince").value = address.province || "";
+  document.getElementById("checkoutDistrict").value = address.district || "";
+  document.getElementById("checkoutWard").value = address.ward || "";
+  document.getElementById("checkoutAddress").value = address.address_line || "";
+}
+
+function formatCheckoutAddressLine(address) {
+  return [
+    address.address_line,
+    address.ward,
+    address.district,
+    address.province
+  ].filter(Boolean).join(", ");
 }
 
 async function submitCheckout(event) {

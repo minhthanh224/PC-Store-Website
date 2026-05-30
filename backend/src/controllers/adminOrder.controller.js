@@ -20,7 +20,7 @@ async function getOrderDetail(req, res) {
 }
 
 async function updateOrderStatus(req, res) {
-  const result = await adminOrderService.updateOrderStatus(req.params.orderCode, req.body.status);
+  const result = await adminOrderService.updateOrderStatus(req.params.orderCode, req.body.status, req.user, req.body.note);
 
   res.json({
     success: true,
@@ -31,11 +31,21 @@ async function updateOrderStatus(req, res) {
   });
 }
 
+async function addInternalNote(req, res) {
+  const result = await adminOrderService.addInternalNote(req.params.orderCode, req.user, req.body);
+
+  res.status(201).json({
+    success: true,
+    message: result.message
+  });
+}
+
 async function assignSerial(req, res) {
   const result = await adminOrderService.assignSerial(
     req.params.orderCode,
     req.params.itemId,
-    req.body.serial_number_id
+    req.body.serial_number_id,
+    req.user
   );
 
   res.json({
@@ -45,7 +55,7 @@ async function assignSerial(req, res) {
 }
 
 async function unassignSerial(req, res) {
-  const result = await adminOrderService.unassignSerial(req.params.orderCode, req.params.itemId);
+  const result = await adminOrderService.unassignSerial(req.params.orderCode, req.params.itemId, req.user);
 
   res.json({
     success: true,
@@ -58,5 +68,6 @@ module.exports = {
   getOrderDetail,
   updateOrderStatus,
   assignSerial,
-  unassignSerial
+  unassignSerial,
+  addInternalNote
 };

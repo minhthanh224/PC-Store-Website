@@ -136,6 +136,26 @@ async function getOrderByCode(req, res) {
   }
 
   const order = orders[0];
+  const [historyRows] = await pool.execute(
+    `
+      SELECT
+        id,
+        order_id,
+        actor_name,
+        actor_role,
+        event_type,
+        from_status,
+        to_status,
+        note,
+        customer_visible,
+        created_at
+      FROM order_events
+      WHERE order_id = ? AND customer_visible = 1
+      ORDER BY created_at ASC, id ASC
+    `,
+    [order.id]
+  );
+
   const [items] = await pool.execute(
     `
       SELECT
@@ -192,6 +212,14 @@ async function getOrderByCode(req, res) {
         promotion_id: order.promotion_id ? Number(order.promotion_id) : null,
         total_amount: Number(order.total_amount)
       },
+      history: historyRows.map(function (event) {
+        return {
+          ...event,
+          id: Number(event.id),
+          order_id: Number(event.order_id),
+          customer_visible: Boolean(event.customer_visible)
+        };
+      }),
       items: items.map(function (item) {
         return {
           ...item,

@@ -27,13 +27,13 @@ async function loadOrderDetail() {
 
     document.title = `${order.order_code} - AeroTech`;
     container.className = "order-detail-card";
-    container.innerHTML = renderOrderDetail(order, items);
+    container.innerHTML = renderOrderDetail(order, items, response.data.history || []);
   } catch (error) {
     container.innerHTML = renderError(error.message);
   }
 }
 
-function renderOrderDetail(order, items) {
+function renderOrderDetail(order, items, history) {
   return `
     <div class="order-detail-header">
       <div>
@@ -72,6 +72,8 @@ function renderOrderDetail(order, items) {
       </div>
     </section>
 
+    ${renderCustomerOrderHistory(history || [])}
+
     <section class="order-money-box">
       <div><span>Tạm tính</span><strong>${formatCurrency(order.subtotal_amount)}</strong></div>
       <div><span>Phí giao hàng</span><strong>${formatCurrency(order.shipping_fee)}</strong></div>
@@ -82,6 +84,50 @@ function renderOrderDetail(order, items) {
   `;
 }
 
+
+function renderCustomerOrderHistory(history) {
+  const events = Array.isArray(history) ? history : [];
+
+  if (!events.length) {
+    return "";
+  }
+
+  return `
+    <section class="order-history-panel">
+      <h2>Lịch sử đơn hàng</h2>
+      <div class="order-event-list customer-order-events">
+        ${events.map(renderCustomerOrderEvent).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderCustomerOrderEvent(event) {
+  return `
+    <article class="order-event-item customer-visible">
+      <div class="order-event-dot"></div>
+      <div>
+        <div class="order-event-head">
+          <strong>${escapeHtml(getCustomerOrderEventLabel(event))}</strong>
+          <span>${escapeHtml(formatDateTime(event.created_at))}</span>
+        </div>
+        ${event.note ? `<p class="order-event-note">${escapeHtml(event.note)}</p>` : ""}
+      </div>
+    </article>
+  `;
+}
+
+function getCustomerOrderEventLabel(event) {
+  if (event.event_type === "created") {
+    return "Đơn hàng đã được tạo";
+  }
+
+  if (event.event_type === "status_changed") {
+    return `${getOrderStatusLabel(event.from_status)} → ${getOrderStatusLabel(event.to_status)}`;
+  }
+
+  return "Cập nhật đơn hàng";
+}
 
 function renderOrderPromotionSummary(order) {
   if (!order.promotion_code_snapshot) {

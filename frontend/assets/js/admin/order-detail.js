@@ -82,6 +82,11 @@ function renderAdminOrderDetail(data) {
         ${renderAdminOrderItems(data.items, order)}
       </div>
     </section>
+
+    <div class="admin-detail-grid">
+      ${renderAdminOrderHistory(data.history || [])}
+      ${renderAdminOrderNotePanel()}
+    </div>
   `;
 }
 
@@ -143,6 +148,95 @@ function renderOrderStatusActions(order, workflow) {
   }
 
   return `<div class="form-actions admin-status-actions">${buttons.join("")}</div>`;
+}
+
+function renderAdminOrderHistory(history) {
+  const events = Array.isArray(history) ? history : [];
+
+  return `
+    <section class="admin-panel">
+      <div class="section-heading-inline">
+        <div>
+          <h2>Lịch sử xử lý</h2>
+          <p>Theo dõi các lần cập nhật trạng thái, gán Serial và ghi chú nội bộ.</p>
+        </div>
+      </div>
+      <div class="order-event-list">
+        ${events.length ? events.map(renderAdminOrderEvent).join("") : '<p class="empty-text">Chưa có lịch sử xử lý cho đơn hàng này.</p>'}
+      </div>
+    </section>
+  `;
+}
+
+function renderAdminOrderEvent(event) {
+  return `
+    <article class="order-event-item ${event.customer_visible ? "customer-visible" : "internal-only"}">
+      <div class="order-event-dot"></div>
+      <div>
+        <div class="order-event-head">
+          <strong>${escapeHtml(getOrderEventLabel(event))}</strong>
+          <span>${escapeHtml(formatDateTime(event.created_at))}</span>
+        </div>
+        <p class="order-event-meta">
+          ${escapeHtml(event.actor_name || "Hệ thống")}
+          ${event.actor_role ? ` · ${escapeHtml(getAdminRoleLabel(event.actor_role))}` : ""}
+          ${event.customer_visible ? " · Khách hàng thấy" : " · Nội bộ"}
+        </p>
+        ${event.note ? `<p class="order-event-note">${escapeHtml(event.note)}</p>` : ""}
+      </div>
+    </article>
+  `;
+}
+
+function getOrderEventLabel(event) {
+  if (event.event_type === "created") {
+    return "Tạo đơn hàng";
+  }
+
+  if (event.event_type === "status_changed") {
+    return `${getOrderStatusLabel(event.from_status)} → ${getOrderStatusLabel(event.to_status)}`;
+  }
+
+  if (event.event_type === "serial_assigned") {
+    return "Gán Serial";
+  }
+
+  if (event.event_type === "serial_unassigned") {
+    return "Gỡ Serial";
+  }
+
+  return "Ghi chú";
+}
+
+function getAdminRoleLabel(role) {
+  const labels = {
+    admin: "Quản trị viên",
+    sales: "Nhân viên bán hàng",
+    technician: "Kỹ thuật viên",
+    customer: "Khách hàng"
+  };
+
+  return labels[role] || role;
+}
+
+function renderAdminOrderNotePanel() {
+  return `
+    <section class="admin-panel">
+      <h2>Thêm ghi chú</h2>
+      <p class="page-subtitle">Ghi chú mặc định chỉ dành cho nhân viên nội bộ. Có thể bật chia sẻ cho khách nếu cần.</p>
+      <form id="adminOrderNoteForm" class="admin-note-form">
+        <label for="adminOrderNoteText">Nội dung ghi chú</label>
+        <textarea id="adminOrderNoteText" rows="5" maxlength="2000" placeholder="Ví dụ: Khách yêu cầu gọi trước khi giao hàng..."></textarea>
+        <label class="checkbox-line">
+          <input id="adminOrderNoteVisible" type="checkbox">
+          <span>Cho khách hàng xem ghi chú này</span>
+        </label>
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit">Lưu ghi chú</button>
+        </div>
+      </form>
+    </section>
+  `;
 }
 
 function renderAdminOrderItems(items, order) {
@@ -274,6 +368,14 @@ function bindAdminOrderDetailActions() {
       unassignSerialFromDetail(button.dataset.itemId);
     });
   });
+
+  const noteForm = document.getElementById("adminOrderNoteForm");
+  if (noteForm) {
+    noteForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+      addAdminOrderNote();
+    });
+  }
 }
 
 async function updateOrderStatusFromDetail(status) {
@@ -281,11 +383,36 @@ async function updateOrderStatusFromDetail(status) {
     return;
   }
 
+  const note = prompt("Ghi chú cho lần cập nhật trạng thái này (có thể bỏ trống):") || "";
+
   try {
     const response = await adminPatch(`/admin/orders/${encodeURIComponent(adminOrderCode)}/status`, {
-      status
+      status,
+      note: note.trim()
     });
     showAdminMessage("adminOrderDetailMessage", "success", response.message || "Cập nhật đơn hàng thành công.");
+    await loadAdminOrderDetail();
+  } catch (error) {
+    showAdminMessage("adminOrderDetailMessage", "error", error.message);
+  }
+}
+
+async function addAdminOrderNote() {
+  const textarea = document.getElementById("adminOrderNoteText");
+  const visibleInput = document.getElementById("adminOrderNoteVisible");
+  const note = textarea ? textarea.value.trim() : "";
+
+  if (!note) {
+    showAdminMessage("adminOrderDetailMessage", "error", "Vui lòng nhập nội dung ghi chú.");
+    return;
+  }
+
+  try {
+    const response = await adminPost(`/admin/orders/${encodeURIComponent(adminOrderCode)}/notes`, {
+      note,
+      customer_visible: Boolean(visibleInput && visibleInput.checked)
+    });
+    showAdminMessage("adminOrderDetailMessage", "success", response.message || "Thêm ghi chú thành công.");
     await loadAdminOrderDetail();
   } catch (error) {
     showAdminMessage("adminOrderDetailMessage", "error", error.message);

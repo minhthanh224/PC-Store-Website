@@ -1,4 +1,8 @@
 ﻿let inventoryProducts = [];
+let serialImportFile = null;
+let serialImportCanCommit = false;
+
+const SERIAL_IMPORT_REQUIRED_HEADERS = ["product_sku", "serial_code", "import_date", "note"];
 
 document.addEventListener("DOMContentLoaded", initInventory);
 
@@ -8,6 +12,7 @@ async function initInventory() {
 
   renderAdminLayout("inventory", user);
   bindInventoryTabs();
+  bindSerialImport();
   document.getElementById("inventorySummaryFilterForm").addEventListener("submit", function (event) {
     event.preventDefault();
     renderFilteredInventorySummary();
@@ -18,6 +23,8 @@ async function initInventory() {
     event.preventDefault();
     loadSerials();
   });
+  document.getElementById("resetSerialFilterBtn").addEventListener("click", resetSerialFilter);
+  document.getElementById("exportSerialsBtn").addEventListener("click", exportSerials);
   document.getElementById("serialImportDate").value = new Date().toISOString().slice(0, 10);
   await Promise.all([loadInventorySummary(), loadSerializedProductOptions(), loadSerials()]);
 }
@@ -48,6 +55,165 @@ function setInventoryTab(tabKey) {
   document.querySelectorAll("[data-tab-panel]").forEach(function (panel) {
     panel.hidden = panel.dataset.tabPanel !== tabKey;
   });
+}
+
+function bindSerialImport() {
+  const fileInput = document.getElementById("serialImportFile");
+  const previewButton = document.getElementById("previewSerialImportBtn");
+  const commitButton = document.getElementById("commitSerialImportBtn");
+
+  if (!fileInput || !previewButton || !commitButton) {
+    return;
+  }
+
+  fileInput.addEventListener("change", function () {
+    serialImportFile = fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+    serialImportCanCommit = false;
+    commitButton.disabled = true;
+    renderSerialImportFileMeta();
+    document.getElementById("serialImportPreview").innerHTML = "";
+  });
+
+  previewButton.addEventListener("click", previewSerialImport);
+  commitButton.addEventListener("click", commitSerialImport);
+}
+
+function renderSerialImportFileMeta() {
+  const meta = document.getElementById("serialImportFileMeta");
+
+  if (!meta) {
+    return;
+  }
+
+  if (!serialImportFile) {
+    meta.className = "import-file-meta";
+    meta.textContent = "Chưa chọn file CSV.";
+    return;
+  }
+
+  meta.className = "import-file-meta has-file";
+  meta.textContent = `${serialImportFile.name} · ${formatFileSize(serialImportFile.size)}`;
+}
+
+function formatFileSize(size) {
+  if (!Number.isFinite(size)) {
+    return "";
+  }
+
+  if (size < 1024) {
+    return `${size} B`;
+  }
+
+  if (size < 1024 * 1024) {
+    return `${(size / 1024).toFixed(1)} KB`;
+  }
+
+  return `${(size / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function buildSerialImportFormData() {
+  const formData = new FormData();
+  formData.append("file", serialImportFile);
+  return formData;
+}
+
+async function previewSerialImport() {
+  const container = document.getElementById("serialImportPreview");
+  const commitButton = document.getElementById("commitSerialImportBtn");
+
+  if (!serialImportFile) {
+    container.innerHTML = renderError("Vui lòng chọn file CSV để import Serial.");
+    return;
+  }
+
+  container.innerHTML = '<div class="loading-box">Đang kiểm tra file Serial...</div>';
+  serialImportCanCommit = false;
+  commitButton.disabled = true;
+
+  try {
+    const response = await adminPostFormData("/admin/inventory/serials/import/preview", buildSerialImportFormData());
+    const preview = response.data || {};
+    serialImportCanCommit = Boolean(preview.canCommit);
+    commitButton.disabled = !serialImportCanCommit;
+    container.innerHTML = renderSerialImportPreview(preview);
+  } catch (error) {
+    const preview = error.data || null;
+    serialImportCanCommit = false;
+    commitButton.disabled = true;
+    container.innerHTML = preview ? renderSerialImportPreview(preview) : renderError(error.message);
+  }
+}
+
+async function commitSerialImport() {
+  const container = document.getElementById("serialImportPreview");
+  const commitButton = document.getElementById("commitSerialImportBtn");
+
+  if (!serialImportFile || !serialImportCanCommit) {
+    container.innerHTML = renderError("Vui lòng preview file Serial hợp lệ trước khi xác nhận import.");
+    return;
+  }
+
+  commitButton.disabled = true;
+  container.innerHTML = '<div class="loading-box">Đang import Serial...</div>';
+
+  try {
+    const response = await adminPostFormData("/admin/inventory/serials/import/commit", buildSerialImportFormData());
+    serialImportCanCommit = false;
+    document.getElementById("serialImportFile").value = "";
+    serialImportFile = null;
+    renderSerialImportFileMeta();
+    container.innerHTML = `<div class="state-box state-success">${escapeHtml(response.message || "Import Serial thành công.")}</div>`;
+    await Promise.all([loadInventorySummary(), loadSerials()]);
+  } catch (error) {
+    const preview = error.data || null;
+    container.innerHTML = preview ? renderSerialImportPreview(preview) : renderError(error.message);
+  } finally {
+    commitButton.disabled = true;
+  }
+}
+
+function renderSerialImportPreview(preview) {
+  const summary = [
+    { label: "Dòng dữ liệu", value: preview.totalRows || 0 },
+    { label: "Sẽ tạo", value: preview.createCount || 0 },
+    { label: "Lỗi", value: preview.errorCount || 0 },
+    { label: "Cảnh báo", value: preview.warningCount || 0 }
+  ];
+
+  return `
+    <div class="admin-import-summary serial-import-summary">
+      ${summary.map(function (item) {
+        return `<article><span>${escapeHtml(item.label)}</span><strong>${escapeHtml(item.value)}</strong></article>`;
+      }).join("")}
+    </div>
+    <div class="serial-import-format-note">
+      Header khuyến nghị: ${SERIAL_IMPORT_REQUIRED_HEADERS.map(function (header) {
+        return `<code>${escapeHtml(header)}</code>`;
+      }).join(" ")}
+    </div>
+    ${renderSerialImportIssueList("Lỗi cần sửa", preview.errors || [], "has-errors")}
+    ${renderSerialImportIssueList("Cảnh báo", preview.warnings || [], "has-warnings")}
+    ${preview.canCommit ? '<div class="state-box state-success">File hợp lệ. Bạn có thể xác nhận import.</div>' : ''}
+  `;
+}
+
+function renderSerialImportIssueList(title, issues, className) {
+  if (!issues.length) {
+    return "";
+  }
+
+  return `
+    <section class="admin-import-list ${className}">
+      <h3>${escapeHtml(title)}</h3>
+      <ul>
+        ${issues.slice(0, 80).map(function (issue) {
+          const location = [issue.file, issue.line ? `dòng ${issue.line}` : "", issue.field].filter(Boolean).join(" / ");
+          return `<li><strong>${escapeHtml(location || "Dữ liệu")}</strong>: ${escapeHtml(issue.message || "Không hợp lệ")}</li>`;
+        }).join("")}
+      </ul>
+      ${issues.length > 80 ? `<p class="muted-text">Còn ${escapeHtml(issues.length - 80)} lỗi/cảnh báo khác.</p>` : ""}
+    </section>
+  `;
 }
 
 async function loadInventorySummary() {
@@ -183,11 +349,7 @@ function renderSerializedProductOptions(products) {
 
 async function loadSerials() {
   const container = document.getElementById("serialTable");
-  const query = buildQueryString({
-    keyword: document.getElementById("serialKeyword").value.trim(),
-    status: document.getElementById("serialStatus").value,
-    limit: 20
-  });
+  const query = buildSerialFilterQuery();
 
   try {
     const response = await adminGet(`/admin/inventory/serials?${query}`);
@@ -195,6 +357,55 @@ async function loadSerials() {
     container.innerHTML = renderSerialTable(response.data || []);
   } catch (error) {
     container.innerHTML = renderError(error.message);
+  }
+}
+
+function buildSerialFilterQuery(extra) {
+  return buildQueryString({
+    keyword: document.getElementById("serialKeyword").value.trim(),
+    status: document.getElementById("serialStatus").value,
+    limit: extra && extra.limit ? extra.limit : 20
+  });
+}
+
+function resetSerialFilter() {
+  document.getElementById("serialKeyword").value = "";
+  document.getElementById("serialStatus").value = "";
+  loadSerials();
+}
+
+async function exportSerials() {
+  const token = getAuthToken();
+
+  if (!token) {
+    window.location.href = `../login.html?redirect=${encodeURIComponent(getAdminRedirectPath())}`;
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/inventory/serials/export?${buildSerialFilterQuery({ limit: 10000 })}`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      const data = await response.json().catch(function () { return {}; });
+      throw new Error(data.message || "Không thể xuất danh sách Serial.");
+    }
+
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `aerotech-serials-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    showAdminMessage("serialMessage", "error", error.message);
+    setInventoryTab("add");
   }
 }
 
@@ -243,4 +454,11 @@ async function addSerial(event) {
   }
 }
 
-
+function getSerialStatusLabel(status) {
+  return {
+    in_stock: "Trong kho",
+    sold: "Đã bán",
+    warranty: "Bảo hành",
+    returned: "Đã trả"
+  }[status] || status;
+}

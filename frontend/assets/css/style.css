@@ -10468,3 +10468,181 @@ body.has-compare-bar {
     width: 100%;
   }
 }
+
+.order-history-panel {
+  margin-top: 22px;
+  padding: 20px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 20px;
+  background: #fff;
+}
+
+.order-event-list {
+  display: grid;
+  gap: 12px;
+}
+
+.order-event-item {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(15, 98, 254, 0.14);
+  border-radius: 16px;
+  background: rgba(15, 98, 254, 0.035);
+}
+
+.order-event-dot {
+  width: 10px;
+  height: 10px;
+  margin-top: 5px;
+  border-radius: 999px;
+  background: #0f62fe;
+  box-shadow: 0 0 0 4px rgba(15, 98, 254, 0.12);
+}
+
+.order-event-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.order-event-head span {
+  color: #6b7280;
+  font-size: 0.88rem;
+}
+
+.order-event-note {
+  margin-top: 6px;
+  color: #374151;
+  line-height: 1.55;
+}
+
+@media (max-width: 520px) {
+  .order-history-panel {
+    padding: 14px;
+  }
+
+  .order-event-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+  }
+}
+
+/* Customer profile and address book enhancements */
+.account-card-heading,
+.account-address-card h2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.account-inline-form,
+.account-password-form,
+.address-form {
+  margin-top: 16px;
+  border-top: 1px solid #edf2f7;
+  padding-top: 16px;
+}
+
+.account-password-form h3 {
+  margin: 0 0 2px;
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.form-actions-inline,
+.address-card-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.address-form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.checkbox-row {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text) !important;
+  font-weight: 800 !important;
+}
+
+.checkbox-row input {
+  width: 18px !important;
+  min-height: 18px !important;
+}
+
+.address-card-actions {
+  margin-top: 12px;
+}
+
+.saved-address-box {
+  display: grid;
+  gap: 10px;
+  border: 1px solid #dbeafe;
+  border-radius: 14px;
+  margin-bottom: 16px;
+  padding: 14px;
+  background: #f8fbff;
+}
+
+.saved-address-box label,
+.saved-address-empty strong {
+  color: var(--color-text);
+  font-weight: 900;
+}
+
+.saved-address-select-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.saved-address-select-row select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 12px;
+  color: var(--ink);
+  background: var(--white);
+}
+
+.saved-address-note,
+.saved-address-empty span {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 700px) {
+  .account-card-heading,
+  .account-address-card h2 {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .address-form-grid,
+  .saved-address-select-row {
+    grid-template-columns: 1fr;
+  }
+
+  .saved-address-select-row .btn {
+    width: 100%;
+  }
+}
+
+.is-hidden {
+  display: none !important;
+}
