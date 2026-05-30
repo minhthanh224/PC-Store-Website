@@ -1,5 +1,6 @@
 const adminOrderService = require("../services/adminOrder.service");
 const { buildCsv, sendCsv, formatDateForFilename } = require("../utils/csvExport");
+const { logAuditEvent } = require("../services/adminAudit.service");
 
 const ORDER_STATUS_LABELS = {
   pending: "Chờ duyệt",
@@ -49,6 +50,13 @@ async function exportOrders(req, res) {
     { key: "updated_at", label: "Cập nhật" }
   ];
 
+  await logAuditEvent(req, {
+    action_type: "export_orders",
+    entity_type: "order",
+    message: `Xuất CSV ${orders.length} đơn hàng.`,
+    metadata: { filters: req.query, count: orders.length }
+  });
+
   const csv = buildCsv(headers, orders);
   sendCsv(res, `aerotech-orders-${formatDateForFilename(new Date())}.csv`, csv);
 }
@@ -65,6 +73,15 @@ async function getOrderDetail(req, res) {
 async function updateOrderStatus(req, res) {
   const result = await adminOrderService.updateOrderStatus(req.params.orderCode, req.body.status, req.user, req.body.note);
 
+  await logAuditEvent(req, {
+    action_type: "update_order_status",
+    entity_type: "order",
+    entity_id: req.params.orderCode,
+    entity_label: req.params.orderCode,
+    message: `Cập nhật trạng thái đơn ${req.params.orderCode} thành ${result.status}.`,
+    metadata: { status: result.status, note: req.body.note || null }
+  });
+
   res.json({
     success: true,
     message: result.message,
@@ -76,6 +93,15 @@ async function updateOrderStatus(req, res) {
 
 async function addInternalNote(req, res) {
   const result = await adminOrderService.addInternalNote(req.params.orderCode, req.user, req.body);
+
+  await logAuditEvent(req, {
+    action_type: "add_order_note",
+    entity_type: "order",
+    entity_id: req.params.orderCode,
+    entity_label: req.params.orderCode,
+    message: `Thêm ghi chú cho đơn ${req.params.orderCode}.`,
+    metadata: { customer_visible: Boolean(req.body && req.body.customer_visible) }
+  });
 
   res.status(201).json({
     success: true,
@@ -91,6 +117,15 @@ async function assignSerial(req, res) {
     req.user
   );
 
+  await logAuditEvent(req, {
+    action_type: "assign_serial",
+    entity_type: "order",
+    entity_id: req.params.orderCode,
+    entity_label: req.params.orderCode,
+    message: `Gán Serial cho đơn ${req.params.orderCode}, item #${req.params.itemId}.`,
+    metadata: { order_item_id: req.params.itemId, serial_number_id: req.body.serial_number_id }
+  });
+
   res.json({
     success: true,
     message: result.message
@@ -99,6 +134,15 @@ async function assignSerial(req, res) {
 
 async function unassignSerial(req, res) {
   const result = await adminOrderService.unassignSerial(req.params.orderCode, req.params.itemId, req.user);
+
+  await logAuditEvent(req, {
+    action_type: "unassign_serial",
+    entity_type: "order",
+    entity_id: req.params.orderCode,
+    entity_label: req.params.orderCode,
+    message: `Gỡ Serial khỏi đơn ${req.params.orderCode}, item #${req.params.itemId}.`,
+    metadata: { order_item_id: req.params.itemId }
+  });
 
   res.json({
     success: true,

@@ -1,4 +1,5 @@
 const pool = require("../config/database");
+const { logAuditEvent } = require("../services/adminAudit.service");
 
 const STATUSES = ["active", "inactive"];
 
@@ -118,6 +119,15 @@ async function createCategory(req, res) {
     [category.parent_id, category.name, category.slug, category.description, category.status]
   );
 
+  await logAuditEvent(req, {
+    action_type: "create_category",
+    entity_type: "category",
+    entity_id: result.insertId,
+    entity_label: category.name,
+    message: `Tạo danh mục ${category.name}.`,
+    metadata: { slug: category.slug, parent_id: category.parent_id, status: category.status }
+  });
+
   res.status(201).json({
     success: true,
     message: "Tạo danh mục thành công.",
@@ -150,6 +160,15 @@ async function updateCategory(req, res) {
     return;
   }
 
+  await logAuditEvent(req, {
+    action_type: "update_category",
+    entity_type: "category",
+    entity_id: id,
+    entity_label: category.name,
+    message: `Cập nhật danh mục ${category.name}.`,
+    metadata: { slug: category.slug, parent_id: category.parent_id, status: category.status }
+  });
+
   res.json({
     success: true,
     message: "Cập nhật danh mục thành công."
@@ -179,6 +198,14 @@ async function updateCategoryStatus(req, res) {
     });
     return;
   }
+
+  await logAuditEvent(req, {
+    action_type: "update_category_status",
+    entity_type: "category",
+    entity_id: req.params.id,
+    message: `Cập nhật trạng thái danh mục #${req.params.id} thành ${status}.`,
+    metadata: { status }
+  });
 
   res.json({
     success: true,

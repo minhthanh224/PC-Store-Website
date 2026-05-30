@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nhật ký hệ thống - AeroTech</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <aside id="adminSidebar" class="admin-sidebar"></aside>
+    <main class="admin-main">
+      <header id="adminTopbar" class="admin-topbar"></header>
+      <section class="admin-content">
+        <div class="admin-page-heading admin-heading-with-actions">
+          <div>
+            <p class="eyebrow">Audit</p>
+            <h1>Nhật ký hệ thống</h1>
+            <p class="page-subtitle">Theo dõi các thao tác quan trọng của admin, sales và kỹ thuật viên.</p>
+          </div>
+          <button id="exportAuditBtn" class="btn btn-outline" type="button">Xuất CSV</button>
+        </div>
+
+        <section class="admin-panel audit-summary-panel">
+          <div class="audit-help-card">
+            <strong>Audit log dùng để làm gì?</strong>
+            <p>Trang này ghi lại các thao tác như import sản phẩm, cập nhật đơn hàng, gán serial, duyệt đánh giá, xử lý bảo hành và xuất báo cáo. Dữ liệu này giúp nhóm dễ kiểm tra ai đã làm gì khi demo hoặc vận hành thử.</p>
+          </div>
+        </section>
+
+        <section class="admin-panel">
+          <form id="auditFilterForm" class="admin-filter-bar audit-filter-bar">
+            <input id="auditKeywordInput" type="search" placeholder="Tìm người thao tác, email, đối tượng, nội dung">
+            <select id="auditActionFilter" aria-label="Lọc hành động">
+              <option value="">Tất cả hành động</option>
+            </select>
+            <select id="auditEntityFilter" aria-label="Lọc loại dữ liệu">
+              <option value="">Tất cả dữ liệu</option>
+            </select>
+            <select id="auditRoleFilter" aria-label="Lọc vai trò">
+              <option value="">Tất cả vai trò</option>
+              <option value="admin">Admin</option>
+              <option value="sales">Sales</option>
+              <option value="technician">Technician</option>
+            </select>
+            <input id="auditDateFrom" type="date" aria-label="Từ ngày">
+            <input id="auditDateTo" type="date" aria-label="Đến ngày">
+            <button class="btn btn-dark" type="submit">Lọc</button>
+            <button id="resetAuditFilterBtn" class="btn btn-light" type="button">Làm mới</button>
+          </form>
+
+          <div id="auditMessage"></div>
+          <div id="auditTable" class="admin-table-wrap loading-box">Đang tải nhật ký...</div>
+          <div id="auditPagination" class="pagination"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/utils.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/admin/admin-api.js"></script>
+  <script src="../assets/js/admin/admin-layout.js"></script>
+  <script src="../assets/js/admin/audit-logs.js"></script>
+</body>
+</html>

@@ -2903,3 +2903,105 @@
     width: 100%;
   }
 }
+
+/* Audit logs */
+.audit-summary-panel {
+  margin-bottom: 18px;
+}
+
+.audit-help-card {
+  border: 1px solid rgba(30, 80, 170, 0.12);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(30, 94, 255, 0.08), rgba(255, 255, 255, 0.96));
+  padding: 16px 18px;
+  color: #1f2a44;
+}
+
+.audit-help-card strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #102a62;
+}
+
+.audit-help-card p {
+  margin: 0;
+  color: #64708a;
+  line-height: 1.6;
+}
+
+.audit-filter-bar {
+  align-items: stretch;
+}
+
+.audit-log-table td {
+  vertical-align: top;
+}
+
+.audit-action-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: rgba(30, 94, 255, 0.1);
+  color: #1746a2;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.audit-message-cell {
+  min-width: 260px;
+  color: #33405c;
+  line-height: 1.5;
+}
+
+.audit-metadata {
+  margin-top: 8px;
+  font-size: 0.82rem;
+  color: #60708f;
+}
+
+.audit-metadata summary {
+  cursor: pointer;
+  color: #2559d7;
+  font-weight: 700;
+}
+
+.audit-metadata dl {
+  margin: 8px 0 0;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.audit-metadata dl div {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+.audit-metadata dt {
+  font-weight: 700;
+  color: #42526e;
+}
+
+.audit-metadata dd {
+  margin: 0;
+  word-break: break-word;
+}
+
+@media (max-width: 720px) {
+  .audit-filter-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .audit-message-cell {
+    min-width: 0;
+  }
+
+  .audit-metadata dl div {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}

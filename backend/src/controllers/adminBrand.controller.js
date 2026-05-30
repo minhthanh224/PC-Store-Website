@@ -1,4 +1,5 @@
 const pool = require("../config/database");
+const { logAuditEvent } = require("../services/adminAudit.service");
 
 const STATUSES = ["active", "inactive"];
 
@@ -75,6 +76,15 @@ async function createBrand(req, res) {
     [brand.name, brand.slug, brand.description, brand.status]
   );
 
+  await logAuditEvent(req, {
+    action_type: "create_brand",
+    entity_type: "brand",
+    entity_id: result.insertId,
+    entity_label: brand.name,
+    message: `Tạo thương hiệu ${brand.name}.`,
+    metadata: { slug: brand.slug, status: brand.status }
+  });
+
   res.status(201).json({
     success: true,
     message: "Tạo thương hiệu thành công.",
@@ -107,6 +117,15 @@ async function updateBrand(req, res) {
     return;
   }
 
+  await logAuditEvent(req, {
+    action_type: "update_brand",
+    entity_type: "brand",
+    entity_id: id,
+    entity_label: brand.name,
+    message: `Cập nhật thương hiệu ${brand.name}.`,
+    metadata: { slug: brand.slug, status: brand.status }
+  });
+
   res.json({
     success: true,
     message: "Cập nhật thương hiệu thành công."
@@ -136,6 +155,14 @@ async function updateBrandStatus(req, res) {
     });
     return;
   }
+
+  await logAuditEvent(req, {
+    action_type: "update_brand_status",
+    entity_type: "brand",
+    entity_id: req.params.id,
+    message: `Cập nhật trạng thái thương hiệu #${req.params.id} thành ${status}.`,
+    metadata: { status }
+  });
 
   res.json({
     success: true,

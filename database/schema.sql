@@ -9,6 +9,7 @@ USE se104_pc_store;
 SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS wishlists;
+DROP TABLE IF EXISTS admin_audit_logs;
 DROP TABLE IF EXISTS product_reviews;
 DROP TABLE IF EXISTS warranty_tickets;
 DROP TABLE IF EXISTS order_items;
@@ -43,6 +44,34 @@ CREATE TABLE users (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uk_users_email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+CREATE TABLE admin_audit_logs (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  actor_user_id BIGINT UNSIGNED NULL,
+  actor_name VARCHAR(150) NULL,
+  actor_email VARCHAR(150) NULL,
+  actor_role VARCHAR(50) NULL,
+  action_type VARCHAR(80) NOT NULL,
+  entity_type VARCHAR(80) NULL,
+  entity_id VARCHAR(120) NULL,
+  entity_label VARCHAR(255) NULL,
+  message TEXT NULL,
+  metadata_json TEXT NULL,
+  ip_address VARCHAR(80) NULL,
+  user_agent VARCHAR(255) NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_admin_audit_logs_actor_user_id (actor_user_id),
+  KEY idx_admin_audit_logs_action_type (action_type),
+  KEY idx_admin_audit_logs_entity_type (entity_type),
+  KEY idx_admin_audit_logs_created_at (created_at),
+  KEY idx_admin_audit_logs_actor_role (actor_role),
+  CONSTRAINT fk_admin_audit_logs_actor
+    FOREIGN KEY (actor_user_id) REFERENCES users(id)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE customer_addresses (

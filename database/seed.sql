@@ -5,6 +5,7 @@ USE se104_pc_store;
 SET FOREIGN_KEY_CHECKS = 0;
 
 DELETE FROM wishlists;
+DELETE FROM admin_audit_logs;
 DELETE FROM product_reviews;
 DELETE FROM warranty_tickets;
 DELETE FROM order_items;
@@ -27,6 +28,7 @@ DELETE FROM brands;
 DELETE FROM users;
 
 ALTER TABLE wishlists AUTO_INCREMENT = 1;
+ALTER TABLE admin_audit_logs AUTO_INCREMENT = 1;
 ALTER TABLE product_reviews AUTO_INCREMENT = 1;
 ALTER TABLE warranty_tickets AUTO_INCREMENT = 1;
 ALTER TABLE order_items AUTO_INCREMENT = 1;

@@ -1,6 +1,7 @@
 const multer = require("multer");
 const { parse } = require("csv-parse/sync");
 const pool = require("../config/database");
+const { logAuditEvent } = require("../services/adminAudit.service");
 const {
   getAvailableStockExpression,
   getReservedStockExpression,
@@ -521,6 +522,13 @@ async function exportSerials(req, res) {
     ].map(escapeCsvValue).join(",");
   })).join("\n");
 
+  await logAuditEvent(req, {
+    action_type: "export_serials",
+    entity_type: "serial",
+    message: `Xuất CSV ${serials.length} Serial.`,
+    metadata: { filters: req.query, count: serials.length }
+  });
+
   res.setHeader("Content-Type", "text/csv; charset=utf-8");
   res.setHeader("Content-Disposition", `attachment; filename="aerotech-serials-${new Date().toISOString().slice(0, 10)}.csv"`);
   res.send(`\uFEFF${csv}`);
@@ -569,6 +577,15 @@ async function createSerial(req, res) {
       `,
       [productId, serialCode, importDate, note]
     );
+
+    await logAuditEvent(req, {
+      action_type: "create_serial",
+      entity_type: "serial",
+      entity_id: result.insertId,
+      entity_label: serialCode,
+      message: `Thêm Serial ${serialCode}.`,
+      metadata: { product_id: productId, import_date: importDate }
+    });
 
     res.status(201).json({
       success: true,
@@ -638,6 +655,13 @@ async function commitSerialImport(req, res) {
 
     await connection.commit();
 
+    await logAuditEvent(req, {
+      action_type: "import_serials",
+      entity_type: "serial",
+      message: `Import ${preview.createCount} Serial.`,
+      metadata: { created: preview.createCount, warnings: preview.warnings.length }
+    });
+
     res.status(201).json({
       success: true,
       message: `Import ${preview.createCount} Serial thành công.`,
@@ -691,6 +715,14 @@ async function updateSerialStatus(req, res) {
     });
     return;
   }
+
+  await logAuditEvent(req, {
+    action_type: "update_serial_status",
+    entity_type: "serial",
+    entity_id: req.params.id,
+    message: `Cập nhật trạng thái Serial #${req.params.id} thành ${status}.`,
+    metadata: { status, note }
+  });
 
   res.json({
     success: true,

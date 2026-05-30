@@ -1,5 +1,6 @@
 const adminReportService = require("../services/adminReport.service");
 const { buildCsv, sendCsv, formatDateForFilename } = require("../utils/csvExport");
+const { logAuditEvent } = require("../services/adminAudit.service");
 
 async function getOverview(req, res) {
   const data = await adminReportService.getOverview(req.query);
@@ -168,27 +169,72 @@ async function exportReport(req, res) {
   const type = req.params.type;
 
   if (type === "revenue") {
-    sendRevenueCsv(res, await adminReportService.getRevenue(req.query));
+    const rows = await adminReportService.getRevenue(req.query);
+    await logAuditEvent(req, {
+      action_type: "export_report",
+      entity_type: "report",
+      entity_id: "revenue",
+      entity_label: "Doanh thu",
+      message: "Xuất báo cáo doanh thu.",
+      metadata: { type, filters: req.query, count: rows.length }
+    });
+    sendRevenueCsv(res, rows);
     return;
   }
 
   if (type === "best-selling") {
-    sendBestSellingCsv(res, await adminReportService.getBestSelling(req.query));
+    const rows = await adminReportService.getBestSelling(req.query);
+    await logAuditEvent(req, {
+      action_type: "export_report",
+      entity_type: "report",
+      entity_id: "best-selling",
+      entity_label: "Sản phẩm bán chạy",
+      message: "Xuất báo cáo sản phẩm bán chạy.",
+      metadata: { type, filters: req.query, count: rows.length }
+    });
+    sendBestSellingCsv(res, rows);
     return;
   }
 
   if (type === "inventory") {
-    sendInventoryCsv(res, await adminReportService.getInventoryReport());
+    const rows = await adminReportService.getInventoryReport();
+    await logAuditEvent(req, {
+      action_type: "export_report",
+      entity_type: "report",
+      entity_id: "inventory",
+      entity_label: "Tồn kho",
+      message: "Xuất báo cáo tồn kho.",
+      metadata: { type, count: rows.length }
+    });
+    sendInventoryCsv(res, rows);
     return;
   }
 
   if (type === "warranty") {
-    sendWarrantyCsv(res, await adminReportService.getWarrantyReport());
+    const data = await adminReportService.getWarrantyReport();
+    await logAuditEvent(req, {
+      action_type: "export_report",
+      entity_type: "report",
+      entity_id: "warranty",
+      entity_label: "Bảo hành",
+      message: "Xuất báo cáo bảo hành.",
+      metadata: { type }
+    });
+    sendWarrantyCsv(res, data);
     return;
   }
 
   if (type === "orders") {
-    sendOrderStatusCsv(res, await adminReportService.getOrderReport());
+    const data = await adminReportService.getOrderReport();
+    await logAuditEvent(req, {
+      action_type: "export_report",
+      entity_type: "report",
+      entity_id: "orders",
+      entity_label: "Trạng thái đơn hàng",
+      message: "Xuất báo cáo trạng thái đơn hàng.",
+      metadata: { type }
+    });
+    sendOrderStatusCsv(res, data);
     return;
   }
 

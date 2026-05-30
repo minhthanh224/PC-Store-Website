@@ -1,4 +1,5 @@
 const productImportService = require("../services/productImport.service");
+const { logAuditEvent } = require("../services/adminAudit.service");
 
 function requireZipFile(req) {
   if (!req.file || !req.file.buffer) {
@@ -32,6 +33,22 @@ async function commitProductImport(req, res) {
     });
     return;
   }
+
+  await logAuditEvent(req, {
+    action_type: "import_products",
+    entity_type: "product",
+    message: "Import sản phẩm bằng Product Import V2.",
+    metadata: {
+      importMode: req.body && req.body.importMode,
+      totalProducts: result.totalProducts,
+      createCount: result.createCount,
+      updateBySkuCount: result.updateBySkuCount,
+      updateBySlugCount: result.updateBySlugCount,
+      imageCount: result.imageCount,
+      specCount: result.specCount,
+      warningCount: Array.isArray(result.warnings) ? result.warnings.length : undefined
+    }
+  });
 
   res.json({
     success: true,
