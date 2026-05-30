@@ -154,9 +154,14 @@ function setReportBoxLoading(elementId, message, className) {
 function renderOverview(data) {
   const container = document.getElementById("reportOverview");
 
-  container.className = "admin-card-grid";
+  container.className = "admin-card-grid report-overview-grid";
   container.innerHTML = `
-    ${renderReportCard("Doanh thu", formatCurrency(data.total_revenue))}
+    ${renderReportCard("Doanh thu thuần", formatCurrency(data.net_order_revenue || data.total_revenue || 0))}
+    ${renderReportCard("Doanh thu hàng hóa", formatCurrency(data.product_revenue || 0))}
+    ${renderReportCard("Mua kèm ưu đãi", formatCurrency(data.bundle_addon_revenue || 0))}
+    ${renderReportCard("Gói bảo hành", formatCurrency(data.warranty_package_revenue || 0))}
+    ${renderReportCard("Giảm giá", `-${formatCurrency(data.promotion_discount || 0)}`)}
+    ${renderReportCard("Phí vận chuyển", formatCurrency(data.shipping_revenue || 0))}
     ${renderReportCard("Đơn hoàn thành", data.completed_order_count)}
     ${renderReportCard("Đơn chờ duyệt", data.pending_order_count)}
     ${renderReportCard("Sản phẩm đã bán", data.total_products_sold)}
@@ -190,12 +195,25 @@ function renderRevenue(rows, containerId) {
   container.innerHTML = `
     <div class="report-revenue-list">
       ${rows.map(function (row) {
-        const width = Math.max((Number(row.revenue) / maxRevenue) * 100, 3);
+        const revenue = Number(row.revenue || 0);
+        const productRevenue = Number(row.product_revenue || 0);
+        const bundleRevenue = Number(row.bundle_addon_revenue || 0);
+        const warrantyRevenue = Number(row.warranty_package_revenue || 0);
+        const shippingRevenue = Number(row.shipping_revenue || 0);
+        const discountAmount = Number(row.promotion_discount || 0);
+        const width = Math.max((revenue / maxRevenue) * 100, 3);
         return `
-          <article class="report-revenue-row">
+          <article class="report-revenue-row report-revenue-row-detailed">
             <span class="report-revenue-label">${escapeHtml(row.label)}</span>
             <div class="report-revenue-track" aria-hidden="true"><i style="width:${width}%"></i></div>
-            <strong class="report-revenue-value">${formatCurrency(row.revenue)} (${escapeHtml(row.order_count)} đơn)</strong>
+            <strong class="report-revenue-value">${formatCurrency(revenue)} (${escapeHtml(row.order_count)} đơn)</strong>
+            <div class="report-revenue-breakdown" aria-label="Chi tiết doanh thu">
+              <span>Hàng hóa: <strong>${formatCurrency(productRevenue)}</strong></span>
+              <span>Mua kèm: <strong>${formatCurrency(bundleRevenue)}</strong></span>
+              <span>Bảo hành: <strong>${formatCurrency(warrantyRevenue)}</strong></span>
+              <span>Vận chuyển: <strong>${formatCurrency(shippingRevenue)}</strong></span>
+              <span>Giảm giá: <strong>-${formatCurrency(discountAmount)}</strong></span>
+            </div>
           </article>
         `;
       }).join("")}

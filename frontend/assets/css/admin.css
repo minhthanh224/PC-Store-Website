@@ -2660,3 +2660,49 @@
     grid-column: 2;
   }
 }
+
+.report-overview-grid .admin-stat-card span {
+  line-height: 1.35;
+}
+
+.report-revenue-row-detailed {
+  grid-template-columns: minmax(180px, 220px) minmax(160px, 1fr) max-content;
+}
+
+.report-revenue-breakdown {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--admin-muted);
+  font-size: 0.8rem;
+}
+
+.report-revenue-breakdown span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--admin-border);
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: #fff;
+}
+
+.report-revenue-breakdown strong {
+  color: var(--admin-text);
+}
+
+@media (max-width: 768px) {
+  .report-revenue-row-detailed {
+    grid-template-columns: 1fr;
+  }
+
+  .report-revenue-breakdown {
+    gap: 6px;
+  }
+
+  .report-revenue-breakdown span {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

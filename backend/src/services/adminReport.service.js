@@ -69,7 +69,8 @@ async function getOverview(query) {
   const orderParams = dateFilter.params;
 
   const [
-    [[revenue]],
+    [[orderTotals]],
+    [[itemTotals]],
     [[pendingOrders]],
     [[productsSold]],
     [[lowStock]],
@@ -79,8 +80,25 @@ async function getOverview(query) {
       `
         SELECT
           COALESCE(SUM(o.total_amount), 0) AS total_revenue,
+          COALESCE(SUM(o.subtotal_amount), 0) AS subtotal_revenue,
+          COALESCE(SUM(o.shipping_fee), 0) AS shipping_revenue,
+          COALESCE(SUM(o.discount_amount), 0) AS promotion_discount,
           COUNT(*) AS completed_order_count
         FROM orders o
+        WHERE o.status = 'completed'
+        ${orderDateSql}
+      `,
+      orderParams
+    ),
+    pool.execute(
+      `
+        SELECT
+          COALESCE(SUM(CASE WHEN oi.is_bundle_addon = 1 THEN 0 ELSE oi.unit_price * oi.quantity END), 0) AS product_revenue,
+          COALESCE(SUM(CASE WHEN oi.is_bundle_addon = 1 THEN oi.total_price ELSE 0 END), 0) AS bundle_addon_revenue,
+          COALESCE(SUM(CASE WHEN oi.is_bundle_addon = 1 THEN 0 ELSE oi.warranty_package_price * oi.quantity END), 0) AS warranty_package_revenue,
+          COALESCE(SUM(oi.total_price), 0) AS gross_item_revenue
+        FROM order_items oi
+        INNER JOIN orders o ON o.id = oi.order_id
         WHERE o.status = 'completed'
         ${orderDateSql}
       `,
@@ -125,8 +143,16 @@ async function getOverview(query) {
   ]);
 
   return {
-    total_revenue: Number(revenue.total_revenue),
-    completed_order_count: Number(revenue.completed_order_count),
+    total_revenue: Number(orderTotals.total_revenue),
+    net_order_revenue: Number(orderTotals.total_revenue),
+    subtotal_revenue: Number(orderTotals.subtotal_revenue),
+    product_revenue: Number(itemTotals.product_revenue),
+    bundle_addon_revenue: Number(itemTotals.bundle_addon_revenue),
+    warranty_package_revenue: Number(itemTotals.warranty_package_revenue),
+    gross_item_revenue: Number(itemTotals.gross_item_revenue),
+    shipping_revenue: Number(orderTotals.shipping_revenue),
+    promotion_discount: Number(orderTotals.promotion_discount),
+    completed_order_count: Number(orderTotals.completed_order_count),
     pending_order_count: Number(pendingOrders.pending_order_count),
     total_products_sold: Number(productsSold.total_products_sold),
     low_stock_count: Number(lowStock.low_stock_count),
@@ -150,8 +176,25 @@ async function getRevenue(query) {
       SELECT
         ${labelExpression} AS label,
         COALESCE(SUM(o.total_amount), 0) AS revenue,
+        COALESCE(SUM(o.subtotal_amount), 0) AS subtotal_revenue,
+        COALESCE(SUM(o.shipping_fee), 0) AS shipping_revenue,
+        COALESCE(SUM(o.discount_amount), 0) AS promotion_discount,
+        COALESCE(SUM(ib.product_revenue), 0) AS product_revenue,
+        COALESCE(SUM(ib.bundle_addon_revenue), 0) AS bundle_addon_revenue,
+        COALESCE(SUM(ib.warranty_package_revenue), 0) AS warranty_package_revenue,
+        COALESCE(SUM(ib.gross_item_revenue), 0) AS gross_item_revenue,
         COUNT(*) AS order_count
       FROM orders o
+      LEFT JOIN (
+        SELECT
+          order_id,
+          COALESCE(SUM(CASE WHEN is_bundle_addon = 1 THEN 0 ELSE unit_price * quantity END), 0) AS product_revenue,
+          COALESCE(SUM(CASE WHEN is_bundle_addon = 1 THEN total_price ELSE 0 END), 0) AS bundle_addon_revenue,
+          COALESCE(SUM(CASE WHEN is_bundle_addon = 1 THEN 0 ELSE warranty_package_price * quantity END), 0) AS warranty_package_revenue,
+          COALESCE(SUM(total_price), 0) AS gross_item_revenue
+        FROM order_items
+        GROUP BY order_id
+      ) ib ON ib.order_id = o.id
       WHERE o.status = 'completed'
       ${orderDateSql}
       GROUP BY label
@@ -164,6 +207,13 @@ async function getRevenue(query) {
     return {
       label: String(row.label),
       revenue: Number(row.revenue),
+      product_revenue: Number(row.product_revenue),
+      bundle_addon_revenue: Number(row.bundle_addon_revenue),
+      warranty_package_revenue: Number(row.warranty_package_revenue),
+      gross_item_revenue: Number(row.gross_item_revenue),
+      subtotal_revenue: Number(row.subtotal_revenue),
+      shipping_revenue: Number(row.shipping_revenue),
+      promotion_discount: Number(row.promotion_discount),
       order_count: Number(row.order_count)
     };
   });
@@ -182,7 +232,7 @@ async function getBestSelling(query) {
         b.name AS brand_name,
         c.name AS category_name,
         COALESCE(SUM(oi.quantity), 0) AS total_quantity,
-        COALESCE(SUM(oi.total_price), 0) AS total_revenue,
+        COALESCE(SUM(CASE WHEN oi.is_bundle_addon = 1 THEN oi.total_price ELSE oi.unit_price * oi.quantity END), 0) AS total_revenue,
         (
           SELECT pi.image_url
           FROM product_images pi
