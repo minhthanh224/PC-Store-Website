@@ -28,6 +28,7 @@ async function loadOrderDetail() {
     document.title = `${order.order_code} - AeroTech`;
     container.className = "order-detail-card";
     container.innerHTML = renderOrderDetail(order, items, response.data.history || []);
+    bindCustomerWarrantyRequestActions(order);
   } catch (error) {
     container.innerHTML = renderError(error.message);
   }
@@ -68,9 +69,11 @@ function renderOrderDetail(order, items, history) {
     <section>
       <h2>Sản phẩm</h2>
       <div class="order-item-list">
-        ${items.map(renderOrderItem).join("")}
+        ${items.map(function (item) { return renderOrderItem(item, order); }).join("")}
       </div>
     </section>
+
+    ${renderWarrantyRequestPanel()}
 
     ${renderCustomerOrderHistory(history || [])}
 
@@ -143,7 +146,7 @@ function renderOrderPromotionSummary(order) {
   `;
 }
 
-function renderOrderItem(item) {
+function renderOrderItem(item, order) {
   const imageFallback = getProductImageFallback(item);
 
   return `
@@ -161,6 +164,7 @@ function renderOrderItem(item) {
         <p>Bảo hành: ${escapeHtml(item.warranty_months_snapshot)} tháng</p>
         ${renderOrderItemWarrantyPackage(item)}
         ${item.serial_code ? `<a class="text-link" href="warranty-lookup.html?serial=${encodeURIComponent(item.serial_code)}">Tra cứu bảo hành</a>` : ""}
+        ${renderOrderItemWarrantyRequest(item, order)}
       </div>
       <div>
         <p>x${escapeHtml(item.quantity)}</p>
@@ -202,3 +206,126 @@ function renderOrderItemWarrantyPackage(item) {
 }
 
 
+
+
+
+function renderOrderItemWarrantyRequest(item, order) {
+  if (!item.serial_code) {
+    return '<p class="order-warranty-request-note muted-text">Sản phẩm chưa có Serial nên chưa thể tạo yêu cầu bảo hành trực tuyến.</p>';
+  }
+
+  if (item.warranty_ticket_code) {
+    return `
+      <div class="order-warranty-ticket-note">
+        <strong>Phiếu bảo hành: ${escapeHtml(item.warranty_ticket_code)}</strong>
+        <span>${escapeHtml(getWarrantyStatusLabel(item.warranty_ticket_status))}</span>
+        <a class="text-link" href="my-warranty.html?ticket=${encodeURIComponent(item.warranty_ticket_code)}">Theo dõi phiếu</a>
+      </div>
+    `;
+  }
+
+  if (!order || order.status !== "completed") {
+    return '<p class="order-warranty-request-note muted-text">Có thể yêu cầu bảo hành sau khi đơn hàng hoàn thành.</p>';
+  }
+
+  if (item.serial_status === "warranty") {
+    return '<p class="order-warranty-request-note muted-text">Sản phẩm đang được xử lý bảo hành.</p>';
+  }
+
+  if (item.serial_status === "returned") {
+    return '<p class="order-warranty-request-note muted-text">Serial này không còn đủ điều kiện tạo yêu cầu bảo hành.</p>';
+  }
+
+  return `
+    <button
+      class="btn btn-soft btn-small js-open-warranty-request"
+      type="button"
+      data-order-item-id="${escapeAttribute(item.id)}"
+      data-product-name="${escapeAttribute(item.product_name_snapshot)}"
+      data-serial-code="${escapeAttribute(item.serial_code)}"
+    >Yêu cầu bảo hành</button>
+  `;
+}
+
+function renderWarrantyRequestPanel() {
+  return `
+    <section id="warrantyRequestPanel" class="warranty-request-panel" hidden>
+      <div class="section-heading compact-heading">
+        <div>
+          <p class="eyebrow">Yêu cầu bảo hành</p>
+          <h2 id="warrantyRequestTitle">Tạo yêu cầu bảo hành</h2>
+          <p id="warrantyRequestSerial" class="page-subtitle"></p>
+        </div>
+        <button id="closeWarrantyRequestBtn" class="btn btn-light" type="button">Đóng</button>
+      </div>
+      <form id="warrantyRequestForm" class="stack-form">
+        <input id="warrantyRequestOrderItemId" type="hidden">
+        <label>
+          Mô tả lỗi gặp phải
+          <textarea id="warrantyRequestIssue" rows="5" placeholder="Ví dụ: máy không lên nguồn, màn hình sọc, quạt kêu lớn..." required></textarea>
+        </label>
+        <p class="form-hint">AeroTech sẽ tiếp nhận phiếu ở trạng thái “Đã tiếp nhận”. Bạn có thể theo dõi trong trang Phiếu bảo hành của tôi.</p>
+        <div class="form-actions-inline">
+          <button class="btn btn-primary" type="submit">Gửi yêu cầu</button>
+          <button id="cancelWarrantyRequestBtn" class="btn btn-light" type="button">Hủy</button>
+        </div>
+        <div id="warrantyRequestMessage"></div>
+      </form>
+    </section>
+  `;
+}
+
+function bindCustomerWarrantyRequestActions(order) {
+  const panel = document.getElementById("warrantyRequestPanel");
+  const form = document.getElementById("warrantyRequestForm");
+
+  document.querySelectorAll(".js-open-warranty-request").forEach(function (button) {
+    button.addEventListener("click", function () {
+      if (!panel) {
+        return;
+      }
+
+      document.getElementById("warrantyRequestOrderItemId").value = button.dataset.orderItemId;
+      document.getElementById("warrantyRequestTitle").textContent = button.dataset.productName || "Tạo yêu cầu bảo hành";
+      document.getElementById("warrantyRequestSerial").textContent = button.dataset.serialCode ? `Serial: ${button.dataset.serialCode}` : "";
+      document.getElementById("warrantyRequestIssue").value = "";
+      document.getElementById("warrantyRequestMessage").innerHTML = "";
+      panel.hidden = false;
+      panel.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+
+  ["closeWarrantyRequestBtn", "cancelWarrantyRequestBtn"].forEach(function (id) {
+    const button = document.getElementById(id);
+    if (button && panel) {
+      button.addEventListener("click", function () {
+        panel.hidden = true;
+      });
+    }
+  });
+
+  if (form) {
+    form.addEventListener("submit", submitWarrantyRequest);
+  }
+}
+
+async function submitWarrantyRequest(event) {
+  event.preventDefault();
+
+  const message = document.getElementById("warrantyRequestMessage");
+  const orderItemId = Number(document.getElementById("warrantyRequestOrderItemId").value);
+  const issue = document.getElementById("warrantyRequestIssue").value.trim();
+
+  message.innerHTML = renderLoading("Đang gửi yêu cầu bảo hành...");
+
+  try {
+    const response = await authPost("/warranty/requests", {
+      order_item_id: orderItemId,
+      issue_description: issue
+    });
+    message.innerHTML = renderSuccess(response.message || "Yêu cầu bảo hành đã được gửi.");
+    setTimeout(loadOrderDetail, 700);
+  } catch (error) {
+    message.innerHTML = renderError(error.message);
+  }
+}

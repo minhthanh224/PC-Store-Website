@@ -10646,3 +10646,126 @@ body.has-compare-bar {
 .is-hidden {
   display: none !important;
 }
+
+/* Customer warranty request / tracking */
+.muted-text {
+  color: var(--muted);
+}
+
+.order-warranty-request-note {
+  margin-top: 8px;
+  font-size: 0.88rem;
+}
+
+.order-warranty-ticket-note {
+  display: grid;
+  gap: 3px;
+  width: fit-content;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(15, 98, 254, 0.18);
+  border-radius: 12px;
+  background: rgba(15, 98, 254, 0.07);
+  color: #334155;
+  font-size: 0.9rem;
+}
+
+.order-warranty-ticket-note strong {
+  color: var(--color-primary-dark);
+}
+
+.warranty-request-panel,
+.warranty-detail-section {
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--white);
+  box-shadow: var(--shadow-soft);
+}
+
+.warranty-request-panel[hidden],
+.warranty-detail-section[hidden] {
+  display: none;
+}
+
+.warranty-ticket-list {
+  display: grid;
+  gap: 14px;
+}
+
+.warranty-ticket-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: start;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--white);
+  box-shadow: var(--shadow-soft);
+}
+
+.warranty-ticket-card h2 {
+  margin: 8px 0 6px;
+  font-size: 1.05rem;
+}
+
+.warranty-ticket-card p {
+  margin: 4px 0;
+  color: var(--muted);
+}
+
+.warranty-ticket-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.warranty-ticket-issue {
+  max-width: 760px;
+}
+
+.warranty-ticket-meta {
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.warranty-detail-grid {
+  margin-top: 12px;
+}
+
+.warranty-ticket-note-box {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid rgba(15, 98, 254, 0.12);
+  border-radius: 14px;
+  background: #f8fbff;
+}
+
+.warranty-ticket-note-box h3 {
+  margin-bottom: 6px;
+}
+
+.warranty-ticket-note-box p {
+  color: #334155;
+}
+
+@media (max-width: 720px) {
+  .warranty-ticket-card {
+    grid-template-columns: 1fr;
+  }
+
+  .warranty-ticket-meta {
+    justify-items: start;
+  }
+
+  .warranty-request-panel,
+  .warranty-detail-section {
+    padding: 16px;
+  }
+}

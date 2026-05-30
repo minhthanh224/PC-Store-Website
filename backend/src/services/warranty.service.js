@@ -33,6 +33,10 @@ function toIsoDate(value) {
   return date.toISOString().slice(0, 10);
 }
 
+function todayIso() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 function getWarrantyStartDate(row) {
   if (!row) {
     return null;
@@ -102,8 +106,64 @@ function getWarrantyStatus(serialStatus, orderStatus, warrantyEndDate) {
   };
 }
 
-function todayIso() {
-  return new Date().toISOString().slice(0, 10);
+function generateTicketCode() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const randomNumber = Math.floor(100000 + Math.random() * 900000);
+
+  return `BH${year}${month}${day}${randomNumber}`;
+}
+
+async function insertTicketWithRetry(connection, values) {
+  let ticketCode = generateTicketCode();
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const [result] = await connection.execute(
+        `
+          INSERT INTO warranty_tickets (
+            ticket_code,
+            serial_number_id,
+            order_item_id,
+            customer_id,
+            customer_name,
+            customer_phone,
+            issue_description,
+            technician_note,
+            status,
+            received_date
+          )
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'received', ?)
+        `,
+        [
+          ticketCode,
+          values.serial_number_id,
+          values.order_item_id,
+          values.customer_id,
+          values.customer_name,
+          values.customer_phone,
+          values.issue_description,
+          values.technician_note || null,
+          values.received_date || todayIso()
+        ]
+      );
+
+      return {
+        id: result.insertId,
+        ticket_code: ticketCode
+      };
+    } catch (error) {
+      if (error.code !== "ER_DUP_ENTRY") {
+        throw error;
+      }
+
+      ticketCode = generateTicketCode();
+    }
+  }
+
+  throw createError("Không thể tạo mã phiếu bảo hành. Vui lòng thử lại.", 500);
 }
 
 async function lookupWarranty(serialCode) {
@@ -227,7 +287,246 @@ async function lookupWarranty(serialCode) {
   };
 }
 
+async function getCustomerWarrantyOrderItem(connection, userId, orderItemId) {
+  const [rows] = await connection.execute(
+    `
+      SELECT
+        oi.id AS order_item_id,
+        oi.serial_number_id,
+        oi.warranty_months_snapshot,
+        oi.warranty_package_title,
+        oi.warranty_package_duration_months,
+        p.id AS product_id,
+        p.name AS product_name,
+        p.sku,
+        p.warranty_months,
+        sn.id AS serial_id,
+        sn.serial_code,
+        sn.status AS serial_status,
+        sn.sold_date,
+        o.id AS order_id,
+        o.order_code,
+        o.user_id AS customer_id,
+        o.customer_name,
+        o.customer_phone,
+        o.status AS order_status,
+        o.created_at AS order_created_at,
+        o.updated_at AS order_updated_at
+      FROM order_items oi
+      INNER JOIN orders o ON o.id = oi.order_id
+      INNER JOIN products p ON p.id = oi.product_id
+      LEFT JOIN serial_numbers sn ON sn.id = oi.serial_number_id
+      WHERE oi.id = ? AND o.user_id = ?
+      LIMIT 1
+      FOR UPDATE
+    `,
+    [orderItemId, userId]
+  );
+
+  return rows[0] || null;
+}
+
+async function createCustomerWarrantyRequest(user, body) {
+  const orderItemId = Number(body && body.order_item_id);
+  const issueDescription = body && body.issue_description ? String(body.issue_description).trim() : "";
+
+  if (!Number.isInteger(orderItemId) || orderItemId < 1) {
+    throw createError("Vui lòng chọn sản phẩm cần yêu cầu bảo hành.", 400);
+  }
+
+  if (!issueDescription || issueDescription.length < 10) {
+    throw createError("Vui lòng mô tả lỗi sản phẩm ít nhất 10 ký tự.", 400);
+  }
+
+  const connection = await pool.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const orderItem = await getCustomerWarrantyOrderItem(connection, user.id, orderItemId);
+
+    if (!orderItem) {
+      throw createError("Không tìm thấy sản phẩm trong đơn hàng của bạn.", 404);
+    }
+
+    if (orderItem.order_status !== "completed") {
+      throw createError("Chỉ có thể yêu cầu bảo hành cho sản phẩm thuộc đơn hàng đã hoàn thành.", 400);
+    }
+
+    if (!orderItem.serial_id || !orderItem.serial_code) {
+      throw createError("Sản phẩm này chưa có Serial nên chưa thể tạo yêu cầu bảo hành trực tuyến.", 400);
+    }
+
+    if (orderItem.serial_status === "in_stock") {
+      throw createError("Serial này chưa được kích hoạt bảo hành.", 400);
+    }
+
+    if (orderItem.serial_status === "warranty") {
+      throw createError("Sản phẩm này đang có phiếu bảo hành đang xử lý.", 400);
+    }
+
+    if (orderItem.serial_status === "returned") {
+      throw createError("Serial này không còn hợp lệ để tạo yêu cầu bảo hành.", 400);
+    }
+
+    const [activeTickets] = await connection.execute(
+      `
+        SELECT ticket_code
+        FROM warranty_tickets
+        WHERE serial_number_id = ? AND status IN ('received', 'repairing', 'waiting_parts', 'done')
+        LIMIT 1
+      `,
+      [orderItem.serial_id]
+    );
+
+    if (activeTickets.length > 0) {
+      throw createError("Sản phẩm này đã có phiếu bảo hành đang mở.", 400);
+    }
+
+    const warrantyCoverage = getWarrantyCoverage({
+      ...orderItem,
+      purchase_date: orderItem.order_created_at
+    });
+
+    if (warrantyCoverage.isExpired) {
+      const endDateMessage = warrantyCoverage.warrantyEndDateIso
+        ? ` Hạn bảo hành kết thúc ngày ${warrantyCoverage.warrantyEndDateIso}.`
+        : "";
+      throw createError(`Sản phẩm này đã hết hạn bảo hành.${endDateMessage}`, 400);
+    }
+
+    const ticket = await insertTicketWithRetry(connection, {
+      serial_number_id: orderItem.serial_id,
+      order_item_id: orderItem.order_item_id,
+      customer_id: user.id,
+      customer_name: orderItem.customer_name || user.full_name || user.email,
+      customer_phone: orderItem.customer_phone || user.phone || "Chưa cập nhật",
+      issue_description: issueDescription,
+      technician_note: null,
+      received_date: todayIso()
+    });
+
+    await connection.execute(
+      "UPDATE serial_numbers SET status = 'warranty' WHERE id = ?",
+      [orderItem.serial_id]
+    );
+
+    await connection.commit();
+
+    return {
+      ...ticket,
+      status: "received",
+      product_name: orderItem.product_name,
+      serial_code: orderItem.serial_code,
+      order_code: orderItem.order_code
+    };
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+async function getMyWarrantyTickets(user, query) {
+  const allowedStatuses = ["received", "repairing", "waiting_parts", "done", "returned", "rejected"];
+  const params = [user.id];
+  let statusFilter = "";
+
+  if (query && query.status && allowedStatuses.includes(query.status)) {
+    statusFilter = "AND wt.status = ?";
+    params.push(query.status);
+  }
+
+  const [tickets] = await pool.execute(
+    `
+      SELECT
+        wt.ticket_code,
+        wt.status,
+        wt.issue_description,
+        wt.technician_note,
+        wt.received_date,
+        wt.completed_date,
+        wt.created_at,
+        sn.serial_code,
+        p.name AS product_name,
+        p.sku,
+        o.order_code
+      FROM warranty_tickets wt
+      INNER JOIN serial_numbers sn ON sn.id = wt.serial_number_id
+      INNER JOIN products p ON p.id = sn.product_id
+      LEFT JOIN order_items oi ON oi.id = wt.order_item_id
+      LEFT JOIN orders o ON o.id = oi.order_id
+      WHERE wt.customer_id = ?
+      ${statusFilter}
+      ORDER BY wt.created_at DESC, wt.id DESC
+    `,
+    params
+  );
+
+  return tickets;
+}
+
+async function getMyWarrantyTicketDetail(user, ticketCode) {
+  const [rows] = await pool.execute(
+    `
+      SELECT
+        wt.ticket_code,
+        wt.status,
+        wt.issue_description,
+        wt.technician_note,
+        wt.received_date,
+        wt.completed_date,
+        wt.created_at,
+        wt.updated_at,
+        sn.serial_code,
+        sn.status AS serial_status,
+        sn.sold_date,
+        p.name AS product_name,
+        p.sku,
+        p.warranty_months,
+        oi.warranty_months_snapshot,
+        oi.warranty_package_title,
+        oi.warranty_package_duration_months,
+        o.order_code,
+        o.status AS order_status,
+        o.created_at AS order_created_at,
+        o.updated_at AS order_updated_at
+      FROM warranty_tickets wt
+      INNER JOIN serial_numbers sn ON sn.id = wt.serial_number_id
+      INNER JOIN products p ON p.id = sn.product_id
+      LEFT JOIN order_items oi ON oi.id = wt.order_item_id
+      LEFT JOIN orders o ON o.id = oi.order_id
+      WHERE wt.ticket_code = ? AND wt.customer_id = ?
+      LIMIT 1
+    `,
+    [ticketCode, user.id]
+  );
+
+  if (rows.length === 0) {
+    throw createError("Không tìm thấy phiếu bảo hành của bạn.", 404);
+  }
+
+  const row = rows[0];
+  const warrantyCoverage = getWarrantyCoverage({
+    ...row,
+    purchase_date: row.order_created_at
+  });
+
+  return {
+    ...row,
+    warranty_months: warrantyCoverage.warrantyMonths,
+    base_warranty_months: warrantyCoverage.baseWarrantyMonths,
+    extended_warranty_months: warrantyCoverage.extendedWarrantyMonths,
+    warranty_start_date: warrantyCoverage.warrantyStartDateIso,
+    warranty_end_date: warrantyCoverage.warrantyEndDateIso
+  };
+}
+
 module.exports = {
   lookupWarranty,
-  getWarrantyCoverage
+  getWarrantyCoverage,
+  createCustomerWarrantyRequest,
+  getMyWarrantyTickets,
+  getMyWarrantyTicketDetail
 };

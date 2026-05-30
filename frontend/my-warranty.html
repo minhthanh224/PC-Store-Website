@@ -1,0 +1,43 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phiếu bảo hành của tôi - AeroTech</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header id="siteHeader"></header>
+
+  <main class="container my-warranty-page">
+    <div class="page-heading">
+      <p class="eyebrow">Bảo hành</p>
+      <h1>Phiếu bảo hành của tôi</h1>
+      <p class="page-subtitle">Theo dõi các yêu cầu bảo hành đã gửi từ đơn hàng của bạn.</p>
+    </div>
+
+    <div id="warrantyTabs" class="order-tabs warranty-tabs">
+      <button class="active" type="button" data-status="">Tất cả</button>
+      <button type="button" data-status="received">Đã tiếp nhận</button>
+      <button type="button" data-status="repairing">Đang sửa</button>
+      <button type="button" data-status="waiting_parts">Chờ linh kiện</button>
+      <button type="button" data-status="done">Hoàn tất sửa chữa</button>
+      <button type="button" data-status="returned">Đã trả khách</button>
+      <button type="button" data-status="rejected">Từ chối</button>
+    </div>
+
+    <div id="myWarrantyList" class="warranty-ticket-list loading-box">Đang tải phiếu bảo hành...</div>
+    <section id="myWarrantyDetail" class="warranty-detail-section" hidden></section>
+  </main>
+
+  <footer id="siteFooter"></footer>
+
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/cart-store.js"></script>
+  <script src="assets/js/layout.js"></script>
+  <script src="assets/js/my-warranty.js"></script>
+</body>
+</html>

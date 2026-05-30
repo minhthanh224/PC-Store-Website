@@ -191,7 +191,29 @@ async function getOrderByCode(req, res) {
           ORDER BY pi.is_primary DESC, pi.sort_order ASC, pi.id ASC
           LIMIT 1
         ) AS product_image,
-        sn.serial_code
+        sn.serial_code,
+        sn.status AS serial_status,
+        (
+          SELECT wt.ticket_code
+          FROM warranty_tickets wt
+          WHERE wt.order_item_id = oi.id
+          ORDER BY wt.created_at DESC, wt.id DESC
+          LIMIT 1
+        ) AS warranty_ticket_code,
+        (
+          SELECT wt.status
+          FROM warranty_tickets wt
+          WHERE wt.order_item_id = oi.id
+          ORDER BY wt.created_at DESC, wt.id DESC
+          LIMIT 1
+        ) AS warranty_ticket_status,
+        (
+          SELECT wt.created_at
+          FROM warranty_tickets wt
+          WHERE wt.order_item_id = oi.id
+          ORDER BY wt.created_at DESC, wt.id DESC
+          LIMIT 1
+        ) AS warranty_ticket_created_at
       FROM order_items oi
       LEFT JOIN products p ON p.id = oi.product_id
       LEFT JOIN serial_numbers sn ON sn.id = oi.serial_number_id
@@ -233,7 +255,11 @@ async function getOrderByCode(req, res) {
           bundle_offer_id: item.bundle_offer_id ? Number(item.bundle_offer_id) : null,
           bundle_discount_value: item.bundle_discount_value === null ? null : Number(item.bundle_discount_value),
           original_unit_price: item.original_unit_price === null ? null : Number(item.original_unit_price),
-          bundle_unit_price: item.bundle_unit_price === null ? null : Number(item.bundle_unit_price)
+          bundle_unit_price: item.bundle_unit_price === null ? null : Number(item.bundle_unit_price),
+          serial_status: item.serial_status || null,
+          warranty_ticket_code: item.warranty_ticket_code || null,
+          warranty_ticket_status: item.warranty_ticket_status || null,
+          warranty_ticket_created_at: item.warranty_ticket_created_at || null
         };
       })
     }

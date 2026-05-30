@@ -90,6 +90,16 @@ function formatDateTime(value) {
   }).format(new Date(value));
 }
 
+function formatDateOnly(value) {
+  if (!value) {
+    return "";
+  }
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    dateStyle: "short"
+  }).format(new Date(value));
+}
+
 function getProductTypeLabel(type) {
   const labels = {
     pc_build: "PC Build",
