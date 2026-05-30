@@ -92,3 +92,7 @@ build/
 
 # Ignore Bao-cao folder completely
 Bao-cao/
+
+# Ignore scratch folder containing developer tools and test scripts
+scratch/
+
