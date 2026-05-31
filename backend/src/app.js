@@ -33,6 +33,14 @@ const errorMiddleware = require("./middlewares/error.middleware");
 const app = express();
 const frontendPath = path.join(__dirname, "../../frontend");
 const isProduction = process.env.NODE_ENV === "production";
+const DEFAULT_DEVELOPMENT_ORIGINS = [
+  "http://localhost:5000",
+  "http://localhost:5500",
+  "http://127.0.0.1:5500",
+  "http://localhost:3000",
+  "http://127.0.0.1:3000"
+];
+const TRYCLOUDFLARE_ORIGIN_PATTERN = /^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/i;
 
 function parseAllowedOrigins(value) {
   return String(value || "")
@@ -43,25 +51,63 @@ function parseAllowedOrigins(value) {
     .filter(Boolean);
 }
 
-const allowedCorsOrigins = parseAllowedOrigins(process.env.CORS_ORIGIN);
-const corsOptions = allowedCorsOrigins.length
-  ? {
-      origin: function (origin, callback) {
-        if (!origin || allowedCorsOrigins.includes(origin)) {
-          callback(null, true);
-          return;
-        }
+function getConfiguredCorsOrigins() {
+  const configuredOrigins = parseAllowedOrigins(process.env.CORS_ORIGIN);
 
-        const error = new Error("Nguồn truy cập không được CORS cho phép.");
-        error.statusCode = 403;
-        callback(error);
-      }
+  if (isProduction) {
+    return configuredOrigins;
+  }
+
+  return Array.from(new Set(configuredOrigins.concat(DEFAULT_DEVELOPMENT_ORIGINS)));
+}
+
+function shouldAllowTunnelOrigins() {
+  if (isProduction) {
+    return false;
+  }
+
+  return String(process.env.CORS_ALLOW_TUNNELS || "true").toLowerCase() !== "false";
+}
+
+function isAllowedOrigin(origin) {
+  if (!origin) {
+    return true;
+  }
+
+  if (allowedCorsOrigins.includes(origin)) {
+    return true;
+  }
+
+  if (allowTunnelOrigins && TRYCLOUDFLARE_ORIGIN_PATTERN.test(origin)) {
+    return true;
+  }
+
+  return false;
+}
+
+const allowedCorsOrigins = getConfiguredCorsOrigins();
+const allowTunnelOrigins = shouldAllowTunnelOrigins();
+if (allowTunnelOrigins) {
+  console.info("[cors] Development/demo allows https://*.trycloudflare.com origins. Production still requires explicit CORS_ORIGIN.");
+} else if (isProduction && String(process.env.CORS_ALLOW_TUNNELS || "").toLowerCase() === "true") {
+  console.warn("[cors] Ignoring CORS_ALLOW_TUNNELS=true because NODE_ENV=production. Use explicit CORS_ORIGIN entries instead.");
+}
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (isAllowedOrigin(origin)) {
+      callback(null, true);
+      return;
     }
-  : isProduction
-    ? {
-        origin: false
-      }
-    : undefined;
+
+    const error = new Error("Nguồn truy cập không được CORS cho phép.");
+    error.statusCode = 403;
+    callback(error);
+  },
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 204
+};
 
 const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

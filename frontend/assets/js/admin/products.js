@@ -149,13 +149,15 @@ function renderProductTable(products) {
       </thead>
       <tbody>
         ${products.map(function (product) {
-          const imageFallback = getProductImageFallback(product);
+          const imageFallback = getProductTypeIconUrl(product);
+          const primaryImage = product.primary_image ? getImageUrl(product.primary_image, product) : imageFallback;
+          const iconOnlyClass = product.primary_image ? "" : " admin-product-thumb-icon";
 
           return `
             <tr>
               <td>
                 <div class="table-product-cell">
-                  <img src="${escapeAttribute(getImageUrl(product.primary_image, product))}" alt="${escapeAttribute(product.name)}" onerror="this.onerror=null;this.src='${escapeAttribute(imageFallback)}'">
+                  <img class="admin-product-thumb${iconOnlyClass}" src="${escapeAttribute(primaryImage)}" alt="${escapeAttribute(product.name)}" onerror="this.onerror=null;this.src='${escapeAttribute(imageFallback)}';this.classList.add('admin-product-thumb-icon')">
                   <span>${escapeHtml(product.name)}</span>
                 </div>
               </td>
@@ -528,5 +530,4 @@ function renderImportIssueList(title, issues, type) {
     </div>
   `;
 }
-
 

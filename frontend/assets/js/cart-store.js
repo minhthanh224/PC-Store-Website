@@ -1,8 +1,65 @@
 const CART_KEY = "se104_cart";
 const CART_PROMOTION_KEY = "se104_cart_promotion";
+const CART_USER_KEY_PREFIX = `${CART_KEY}:user:`;
+const CART_PROMOTION_USER_KEY_PREFIX = `${CART_PROMOTION_KEY}:user:`;
+
+function getCartOwnerKey() {
+  const user = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+
+  if (!user) {
+    return null;
+  }
+
+  return String(user.id || user.email || "").trim() || null;
+}
+
+function getCartStorageKey() {
+  const ownerKey = getCartOwnerKey();
+  return ownerKey ? `${CART_USER_KEY_PREFIX}${ownerKey}` : null;
+}
+
+function getCartPromotionStorageKey() {
+  const ownerKey = getCartOwnerKey();
+  return ownerKey ? `${CART_PROMOTION_USER_KEY_PREFIX}${ownerKey}` : null;
+}
+
+function clearLegacyGuestCartStorage() {
+  localStorage.removeItem(CART_KEY);
+  localStorage.removeItem(CART_PROMOTION_KEY);
+}
+
+function clearAllCartStorage() {
+  const keys = [];
+
+  for (let index = 0; index < localStorage.length; index += 1) {
+    keys.push(localStorage.key(index));
+  }
+
+  keys.filter(Boolean).forEach(function (key) {
+    if (
+      key === CART_KEY ||
+      key === CART_PROMOTION_KEY ||
+      key.startsWith(CART_USER_KEY_PREFIX) ||
+      key.startsWith(CART_PROMOTION_USER_KEY_PREFIX)
+    ) {
+      localStorage.removeItem(key);
+    }
+  });
+}
+
+function redirectToLoginFromCurrentPage() {
+  const currentPath = `${window.location.pathname.split("/").pop() || "index.html"}${window.location.search || ""}`;
+  window.location.href = `login.html?redirect=${encodeURIComponent(currentPath)}`;
+}
 
 function getCartItems() {
-  const rawCart = localStorage.getItem(CART_KEY);
+  const storageKey = getCartStorageKey();
+
+  if (!storageKey) {
+    return [];
+  }
+
+  const rawCart = localStorage.getItem(storageKey);
 
   if (!rawCart) {
     return [];
@@ -17,7 +74,15 @@ function getCartItems() {
 }
 
 function saveCartItems(items) {
-  localStorage.setItem(CART_KEY, JSON.stringify(items));
+  const storageKey = getCartStorageKey();
+
+  if (!storageKey) {
+    clearLegacyGuestCartStorage();
+    updateCartCount();
+    return;
+  }
+
+  localStorage.setItem(storageKey, JSON.stringify(items));
   updateCartCount();
 }
 
@@ -27,7 +92,13 @@ function clearCart() {
 }
 
 function getCartPromotion() {
-  const rawPromotion = localStorage.getItem(CART_PROMOTION_KEY);
+  const storageKey = getCartPromotionStorageKey();
+
+  if (!storageKey) {
+    return null;
+  }
+
+  const rawPromotion = localStorage.getItem(storageKey);
 
   if (!rawPromotion) {
     return null;
@@ -59,7 +130,14 @@ function saveCartPromotion(promotion) {
     return;
   }
 
-  localStorage.setItem(CART_PROMOTION_KEY, JSON.stringify({
+  const storageKey = getCartPromotionStorageKey();
+
+  if (!storageKey) {
+    clearCartPromotion();
+    return;
+  }
+
+  localStorage.setItem(storageKey, JSON.stringify({
     code: String(promotion.code || "").trim().toUpperCase(),
     title: promotion.title || "",
     description: promotion.description || "",
@@ -70,6 +148,12 @@ function saveCartPromotion(promotion) {
 }
 
 function clearCartPromotion() {
+  const storageKey = getCartPromotionStorageKey();
+
+  if (storageKey) {
+    localStorage.removeItem(storageKey);
+  }
+
   localStorage.removeItem(CART_PROMOTION_KEY);
 }
 
@@ -239,6 +323,16 @@ function normalizeBundleAddonPayload(addon, parentItem) {
 }
 
 function addToCart(product, quantity) {
+  if (!isLoggedIn()) {
+    clearLegacyGuestCartStorage();
+    updateCartCount();
+    return {
+      success: false,
+      requiresLogin: true,
+      message: "Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng."
+    };
+  }
+
   const selectedAddons = Array.isArray(product.bundle_addons) ? product.bundle_addons : [];
   const itemToAdd = normalizeCartProduct({
     ...product,
@@ -433,10 +527,15 @@ function bindCartActionButtons() {
     const result = addToCart(product, 1);
     showToast(result.message, result.success ? "success" : "error");
 
+    if (!result.success && result.requiresLogin) {
+      window.setTimeout(function () {
+        redirectToLoginFromCurrentPage();
+      }, 650);
+      return;
+    }
+
     if (result.success && buyButton) {
       window.location.href = "checkout.html";
     }
   });
 }
-
-

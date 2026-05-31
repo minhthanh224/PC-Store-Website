@@ -2797,6 +2797,120 @@
   height: 16px;
 }
 
+/* Final admin polish */
+.admin-page-tabs {
+  margin-bottom: 18px;
+}
+
+.admin-user-tab-layout {
+  display: block;
+}
+
+.admin-user-tab-layout .admin-panel {
+  width: 100%;
+}
+
+[data-user-panel][hidden],
+[data-category-panel][hidden] {
+  display: none !important;
+}
+
+.admin-category-form-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.admin-product-thumb-icon {
+  padding: 11px !important;
+  background:
+    linear-gradient(180deg, #f8fbff 0%, #eef7ff 100%) !important;
+}
+
+.table-product-cell .admin-product-thumb {
+  flex: 0 0 auto;
+}
+
+.serial-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 46px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.serial-empty-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  min-height: 28px;
+  border-radius: 999px;
+  color: var(--admin-muted);
+  background: #f1f5f9;
+  font-weight: 900;
+}
+
+.report-revenue-row,
+.report-revenue-row-detailed {
+  display: grid !important;
+  grid-template-columns: minmax(150px, 0.85fr) minmax(180px, 1.25fr) minmax(170px, max-content) !important;
+  align-items: center;
+  gap: 14px;
+}
+
+.report-revenue-label {
+  min-width: 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.report-revenue-track {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.report-revenue-track i {
+  position: static;
+  max-width: 100%;
+}
+
+.report-revenue-value {
+  min-width: 0;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.report-revenue-breakdown {
+  min-width: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 767px) {
+  .admin-page-tabs {
+    width: 100%;
+  }
+
+  .admin-page-tabs button {
+    flex: 1 1 100%;
+  }
+
+  .report-revenue-row,
+  .report-revenue-row-detailed {
+    grid-template-columns: 1fr !important;
+  }
+
+  .report-revenue-label,
+  .report-revenue-value {
+    text-align: left;
+    white-space: normal;
+  }
+}
+
 @media (max-width: 768px) {
   .order-event-head {
     align-items: flex-start;
@@ -3089,6 +3203,51 @@
 @media (max-width: 720px) {
   .admin-user-filter-bar {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Final users tab layout override */
+.admin-user-layout.admin-user-tab-layout {
+  display: block !important;
+  grid-template-columns: none !important;
+  width: 100%;
+}
+
+.admin-user-layout.admin-user-tab-layout [data-user-panel][hidden] {
+  display: none !important;
+}
+
+.admin-user-tab-layout .admin-user-list-panel,
+.admin-user-tab-layout .admin-user-form-panel {
+  position: static !important;
+  width: 100%;
+  max-width: none;
+}
+
+.admin-user-tab-layout #userTable {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.admin-user-tab-layout .admin-user-table {
+  min-width: 980px;
+}
+
+.admin-user-tab-layout .admin-user-form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-user-tab-layout .user-password-reset-panel {
+  max-width: 760px;
+}
+
+@media (max-width: 760px) {
+  .admin-user-tab-layout .admin-user-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-user-tab-layout .admin-user-table {
+    min-width: 860px;
   }
 }
 

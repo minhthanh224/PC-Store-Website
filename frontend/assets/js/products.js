@@ -37,6 +37,7 @@ const CATEGORY_LABELS = {
   "monitor-van-phong": "Màn hình văn phòng",
   "man-hinh-van-phong": "Màn hình văn phòng",
   "monitor-do-hoa": "Màn hình đồ họa",
+  "man-hinh-do-hoa": "Màn hình đồ họa",
   "monitor-cong": "Màn hình cong",
   "monitor-144hz": "Màn hình 144Hz+",
   keyboard: "Bàn phím",

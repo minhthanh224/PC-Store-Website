@@ -1,6 +1,6 @@
 const pool = require("../config/database");
 
-const REVIEW_STATUSES = ["pending", "approved", "rejected"];
+const REVIEW_STATUSES = ["approved", "rejected"];
 const REVIEW_STATUS_FILTERS = ["all", ...REVIEW_STATUSES];
 const MODERATION_STATUSES = ["approved", "rejected"];
 
@@ -22,7 +22,7 @@ function normalizePagination(query) {
 }
 
 function buildFilters(query) {
-  const status = query.status || "pending";
+  const status = query.status || "approved";
   const where = [];
   const params = [];
 
@@ -30,7 +30,9 @@ function buildFilters(query) {
     throw createError("Trạng thái đánh giá không hợp lệ.", 400);
   }
 
-  if (status !== "all") {
+  if (status === "approved") {
+    where.push("pr.status IN ('approved', 'pending')");
+  } else if (status !== "all") {
     where.push("pr.status = ?");
     params.push(status);
   }
@@ -75,7 +77,8 @@ async function getReviews(query) {
         u.email AS customer_email,
         pr.rating,
         pr.comment,
-        pr.status,
+        CASE WHEN pr.status = 'rejected' THEN 'rejected' ELSE 'approved' END AS status,
+        pr.status AS raw_status,
         pr.created_at,
         NULL AS updated_at
       FROM product_reviews pr
@@ -83,7 +86,7 @@ async function getReviews(query) {
       LEFT JOIN users u ON u.id = pr.user_id
       WHERE ${whereSql}
       ORDER BY
-        FIELD(pr.status, 'pending', 'approved', 'rejected'),
+        FIELD(CASE WHEN pr.status = 'rejected' THEN 'rejected' ELSE 'approved' END, 'approved', 'rejected'),
         pr.created_at DESC,
         pr.id DESC
       LIMIT ? OFFSET ?
@@ -117,7 +120,7 @@ async function updateReviewStatus(id, status) {
   }
 
   if (!MODERATION_STATUSES.includes(status)) {
-    throw createError("Chỉ có thể duyệt hoặc từ chối đánh giá.", 400);
+    throw createError("Chỉ có thể hiển thị hoặc ẩn đánh giá.", 400);
   }
 
   const [result] = await pool.execute(

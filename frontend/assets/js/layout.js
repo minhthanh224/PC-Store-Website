@@ -36,6 +36,7 @@ function renderHeader(categories) {
   const currentUser = getCurrentUser();
   const displayName = currentUser ? getSafeDisplayName(currentUser) : "";
   const isStaff = isStaffUser(currentUser);
+  const headerActionState = currentUser ? (isStaff ? "staff" : "customer") : "guest";
   const greetingHref = isStaff ? getAdminHomeUrl(currentUser) : "account.html";
   const aeroNavItems = getAeroNavItems(categories);
   const navItems = aeroNavItems.map(function (item) {
@@ -73,7 +74,7 @@ function renderHeader(categories) {
   if (currentUser && isStaff) {
     headerActions = `
       ${cartAction}
-      <a class="account-greeting" href="${escapeAttribute(greetingHref)}" title="${escapeAttribute(displayName)}">${escapeHtml(displayName)}</a>
+      <span class="account-greeting account-greeting-static" title="${escapeAttribute(displayName)}">${escapeHtml(displayName)}</span>
       <a class="header-action-btn header-admin-btn" href="${escapeAttribute(getAdminHomeUrl(currentUser))}">Quản trị</a>
       <button id="logoutBtn" class="header-action-btn header-logout-btn js-logout-btn" type="button">Đăng xuất</button>
     `;
@@ -135,7 +136,7 @@ function renderHeader(categories) {
           <button class="btn btn-dark" type="submit">Tìm kiếm</button>
           <div id="searchSuggestionPanel" class="search-panel" hidden></div>
         </form>
-        <div class="header-actions">
+        <div class="header-actions header-actions-${headerActionState}">
           ${headerActions}
           <button id="mobileMenuToggle" class="mobile-menu-toggle" type="button" aria-controls="mobileHeaderMenu" aria-expanded="false">
             <span class="mobile-menu-icon" aria-hidden="true"></span>
@@ -183,6 +184,11 @@ function getSafeDisplayName(user) {
     technician: "Kỹ thuật viên",
     customer: "Khách hàng"
   };
+
+  if (isStaffUser(user)) {
+    return roleLabels[user.role] || "Nhân viên";
+  }
+
   const rawName = String(user.full_name || "").trim();
   const normalized = rawName.toLowerCase();
 
@@ -208,10 +214,10 @@ function getAeroNavItems(categories) {
       href: "products.html?productType=laptop",
       slug: "laptop",
       children: [
-        { name: "Laptop Gaming", href: "products.html?productType=laptop&category=laptop-gaming" },
-        { name: "Laptop văn phòng", href: "products.html?productType=laptop&category=laptop-van-phong" },
+        { name: "Laptop Gaming", slug: "laptop-gaming", href: "products.html?productType=laptop&category=laptop-gaming" },
+        { name: "Laptop văn phòng", slug: "laptop-van-phong", href: "products.html?productType=laptop&category=laptop-van-phong" },
         { name: "Laptop sinh viên", href: "products.html?productType=laptop&category=laptop-sinh-vien" },
-        { name: "Ultrabook", href: "products.html?productType=laptop&category=ultrabook" },
+        { name: "Ultrabook", slug: "ultrabook-creator", href: "products.html?productType=laptop&category=ultrabook" },
         { name: "MacBook", href: "products.html?productType=laptop&brand=apple" }
       ]
     },
@@ -220,8 +226,8 @@ function getAeroNavItems(categories) {
       href: "products.html?productType=pc_build",
       slug: "pc-build",
       children: [
-        { name: "PC Gaming", href: "products.html?productType=pc_build&category=pc-gaming" },
-        { name: "PC văn phòng", href: "products.html?productType=pc_build&category=pc-van-phong" },
+        { name: "PC Gaming", slug: "pc-gaming", href: "products.html?productType=pc_build&category=pc-gaming" },
+        { name: "PC văn phòng", slug: "pc-van-phong-workstation", href: "products.html?productType=pc_build&category=pc-van-phong" },
         { name: "PC đồ họa", href: "products.html?productType=pc_build&category=pc-do-hoa" },
         { name: "PC workstation", href: "products.html?productType=pc_build&category=pc-workstation" },
         { name: "Build PC theo yêu cầu", href: "products.html?productType=pc_build&category=build-pc-theo-yeu-cau" }
@@ -232,14 +238,14 @@ function getAeroNavItems(categories) {
       href: "products.html?productType=component",
       slug: "linh-kien-pc",
       children: [
-        { name: "CPU", href: "products.html?productType=component&category=cpu" },
-        { name: "VGA / Card đồ họa", href: "products.html?productType=component&category=vga" },
-        { name: "Mainboard", href: "products.html?productType=component&category=mainboard" },
-        { name: "RAM", href: "products.html?productType=component&category=ram" },
-        { name: "SSD / HDD", href: "products.html?productType=component&category=ssd-hdd" },
-        { name: "Nguồn máy tính", href: "products.html?productType=component&category=nguon" },
-        { name: "Case máy tính", href: "products.html?productType=component&category=case" },
-        { name: "Tản nhiệt", href: "products.html?productType=component&category=tan-nhiet" }
+        { name: "CPU", slug: "cpu", href: "products.html?productType=component&category=cpu" },
+        { name: "VGA / Card đồ họa", slug: "vga", href: "products.html?productType=component&category=vga" },
+        { name: "Mainboard", slug: "mainboard", href: "products.html?productType=component&category=mainboard" },
+        { name: "RAM", slug: "ram", href: "products.html?productType=component&category=ram" },
+        { name: "SSD / HDD", slug: "ssd", href: "products.html?productType=component&category=ssd-hdd" },
+        { name: "Nguồn máy tính", slug: "nguon-may-tinh", href: "products.html?productType=component&category=nguon" },
+        { name: "Case máy tính", slug: "vo-case", href: "products.html?productType=component&category=case" },
+        { name: "Tản nhiệt", slug: "tan-nhiet", href: "products.html?productType=component&category=tan-nhiet" }
       ]
     },
     {
@@ -247,9 +253,9 @@ function getAeroNavItems(categories) {
       href: "products.html?productType=monitor",
       slug: "man-hinh",
       children: [
-        { name: "Màn hình gaming", href: "products.html?productType=monitor&category=man-hinh-gaming" },
-        { name: "Màn hình văn phòng", href: "products.html?productType=monitor&category=man-hinh-van-phong" },
-        { name: "Màn hình đồ họa", href: "products.html?productType=monitor&category=monitor-do-hoa" },
+        { name: "Màn hình gaming", slug: "man-hinh-gaming", href: "products.html?productType=monitor&category=man-hinh-gaming" },
+        { name: "Màn hình văn phòng", slug: "man-hinh-van-phong", href: "products.html?productType=monitor&category=man-hinh-van-phong" },
+        { name: "Màn hình đồ họa", slug: "man-hinh-do-hoa", href: "products.html?productType=monitor&category=man-hinh-do-hoa" },
         { name: "Màn hình cong", href: "products.html?productType=monitor&category=monitor-cong" },
         { name: "Màn hình 144Hz+", href: "products.html?productType=monitor&category=monitor-144hz" }
       ]
@@ -259,11 +265,11 @@ function getAeroNavItems(categories) {
       href: "products.html?productType=accessory",
       slug: "phu-kien",
       children: [
-        { name: "Bàn phím", href: "products.html?productType=accessory&category=ban-phim" },
-        { name: "Chuột", href: "products.html?productType=accessory&category=chuot" },
-        { name: "Tai nghe", href: "products.html?productType=accessory&category=tai-nghe" },
-        { name: "Webcam", href: "products.html?productType=accessory&category=webcam" },
-        { name: "Lót chuột", href: "products.html?productType=accessory&category=lot-chuot" },
+        { name: "Bàn phím", slug: "ban-phim", href: "products.html?productType=accessory&category=ban-phim" },
+        { name: "Chuột", slug: "chuot", href: "products.html?productType=accessory&category=chuot" },
+        { name: "Tai nghe", slug: "tai-nghe", href: "products.html?productType=accessory&category=tai-nghe" },
+        { name: "Webcam", slug: "webcam-mic-speaker", href: "products.html?productType=accessory&category=webcam" },
+        { name: "Lót chuột", slug: "lot-chuot", href: "products.html?productType=accessory&category=lot-chuot" },
         { name: "Hub / Cáp sạc", href: "products.html?productType=accessory&category=hub-cable" }
       ]
     },
@@ -271,10 +277,10 @@ function getAeroNavItems(categories) {
       label: "Gaming Gear",
       href: "products.html?productType=accessory",
       children: [
-        { name: "Bàn phím cơ", href: "products.html?productType=accessory&category=ban-phim" },
-        { name: "Chuột gaming", href: "products.html?productType=accessory&category=chuot" },
-        { name: "Tai nghe gaming", href: "products.html?productType=accessory&category=tai-nghe" },
-        { name: "Ghế gaming", href: "products.html?productType=accessory&category=gaming-chair" },
+        { name: "Bàn phím cơ", slug: "ban-phim", href: "products.html?productType=accessory&category=ban-phim" },
+        { name: "Chuột gaming", slug: "chuot", href: "products.html?productType=accessory&category=chuot" },
+        { name: "Tai nghe gaming", slug: "tai-nghe", href: "products.html?productType=accessory&category=tai-nghe" },
+        { name: "Ghế gaming", slug: "ghe-ban-gaming", href: "products.html?productType=accessory&category=ghe-ban-gaming" },
         { name: "Tay cầm", href: "products.html?productType=accessory&category=controller" }
       ]
     },
@@ -285,7 +291,7 @@ function getAeroNavItems(categories) {
       children: [
         { name: "Tư vấn build PC", href: "products.html?productType=service&category=build-pc-theo-yeu-cau" },
         { name: "Tra cứu bảo hành", href: "warranty-lookup.html" },
-        { name: "Dịch vụ kỹ thuật", href: "products.html?productType=service&category=dich-vu-ky-thuat" },
+        { name: "Dịch vụ kỹ thuật", slug: "dich-vu-ky-thuat", href: "products.html?productType=service&category=dich-vu-ky-thuat" },
         { name: "Thu cũ đổi mới", href: "products.html?productType=service&category=trade-in" }
       ]
     }
@@ -297,9 +303,28 @@ function getAeroNavItems(categories) {
     return {
       label: item.label,
       href: category ? `products.html?category=${encodeURIComponent(category.slug)}` : item.href,
-      children: item.children || (category && category.children ? category.children : [])
+      children: (item.children || (category && category.children ? category.children : [])).map(function (child) {
+        return resolveAeroNavChild(child, bySlug);
+      })
     };
   });
+}
+
+function resolveAeroNavChild(child, bySlug) {
+  const category = child.slug ? bySlug[child.slug] : null;
+
+  if (!category) {
+    return child;
+  }
+
+  const href = child.href || "products.html";
+  const url = new URL(href, window.location.href);
+  url.searchParams.set("category", category.slug);
+
+  return {
+    ...child,
+    href: `${url.pathname.split("/").pop()}?${url.searchParams.toString()}`
+  };
 }
 
 function renderFooter() {
@@ -563,7 +588,11 @@ function bindHeaderAuthActions() {
 
   logoutButtons.forEach(function (logoutBtn) {
     logoutBtn.addEventListener("click", function () {
+      if (typeof clearCart === "function") {
+        clearCart();
+      }
       clearAuthSession();
+      updateCartCount();
       window.location.href = "index.html";
     });
   });

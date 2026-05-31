@@ -2,6 +2,25 @@ const AUTH_TOKEN_KEY = "se104_auth_token";
 const AUTH_USER_KEY = "se104_auth_user";
 const STAFF_ROLES = ["admin", "sales", "technician"];
 
+function clearStoredCartSessions() {
+  const keys = [];
+
+  for (let index = 0; index < localStorage.length; index += 1) {
+    keys.push(localStorage.key(index));
+  }
+
+  keys.filter(Boolean).forEach(function (key) {
+    if (
+      key === "se104_cart" ||
+      key === "se104_cart_promotion" ||
+      key.startsWith("se104_cart:user:") ||
+      key.startsWith("se104_cart_promotion:user:")
+    ) {
+      localStorage.removeItem(key);
+    }
+  });
+}
+
 function normalizeUserRole(user) {
   if (!user) {
     return null;
@@ -34,11 +53,13 @@ function getCurrentUser() {
 function setAuthSession(authData) {
   const user = normalizeUserRole(authData.user);
 
+  clearStoredCartSessions();
   localStorage.setItem(AUTH_TOKEN_KEY, authData.token);
   localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
 }
 
 function clearAuthSession() {
+  clearStoredCartSessions();
   localStorage.removeItem(AUTH_TOKEN_KEY);
   localStorage.removeItem(AUTH_USER_KEY);
 }
@@ -137,4 +158,3 @@ function getRedirectTarget(defaultTarget, user) {
 
   return defaultTarget || (isStaffUser(user) ? getAdminHomeUrl(user) : "account.html");
 }
-

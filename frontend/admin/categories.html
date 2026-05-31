@@ -18,31 +18,52 @@
           <h1>Danh mục</h1>
           <p class="page-subtitle">Quản lý cấu trúc danh mục sản phẩm theo cha-con.</p>
         </div>
-        <form id="categoryFilterForm" class="admin-filter-bar">
-          <input id="categoryKeyword" type="search" placeholder="Tìm tên hoặc slug danh mục">
-          <select id="categoryFilterStatus">
-            <option value="">Tất cả trạng thái</option>
-            <option value="active">Đang hoạt động</option>
-            <option value="inactive">Ngừng hoạt động</option>
-          </select>
-          <button class="btn btn-dark" type="submit">Lọc</button>
-          <button id="refreshCategoriesBtn" class="btn btn-light" type="button">Làm mới</button>
-        </form>
-        <form id="categoryForm" class="admin-panel admin-inline-form">
-          <input id="categoryId" type="hidden">
-          <label>Danh mục cha<select id="categoryParent"></select></label>
-          <label>Tên danh mục<input id="categoryName" placeholder="Ví dụ: Laptop Gaming" required></label>
-          <label>Slug<input id="categorySlug" placeholder="laptop-gaming" required></label>
-          <label>Mô tả<input id="categoryDescription" placeholder="Mô tả ngắn"></label>
-          <label>Trạng thái<select id="categoryStatus">
-            <option value="active">Đang hoạt động</option>
-            <option value="inactive">Ngừng hoạt động</option>
-          </select></label>
-          <button class="btn btn-primary" type="submit">Lưu</button>
-          <button id="resetCategoryFormBtn" class="btn btn-light" type="button">Hủy sửa</button>
-        </form>
-        <div id="categoryMessage"></div>
-        <div id="categoryTable" class="admin-table-wrap loading-box">Đang tải danh mục...</div>
+        <div id="categoryAdminTabs" class="admin-order-tabs admin-page-tabs" role="tablist" aria-label="Quản lý danh mục">
+          <button class="active" type="button" data-category-tab="list" role="tab" aria-selected="true">Danh sách danh mục</button>
+          <button type="button" data-category-tab="form" role="tab" aria-selected="false">Thêm / sửa danh mục</button>
+        </div>
+
+        <section class="admin-tab-panel" data-category-panel="list">
+          <form id="categoryFilterForm" class="admin-filter-bar">
+            <input id="categoryKeyword" type="search" placeholder="Tìm tên hoặc slug danh mục">
+            <select id="categoryFilterStatus">
+              <option value="">Tất cả trạng thái</option>
+              <option value="active">Đang hoạt động</option>
+              <option value="inactive">Ngừng hoạt động</option>
+            </select>
+            <button class="btn btn-dark" type="submit">Lọc</button>
+            <button id="refreshCategoriesBtn" class="btn btn-light" type="button">Làm mới</button>
+          </form>
+          <div id="categoryListMessage"></div>
+          <div id="categoryTable" class="admin-table-wrap loading-box">Đang tải danh mục...</div>
+        </section>
+
+        <section class="admin-tab-panel" data-category-panel="form" hidden>
+          <form id="categoryForm" class="admin-panel admin-category-form-panel">
+            <div class="admin-section-heading-inline">
+              <div>
+                <h2 id="categoryFormTitle">Thêm danh mục</h2>
+                <p>Tạo danh mục cha-con, slug và trạng thái hiển thị trên storefront.</p>
+              </div>
+            </div>
+            <input id="categoryId" type="hidden">
+            <div class="admin-form-grid">
+              <label>Danh mục cha<select id="categoryParent"></select></label>
+              <label>Tên danh mục<input id="categoryName" placeholder="Ví dụ: Laptop Gaming" required></label>
+              <label>Slug<input id="categorySlug" placeholder="laptop-gaming" required></label>
+              <label>Mô tả<input id="categoryDescription" placeholder="Mô tả ngắn"></label>
+              <label>Trạng thái<select id="categoryStatus">
+                <option value="active">Đang hoạt động</option>
+                <option value="inactive">Ngừng hoạt động</option>
+              </select></label>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-primary" type="submit">Lưu danh mục</button>
+              <button id="resetCategoryFormBtn" class="btn btn-light" type="button" hidden>Hủy sửa</button>
+            </div>
+          </form>
+          <div id="categoryMessage"></div>
+        </section>
       </section>
     </main>
   </div>

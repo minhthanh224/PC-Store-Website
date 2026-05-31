@@ -10681,6 +10681,159 @@ body.has-compare-bar {
   display: none !important;
 }
 
+/* Final storefront polish */
+#siteHeader .header-main-grid {
+  grid-template-columns: minmax(190px, 218px) minmax(300px, 1fr) minmax(0, max-content);
+  gap: 16px;
+  align-items: center;
+}
+
+#siteHeader .header-search {
+  max-width: 540px;
+  align-self: center;
+}
+
+#siteHeader .header-actions {
+  min-width: 0;
+  max-width: 460px;
+  flex-wrap: nowrap;
+  align-self: center;
+  justify-self: end;
+  row-gap: 0;
+}
+
+#siteHeader .account-greeting {
+  min-width: 0;
+  max-width: 132px;
+  border: 1px solid #dbeafe;
+  background: #f8fbff;
+}
+
+#siteHeader .header-actions-staff .account-greeting {
+  max-width: 148px;
+}
+
+#siteHeader .header-actions .header-action-btn,
+#siteHeader .header-actions .cart-link {
+  flex-shrink: 0;
+}
+
+#siteHeader .header-actions .header-action-btn {
+  padding-inline: 10px;
+}
+
+#siteHeader .header-actions .cart-link {
+  padding-inline: 10px;
+}
+
+#siteHeader .account-greeting-static {
+  cursor: default;
+}
+
+.feature-icon {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f0f9ff 0%, #dff6ff 100%);
+  border: 1px solid #dbeafe;
+}
+
+.feature-icon img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.product-card-service .product-image-link {
+  height: 158px;
+  min-width: 0;
+  padding: 12px;
+}
+
+.product-card-service {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 100%;
+}
+
+.product-card-service .product-card-body {
+  min-width: 0;
+  align-content: start;
+}
+
+.product-card-service h3 {
+  min-height: 48px;
+}
+
+.product-card-service .short-specs {
+  min-height: 48px;
+}
+
+.product-card-service .product-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-self: end;
+  min-width: 0;
+}
+
+.product-card-service .product-actions .js-add-wishlist {
+  grid-column: 1 / -1;
+}
+
+.product-actions .btn {
+  min-width: 0;
+  width: 100%;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.25;
+}
+
+@media (min-width: 1366px) {
+  #siteHeader .header-main-grid {
+    grid-template-columns: 218px minmax(360px, 1fr) minmax(360px, auto);
+  }
+}
+
+@media (max-width: 1180px) {
+  #siteHeader .header-actions {
+    max-width: 100%;
+    flex-wrap: nowrap;
+  }
+
+  #siteHeader .header-actions-staff .account-greeting {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  #siteHeader .header-main-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  #siteHeader .site-logo,
+  #siteHeader .header-search,
+  #siteHeader .header-actions {
+    width: 100%;
+    max-width: none;
+    justify-self: stretch;
+  }
+
+  #siteHeader .header-actions {
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .product-card-service .product-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Customer warranty request / tracking */
 .muted-text {
   color: var(--muted);

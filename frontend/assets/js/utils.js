@@ -8,7 +8,7 @@ const PRODUCT_FALLBACK_DEFINITIONS = {
   component: { label: "Linh kiện", accent: "#a3e635", glow: "#3f6212", icon: "HW" },
   monitor: { label: "Màn hình", accent: "#60a5fa", glow: "#1e40af", icon: "4K" },
   accessory: { label: "Phụ kiện", accent: "#f59e0b", glow: "#92400e", icon: "GEAR" },
-  service: { label: "Dịch vụ", accent: "#34d399", glow: "#065f46", icon: "SV" }
+  service: { label: "Dịch vụ", accent: "#34d399", glow: "#065f46", icon: "DV" }
 };
 
 function createProductFallbackImage(definition) {
@@ -124,7 +124,7 @@ function getCatalogStatusLabel(status) {
 
 function getStockLabel(product) {
   if (product.product_type === "service") {
-    return "Dịch vụ tư vấn";
+    return "Có thể đặt lịch tư vấn";
   }
 
   if (Number(product.available_stock) > 0) {
@@ -210,6 +210,75 @@ function getProductFallbackKey(product) {
 
 function getProductImageFallback(product) {
   return PRODUCT_FALLBACK_IMAGES[getProductFallbackKey(product)] || PRODUCT_PLACEHOLDER_IMAGE;
+}
+
+function getFrontendAssetPath(relativePath) {
+  const cleanPath = String(relativePath || "").replace(/^\/+/, "");
+  const isAdminPage = window.location.pathname.includes("/admin/");
+
+  return `${isAdminPage ? "../" : ""}${cleanPath}`;
+}
+
+function getProductTypeIconKey(product) {
+  const text = [
+    product && product.sku,
+    product && product.product_type,
+    product && product.category_slug,
+    product && product.category_name,
+    product && product.name
+  ].filter(Boolean).join(" ").toLowerCase();
+
+  if (text.includes("laptop") || text.includes("macbook")) return "laptop";
+  if (text.includes("pc_build") || text.includes("pc build") || text.includes("pc-") || text.includes("build pc")) return "pc-build";
+  if (text.includes("cpu") || text.includes("processor")) return "cpu";
+  if (text.includes("vga") || text.includes("gpu") || text.includes("card đồ họa") || text.includes("graphics")) return "gpu";
+  if (text.includes("mainboard") || text.includes("motherboard")) return "mainboard";
+  if (text.includes("ram") || text.includes("memory")) return "ram";
+  if (text.includes("ssd") || text.includes("hdd") || text.includes("storage") || text.includes("lưu trữ")) return "storage";
+  if (text.includes("monitor") || text.includes("màn hình") || text.includes("man-hinh")) return "monitor";
+  if (text.includes("keyboard") || text.includes("bàn phím") || text.includes("ban-phim") || text.includes("kb-")) return "keyboard";
+  if (text.includes("mouse") || text.includes("chuột") || text.includes("chuot") || text.includes("chu-")) return "mouse";
+  if (text.includes("headset") || text.includes("tai nghe") || text.includes("tai-")) return "headset";
+  if (text.includes("chair") || text.includes("ghế") || text.includes("ghe-")) return "chair";
+  if (text.includes("webcam") || text.includes("camera") || text.includes("cam-")) return "webcam";
+  if (text.includes("service") || text.includes("dịch vụ") || text.includes("svc-")) return "service";
+  if (text.includes("accessory") || text.includes("phụ kiện")) return "accessory";
+
+  return "accessory";
+}
+
+function getProductTypeIconUrl(product) {
+  return getFrontendAssetPath(`assets/icons/product-types/${getProductTypeIconKey(product)}.svg`);
+}
+
+function getFeatureIconKey(value) {
+  const normalized = normalizeIconText(value);
+
+  if (normalized.includes("cpu") || normalized.includes("hieu_nang") || normalized.includes("processor")) return "cpu";
+  if (normalized.includes("gpu") || normalized.includes("vga") || normalized.includes("do_hoa") || normalized.includes("graphics")) return "gpu";
+  if (normalized.includes("ram") || normalized.includes("memory") || normalized.includes("bo_nho")) return "ram";
+  if (normalized.includes("ssd") || normalized.includes("hdd") || normalized.includes("storage") || normalized.includes("luu_tru")) return "storage";
+  if (normalized.includes("display") || normalized.includes("screen") || normalized.includes("man_hinh")) return "monitor";
+  if (normalized.includes("warranty") || normalized.includes("bao_hanh") || normalized.includes("shield")) return "shield";
+  if (normalized.includes("upgrade") || normalized.includes("nang_cap")) return "arrow-up";
+  if (normalized.includes("service") || normalized.includes("technical") || normalized.includes("ky_thuat") || normalized.includes("tool")) return "wrench";
+  if (normalized.includes("delivery") || normalized.includes("giao_hang") || normalized.includes("truck")) return "truck";
+
+  return "check";
+}
+
+function getFeatureIconUrl(value) {
+  return getFrontendAssetPath(`assets/icons/product-types/${getFeatureIconKey(value)}.svg`);
+}
+
+function normalizeIconText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
 }
 
 function getImageUrl(imageUrl, product) {
@@ -414,7 +483,7 @@ function renderProductCard(product) {
         `;
 
   return `
-    <article class="product-card">
+    <article class="product-card ${isService ? "product-card-service" : ""}">
       <a class="product-image-link" href="${detailsUrl}" aria-label="${escapeAttribute(product.name)}">
         <img
           src="${escapeAttribute(getImageUrl(product.primary_image, product))}"
@@ -517,5 +586,3 @@ function showToast(message, type) {
     toast.remove();
   }, 3200);
 }
-
-

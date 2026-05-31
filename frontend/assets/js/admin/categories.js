@@ -7,6 +7,7 @@ async function initCategories() {
   if (!user) return;
 
   renderAdminLayout("categories", user);
+  bindCategoryTabs();
   document.getElementById("categoryForm").addEventListener("submit", saveCategory);
   document.getElementById("categoryFilterForm").addEventListener("submit", function (event) {
     event.preventDefault();
@@ -14,7 +15,41 @@ async function initCategories() {
   });
   document.getElementById("refreshCategoriesBtn").addEventListener("click", refreshCategoryList);
   document.getElementById("resetCategoryFormBtn").addEventListener("click", resetCategoryForm);
+  setCategoryTab("list");
+  updateCategoryFormMode();
   await loadCategories();
+}
+
+function bindCategoryTabs() {
+  const tabs = document.getElementById("categoryAdminTabs");
+
+  if (!tabs) {
+    return;
+  }
+
+  tabs.addEventListener("click", function (event) {
+    const button = event.target.closest("[data-category-tab]");
+
+    if (!button) {
+      return;
+    }
+
+    setCategoryTab(button.dataset.categoryTab);
+  });
+}
+
+function setCategoryTab(tabKey) {
+  const key = tabKey === "form" ? "form" : "list";
+
+  document.querySelectorAll("[data-category-tab]").forEach(function (button) {
+    const isActive = button.dataset.categoryTab === key;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-selected", String(isActive));
+  });
+
+  document.querySelectorAll("[data-category-panel]").forEach(function (panel) {
+    panel.hidden = panel.dataset.categoryPanel !== key;
+  });
 }
 
 async function loadCategories() {
@@ -114,6 +149,8 @@ function bindCategoryActions() {
       document.getElementById("categorySlug").value = category.slug;
       document.getElementById("categoryDescription").value = category.description || "";
       document.getElementById("categoryStatus").value = category.status;
+      updateCategoryFormMode();
+      setCategoryTab("form");
       showAdminMessage("categoryMessage", "success", `Đang chỉnh sửa: ${category.name}`);
     });
   });
@@ -150,6 +187,7 @@ async function saveCategory(event) {
     resetCategoryForm();
     showAdminMessage("categoryMessage", "success", "Lưu danh mục thành công.");
     await loadCategories();
+    setCategoryTab("list");
   } catch (error) {
     showAdminMessage("categoryMessage", "error", error.message);
   }
@@ -159,6 +197,21 @@ function resetCategoryForm() {
   document.getElementById("categoryForm").reset();
   document.getElementById("categoryId").value = "";
   document.getElementById("categoryMessage").innerHTML = "";
+  updateCategoryFormMode();
+}
+
+function updateCategoryFormMode() {
+  const isEditing = Boolean(document.getElementById("categoryId").value);
+  const title = document.getElementById("categoryFormTitle");
+  const resetButton = document.getElementById("resetCategoryFormBtn");
+
+  if (title) {
+    title.textContent = isEditing ? "Chỉnh sửa danh mục" : "Thêm danh mục";
+  }
+
+  if (resetButton) {
+    resetButton.hidden = !isEditing;
+  }
 }
 
 

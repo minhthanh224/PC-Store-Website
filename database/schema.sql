@@ -13,6 +13,7 @@ DROP TABLE IF EXISTS admin_audit_logs;
 DROP TABLE IF EXISTS product_reviews;
 DROP TABLE IF EXISTS warranty_tickets;
 DROP TABLE IF EXISTS order_items;
+DROP TABLE IF EXISTS order_events;
 DROP TABLE IF EXISTS orders;
 DROP TABLE IF EXISTS serial_numbers;
 DROP TABLE IF EXISTS product_warranty_packages;

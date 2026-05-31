@@ -217,7 +217,7 @@ function renderPurchaseSummary(product, cartPayload, comparePayload, isService) 
     <div class="detail-price-box">
       ${renderDetailPrice(product, isService)}
       <span class="purchase-status ${isService ? "service" : (isAvailable ? "in-stock" : "out-stock")}">
-        ${escapeHtml(isService ? "Dịch vụ tư vấn" : getStockLabel(product))}
+        ${escapeHtml(isService ? "Có thể đặt lịch tư vấn" : getStockLabel(product))}
       </span>
     </div>
 
@@ -368,9 +368,12 @@ function renderProductHighlights(highlights) {
       </div>
       <div class="product-highlight-grid">
         ${visibleHighlights.map(function (item) {
+          const iconUrl = getFeatureIconUrl(`${item.code || ""} ${item.title || ""}`);
           return `
             <article class="product-highlight-card">
-              <span>${escapeHtml(getCompactIconText(item.code, "AT"))}</span>
+              <span class="feature-icon" aria-hidden="true">
+                <img src="${escapeAttribute(iconUrl)}" alt="" loading="lazy">
+              </span>
               <div>
                 <h3>${escapeHtml(item.title)}</h3>
                 <p>${escapeHtml(item.description)}</p>
@@ -1039,7 +1042,7 @@ async function loadProductReviews(slug) {
         <div class="review-list review-list-pro">
           ${reviews.map(renderReviewItem).join("")}
         </div>
-      ` : renderEmpty("Chưa có đánh giá được duyệt cho sản phẩm này.")}
+      ` : renderEmpty("Chưa có đánh giá hiển thị cho sản phẩm này.")}
     `;
     bindReviewForm(slug);
   } catch (error) {
@@ -1057,11 +1060,11 @@ function renderReviewOverview(reviews) {
         <span class="review-stars" aria-label="${summary.count ? `${summary.average.toFixed(1)} trên 5 sao` : "Chưa có đánh giá"}">
           ${renderReviewStars(Math.round(summary.average || 0))}
         </span>
-        <small>${summary.count} đánh giá đã duyệt</small>
+        <small>${summary.count} đánh giá đang hiển thị</small>
       </div>
       <div>
         <h3>Đánh giá từ khách hàng đã mua</h3>
-        <p>Đánh giá mới sẽ được kiểm duyệt trước khi hiển thị trên trang sản phẩm.</p>
+        <p>Khách hàng đã mua và hoàn thành đơn hàng có thể gửi đánh giá, đánh giá sẽ hiển thị ngay.</p>
       </div>
     </div>
   `;
@@ -1110,7 +1113,7 @@ function renderReviewForm(slug) {
       </label>
       <div class="review-form-actions">
         <button class="btn btn-primary" type="submit">Gửi đánh giá</button>
-        <small>Đánh giá sẽ hiển thị sau khi được admin duyệt.</small>
+        <small>Đánh giá hợp lệ sẽ hiển thị ngay; admin có thể ẩn nếu nội dung không phù hợp.</small>
       </div>
       <div id="reviewMessage"></div>
     </form>
@@ -1150,7 +1153,7 @@ function bindReviewForm(slug) {
         comment: document.getElementById("reviewComment").value.trim()
       });
       document.getElementById("reviewMessage").innerHTML = `
-        <div class="state-box state-success">Đánh giá của bạn đã được gửi và đang chờ duyệt.</div>
+        <div class="state-box state-success">Đánh giá của bạn đã được gửi và đang hiển thị.</div>
       `;
       document.getElementById("reviewComment").value = "";
     } catch (error) {
@@ -1195,7 +1198,7 @@ function updateProductReviewSummary(reviews) {
   if (!summary.count) {
     element.innerHTML = `
       <span class="review-stars" aria-hidden="true">★★★★★</span>
-      <span>Chưa có đánh giá được duyệt</span>
+      <span>Chưa có đánh giá hiển thị</span>
     `;
     return;
   }

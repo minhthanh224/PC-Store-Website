@@ -19,8 +19,44 @@
           <p class="page-subtitle">Tạo tài khoản nhân sự, khóa/mở khóa và kiểm soát vai trò truy cập AeroTech.</p>
         </div>
 
-        <div class="admin-user-layout">
-          <section class="admin-panel admin-user-form-panel">
+        <div id="userAdminTabs" class="admin-order-tabs admin-page-tabs" role="tablist" aria-label="Quản lý người dùng">
+          <button class="active" type="button" data-user-tab="list" role="tab" aria-selected="true">Danh sách người dùng</button>
+          <button type="button" data-user-tab="form" role="tab" aria-selected="false">Tạo tài khoản</button>
+        </div>
+
+        <div class="admin-user-layout admin-user-tab-layout">
+          <section class="admin-panel admin-user-list-panel" data-user-panel="list">
+            <div class="admin-section-heading-inline">
+              <div>
+                <h2>Danh sách người dùng</h2>
+                <p>Tìm kiếm theo tên, email, số điện thoại và lọc theo quyền truy cập.</p>
+              </div>
+            </div>
+
+            <form id="userFilterForm" class="admin-filter-bar admin-user-filter-bar">
+              <input id="userKeyword" type="search" placeholder="Tìm tên, email, số điện thoại">
+              <select id="userRoleFilter" aria-label="Lọc vai trò">
+                <option value="">Tất cả vai trò</option>
+                <option value="admin">Quản trị viên</option>
+                <option value="sales">Nhân viên bán hàng</option>
+                <option value="technician">Kỹ thuật viên</option>
+                <option value="customer">Khách hàng</option>
+              </select>
+              <select id="userStatusFilter" aria-label="Lọc trạng thái">
+                <option value="">Tất cả trạng thái</option>
+                <option value="active">Đang hoạt động</option>
+                <option value="inactive">Đã khóa</option>
+              </select>
+              <button class="btn btn-dark" type="submit">Lọc</button>
+              <button id="resetUserFilterBtn" class="btn btn-light" type="button">Làm mới</button>
+            </form>
+
+            <div id="userListMessage"></div>
+            <div id="userTable" class="admin-table-wrap loading-box">Đang tải người dùng...</div>
+            <div id="userPagination" class="pagination"></div>
+          </section>
+
+          <section class="admin-panel admin-user-form-panel" data-user-panel="form" hidden>
             <div class="admin-section-heading-inline">
               <div>
                 <h2 id="userFormTitle">Tạo tài khoản</h2>
@@ -87,37 +123,6 @@
                 </div>
               </form>
             </section>
-          </section>
-
-          <section class="admin-panel admin-user-list-panel">
-            <div class="admin-section-heading-inline">
-              <div>
-                <h2>Danh sách người dùng</h2>
-                <p>Tìm kiếm theo tên, email, số điện thoại và lọc theo quyền truy cập.</p>
-              </div>
-            </div>
-
-            <form id="userFilterForm" class="admin-filter-bar admin-user-filter-bar">
-              <input id="userKeyword" type="search" placeholder="Tìm tên, email, số điện thoại">
-              <select id="userRoleFilter" aria-label="Lọc vai trò">
-                <option value="">Tất cả vai trò</option>
-                <option value="admin">Quản trị viên</option>
-                <option value="sales">Nhân viên bán hàng</option>
-                <option value="technician">Kỹ thuật viên</option>
-                <option value="customer">Khách hàng</option>
-              </select>
-              <select id="userStatusFilter" aria-label="Lọc trạng thái">
-                <option value="">Tất cả trạng thái</option>
-                <option value="active">Đang hoạt động</option>
-                <option value="inactive">Đã khóa</option>
-              </select>
-              <button class="btn btn-dark" type="submit">Lọc</button>
-              <button id="resetUserFilterBtn" class="btn btn-light" type="button">Làm mới</button>
-            </form>
-
-            <div id="userListMessage"></div>
-            <div id="userTable" class="admin-table-wrap loading-box">Đang tải người dùng...</div>
-            <div id="userPagination" class="pagination"></div>
           </section>
         </div>
       </section>

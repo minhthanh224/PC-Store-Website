@@ -12,10 +12,25 @@ async function initAdminUsers() {
   renderAdminLayout("users", user);
   bindAdminUserEvents();
   resetAdminUserForm();
+  setAdminUserTab("list");
   await loadAdminUsers();
 }
 
 function bindAdminUserEvents() {
+  const tabs = document.getElementById("userAdminTabs");
+
+  if (tabs) {
+    tabs.addEventListener("click", function (event) {
+      const button = event.target.closest("[data-user-tab]");
+
+      if (!button) {
+        return;
+      }
+
+      setAdminUserTab(button.dataset.userTab);
+    });
+  }
+
   document.getElementById("userForm").addEventListener("submit", saveAdminUser);
   document.getElementById("resetUserFormBtn").addEventListener("click", resetAdminUserForm);
   document.getElementById("userPasswordResetForm").addEventListener("submit", submitAdminUserPasswordReset);
@@ -26,6 +41,28 @@ function bindAdminUserEvents() {
     loadAdminUsers();
   });
   document.getElementById("resetUserFilterBtn").addEventListener("click", resetUserFilters);
+}
+
+function setAdminUserTab(tabKey) {
+  const key = tabKey === "form" ? "form" : "list";
+
+  document.querySelectorAll("[data-user-tab]").forEach(function (button) {
+    const active = button.dataset.userTab === key;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-selected", String(active));
+  });
+
+  document.querySelectorAll("[data-user-panel]").forEach(function (panel) {
+    panel.hidden = panel.dataset.userPanel !== key;
+  });
+}
+
+function setUserFormTabLabel(label) {
+  const button = document.querySelector('[data-user-tab="form"]');
+
+  if (button) {
+    button.textContent = label || "Tạo tài khoản";
+  }
 }
 
 async function loadAdminUsers() {
@@ -148,6 +185,7 @@ async function saveAdminUser(event) {
     showAdminMessage("userFormMessage", "success", response.message || "Đã lưu tài khoản.");
     resetAdminUserForm();
     await loadAdminUsers();
+    setAdminUserTab("list");
   } catch (error) {
     showAdminMessage("userFormMessage", "error", error.message);
   }
@@ -172,6 +210,8 @@ function editAdminUser(id) {
   document.getElementById("userStatus").value = user.status;
   document.getElementById("userPassword").value = "";
   document.getElementById("userFormTitle").textContent = "Cập nhật tài khoản";
+  setUserFormTabLabel("Sửa tài khoản");
+  document.getElementById("resetUserFormBtn").textContent = "Hủy";
   document.getElementById("userEmail").disabled = true;
   document.getElementById("userEmail").required = false;
   document.getElementById("userPasswordField").hidden = true;
@@ -180,15 +220,19 @@ function editAdminUser(id) {
   document.getElementById("userRole").disabled = isSelf;
   document.getElementById("userStatus").disabled = isSelf;
   document.getElementById("userFormMessage").innerHTML = "";
+  setAdminUserTab("form");
   document.querySelector(".admin-user-form-panel").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function resetAdminUserForm() {
   const form = document.getElementById("userForm");
+  const wasEditing = Boolean(document.getElementById("userId").value);
 
   form.reset();
   document.getElementById("userId").value = "";
   document.getElementById("userFormTitle").textContent = "Tạo tài khoản";
+  setUserFormTabLabel("Tạo tài khoản");
+  document.getElementById("resetUserFormBtn").textContent = "Tạo mới";
   document.getElementById("userEmail").disabled = false;
   document.getElementById("userEmail").required = true;
   document.getElementById("userPasswordField").hidden = false;
@@ -199,6 +243,10 @@ function resetAdminUserForm() {
   document.getElementById("userStatus").value = "active";
   document.getElementById("currentUserGuardNote").hidden = true;
   document.getElementById("userFormMessage").innerHTML = "";
+
+  if (wasEditing) {
+    setAdminUserTab("list");
+  }
 }
 
 function resetUserFilters() {
@@ -244,6 +292,8 @@ function showPasswordResetPanel(id) {
   document.getElementById("passwordResetValue").value = "";
   document.getElementById("passwordResetTarget").textContent = `Tài khoản: ${user.full_name || user.email} (${user.email})`;
   document.getElementById("userPasswordResetPanel").hidden = false;
+  setUserFormTabLabel("Đặt mật khẩu");
+  setAdminUserTab("form");
   document.getElementById("passwordResetValue").focus();
   document.querySelector(".user-password-reset-panel").scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
@@ -253,6 +303,8 @@ function hidePasswordResetPanel() {
   document.getElementById("passwordResetValue").value = "";
   document.getElementById("passwordResetTarget").textContent = "Chọn một tài khoản trong danh sách để đặt mật khẩu tạm thời.";
   document.getElementById("userPasswordResetPanel").hidden = true;
+  setUserFormTabLabel("Tạo tài khoản");
+  setAdminUserTab("list");
 }
 
 async function submitAdminUserPasswordReset(event) {

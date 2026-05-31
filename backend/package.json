@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "db:reset": "node scripts/db-reset.js"
+    "db:reset": "node scripts/db-reset.js",
+    "db:seed-demo-serials": "node scripts/seed-demo-serials.js",
+    "seed:demo-serials": "node scripts/seed-demo-serials.js"
   },
   "keywords": [
     "pc-store",

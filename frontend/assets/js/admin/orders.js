@@ -130,6 +130,8 @@ function renderAdminOrderTable(orders) {
 }
 
 function renderAdminOrderRow(order) {
+  const requiredSerials = Number(order.serialized_item_count || 0);
+  const assignedSerials = Number(order.assigned_serial_count || 0);
   const missingSerials = Math.max(Number(order.serialized_item_count || 0) - Number(order.assigned_serial_count || 0), 0);
 
   return `
@@ -148,10 +150,12 @@ function renderAdminOrderRow(order) {
       <td>${escapeHtml(getPaymentMethodLabel(order.payment_method))}</td>
       <td><span class="status-badge ${escapeAttribute(order.status)}">${escapeHtml(getOrderStatusLabel(order.status))}</span></td>
       <td>
-        <div class="serial-progress ${missingSerials > 0 ? "warning" : "good"}">
-          <strong>${escapeHtml(order.assigned_serial_count)} / ${escapeHtml(order.serialized_item_count)}</strong>
-        </div>
-        ${missingSerials > 0 ? `<p class="table-subtext warning-text">Còn ${escapeHtml(missingSerials)} Serial cần gán</p>` : ""}
+        ${requiredSerials > 0 ? `
+          <div class="serial-progress ${missingSerials > 0 ? "warning" : "good"}">
+            <strong class="serial-count-badge">${escapeHtml(assignedSerials)}/${escapeHtml(requiredSerials)}</strong>
+          </div>
+          ${missingSerials > 0 ? `<p class="table-subtext warning-text">Còn ${escapeHtml(missingSerials)} Serial cần gán</p>` : ""}
+        ` : '<span class="serial-empty-mark">—</span>'}
       </td>
       <td class="table-actions">
         <a class="btn btn-light" href="order-detail.html?code=${encodeURIComponent(order.order_code)}">Chi tiết</a>
@@ -230,5 +234,4 @@ function renderAdminOrderPagination(pagination) {
     });
   });
 }
-
 

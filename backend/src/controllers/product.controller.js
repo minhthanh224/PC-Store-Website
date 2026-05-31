@@ -59,7 +59,7 @@ async function createProductReview(req, res) {
 
   res.status(201).json({
     success: true,
-    message: "Đã gửi đánh giá. Đánh giá sẽ hiển thị sau khi được duyệt.",
+    message: "Đã gửi đánh giá. Đánh giá của bạn đang hiển thị trên trang sản phẩm.",
     data: review
   });
 }

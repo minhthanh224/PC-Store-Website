@@ -40,7 +40,7 @@ async function loadAdminReviews() {
 }
 
 function resetReviewFilters() {
-  document.getElementById("reviewStatusFilter").value = "pending";
+  document.getElementById("reviewStatusFilter").value = "approved";
   document.getElementById("reviewSearchInput").value = "";
   document.getElementById("reviewMessage").innerHTML = "";
   adminReviewPage = 1;
@@ -98,17 +98,11 @@ function renderReviewRow(review) {
 }
 
 function renderReviewActions(review) {
-  const actions = [];
-
-  if (review.status !== "approved") {
-    actions.push(`<button class="btn btn-success-outline js-review-status" type="button" data-id="${escapeAttribute(review.id)}" data-status="approved">Duyệt</button>`);
+  if (review.status === "approved") {
+    return `<button class="btn btn-danger-outline js-review-status" type="button" data-id="${escapeAttribute(review.id)}" data-status="rejected">Ẩn đánh giá</button>`;
   }
 
-  if (review.status !== "rejected") {
-    actions.push(`<button class="btn btn-danger-outline js-review-status" type="button" data-id="${escapeAttribute(review.id)}" data-status="rejected">Từ chối</button>`);
-  }
-
-  return actions.join("");
+  return `<button class="btn btn-success-outline js-review-status" type="button" data-id="${escapeAttribute(review.id)}" data-status="approved">Hiện lại</button>`;
 }
 
 function bindReviewActions() {
@@ -116,8 +110,8 @@ function bindReviewActions() {
     button.addEventListener("click", async function () {
       const status = button.dataset.status;
       const message = status === "approved"
-        ? "Duyệt đánh giá này?"
-        : "Từ chối đánh giá này?";
+        ? "Hiện lại đánh giá này?"
+        : "Ẩn đánh giá này khỏi storefront?";
 
       if (!confirm(message)) {
         return;
@@ -165,10 +159,9 @@ function renderReviewStars(rating) {
 
 function getReviewStatusLabel(status) {
   const labels = {
-    pending: "Chờ duyệt",
-    approved: "Đã duyệt",
-    rejected: "Đã từ chối"
+    approved: "Đang hiển thị",
+    rejected: "Đã ẩn"
   };
 
-  return labels[status] || status || "";
+  return labels[status] || "Đang hiển thị";
 }

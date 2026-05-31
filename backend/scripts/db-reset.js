@@ -38,14 +38,16 @@ async function main() {
     }
 
     console.log(`[db:reset] Resetting database ${database}...`);
+    await connection.query(`DROP DATABASE IF EXISTS \`${database}\``);
     await connection.query(`
-      CREATE DATABASE IF NOT EXISTS \`${database}\`
+      CREATE DATABASE \`${database}\`
       CHARACTER SET utf8mb4
       COLLATE utf8mb4_unicode_ci
     `);
     await connection.query(`USE \`${database}\``);
     await connection.query(schemaSql);
     await connection.query(seedSql);
+    await printSummary(connection);
     console.log("[db:reset] Done.");
   } finally {
     await connection.end();
@@ -60,8 +62,28 @@ function assertSafeDatabaseName(database) {
 
 function stripDatabaseDirectives(sql) {
   return sql
-    .replace(/CREATE\s+DATABASE\s+IF\s+NOT\s+EXISTS\s+`?[A-Za-z0-9_]+`?\s+CHARACTER\s+SET\s+utf8mb4\s+COLLATE\s+utf8mb4_unicode_ci\s*;/gi, "")
+    .replace(/CREATE\s+DATABASE(?:\s+IF\s+NOT\s+EXISTS)?\s+`?[A-Za-z0-9_]+`?(?:\s+CHARACTER\s+SET\s+\S+)?(?:\s+COLLATE\s+\S+)?\s*;/gi, "")
+    .replace(/DROP\s+DATABASE\s+IF\s+EXISTS\s+`?[A-Za-z0-9_]+`?\s*;/gi, "")
     .replace(/USE\s+`?[A-Za-z0-9_]+`?\s*;/gi, "");
+}
+
+async function printSummary(connection) {
+  const [rows] = await connection.query(`
+    SELECT 'users' AS name, COUNT(*) AS total FROM users
+    UNION ALL SELECT 'products', COUNT(*) FROM products
+    UNION ALL SELECT 'orders', COUNT(*) FROM orders
+    UNION ALL SELECT 'order_items', COUNT(*) FROM order_items
+    UNION ALL SELECT 'order_events', COUNT(*) FROM order_events
+    UNION ALL SELECT 'serial_numbers', COUNT(*) FROM serial_numbers
+    UNION ALL SELECT 'warranty_tickets', COUNT(*) FROM warranty_tickets
+    UNION ALL SELECT 'product_reviews', COUNT(*) FROM product_reviews
+    UNION ALL SELECT 'wishlists', COUNT(*) FROM wishlists
+  `);
+
+  console.log("[db:reset] Seed summary:");
+  rows.forEach(function (row) {
+    console.log(`[db:reset] - ${row.name}: ${Number(row.total || 0)}`);
+  });
 }
 
 main().catch(function (error) {

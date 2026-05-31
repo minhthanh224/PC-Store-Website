@@ -7,6 +7,8 @@
     "install:backend": "npm --prefix backend install",
     "start": "npm --prefix backend start",
     "dev": "npm --prefix backend run dev",
-    "db:reset": "npm --prefix backend run db:reset"
+    "db:reset": "npm --prefix backend run db:reset",
+    "db:seed-demo-serials": "npm --prefix backend run db:seed-demo-serials",
+    "seed:demo-serials": "npm --prefix backend run seed:demo-serials"
   }
 }

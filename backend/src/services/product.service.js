@@ -170,6 +170,38 @@ function buildSpecFilterCondition(filter) {
   };
 }
 
+async function resolveCategoryIds(categoryValue) {
+  const rawValue = String(categoryValue || "").trim();
+
+  if (!rawValue) {
+    return [];
+  }
+
+  const categoryId = Number(rawValue);
+  const idParam = Number.isInteger(categoryId) ? categoryId : 0;
+
+  const [rows] = await pool.execute(
+    `
+      WITH RECURSIVE category_tree AS (
+        SELECT id
+        FROM categories
+        WHERE id = ? OR slug = ?
+        UNION ALL
+        SELECT child.id
+        FROM categories child
+        INNER JOIN category_tree parent ON parent.id = child.parent_id
+      )
+      SELECT DISTINCT id
+      FROM category_tree
+    `,
+    [idParam, rawValue]
+  );
+
+  return rows.map(function (row) {
+    return row.id;
+  });
+}
+
 function formatSpecValue(spec) {
   const value = String(spec.spec_value || "").trim();
   const unit = String(spec.unit || "").trim();
@@ -185,7 +217,7 @@ function formatSpecValue(spec) {
   return `${value} ${unit}`;
 }
 
-function buildProductFilters(query) {
+async function buildProductFilters(query) {
   const where = ["p.status = 'active'"];
   const params = [];
 
@@ -196,20 +228,16 @@ function buildProductFilters(query) {
   }
 
   if (query.category) {
-    where.push(`
-      p.category_id IN (
-        SELECT child.id
-        FROM categories child
-        WHERE child.slug = ?
-          OR child.parent_id = (
-            SELECT parent.id
-            FROM categories parent
-            WHERE parent.slug = ?
-            LIMIT 1
-          )
-      )
-    `);
-    params.push(query.category, query.category);
+    const categoryIds = await resolveCategoryIds(query.category);
+
+    if (!categoryIds.length) {
+      where.push("1 = 0");
+    } else {
+      where.push(`p.category_id IN (${categoryIds.map(function () {
+        return "?";
+      }).join(", ")})`);
+      params.push(...categoryIds);
+    }
   }
 
   if (query.brand) {
@@ -389,7 +417,7 @@ async function getProducts(query) {
   const limit = normalizePositiveInteger(query.limit, 12, 48);
   const offset = (page - 1) * limit;
   const sort = SORT_OPTIONS.includes(query.sort) ? query.sort : "newest";
-  const { whereClause, params } = buildProductFilters(query);
+  const { whereClause, params } = await buildProductFilters(query);
 
   const [[countRow]] = await pool.execute(
     `
@@ -741,7 +769,7 @@ async function getProductReviews(slug) {
       FROM product_reviews pr
       INNER JOIN products p ON p.id = pr.product_id
       LEFT JOIN users u ON u.id = pr.user_id
-      WHERE p.slug = ? AND p.status = 'active' AND pr.status = 'approved'
+      WHERE p.slug = ? AND p.status = 'active' AND pr.status IN ('approved', 'pending')
       ORDER BY pr.created_at DESC, pr.id DESC
     `,
     [slug]
@@ -807,14 +835,14 @@ async function createProductReview(slug, userId, body) {
   const [result] = await pool.execute(
     `
       INSERT INTO product_reviews (product_id, user_id, rating, comment, status)
-      VALUES (?, ?, ?, ?, 'pending')
+      VALUES (?, ?, ?, ?, 'approved')
     `,
     [productId, userId, rating, comment]
   );
 
   return {
     id: result.insertId,
-    status: "pending"
+    status: "approved"
   };
 }
 
