@@ -28,6 +28,7 @@ async function loadOrderDetail() {
     document.title = `${order.order_code} - AeroTech`;
     container.className = "order-detail-card";
     container.innerHTML = renderOrderDetail(order, items, response.data.history || []);
+    bindPrintOrderAction();
     bindCustomerWarrantyRequestActions(order);
   } catch (error) {
     container.innerHTML = renderError(error.message);
@@ -42,7 +43,10 @@ function renderOrderDetail(order, items, history) {
         <h1>${escapeHtml(order.order_code)}</h1>
         <p>${escapeHtml(formatDateTime(order.created_at))}</p>
       </div>
-      <span class="status-badge ${escapeAttribute(order.status)}">${escapeHtml(getOrderStatusLabel(order.status))}</span>
+      <div class="order-detail-actions print-hidden">
+        <span class="status-badge ${escapeAttribute(order.status)}">${escapeHtml(getOrderStatusLabel(order.status))}</span>
+        <button id="printOrderBtn" class="btn btn-soft" type="button">In đơn hàng</button>
+      </div>
     </div>
 
     <div class="timeline">
@@ -85,6 +89,16 @@ function renderOrderDetail(order, items, history) {
       <div class="total-line"><span>Tổng cộng</span><strong>${formatCurrency(order.total_amount)}</strong></div>
     </section>
   `;
+}
+
+function bindPrintOrderAction() {
+  const printButton = document.getElementById("printOrderBtn");
+
+  if (printButton) {
+    printButton.addEventListener("click", function () {
+      window.print();
+    });
+  }
 }
 
 

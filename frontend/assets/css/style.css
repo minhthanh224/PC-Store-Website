@@ -687,6 +687,40 @@ button:disabled {
   width: 100%;
 }
 
+.order-detail-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+@media print {
+  header,
+  footer,
+  .print-hidden,
+  .compare-bar,
+  .site-header,
+  .site-footer,
+  .text-link {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+
+  .container,
+  .order-detail-card {
+    max-width: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: 0 !important;
+  }
+}
+
 .spec-filter-group {
   display: grid;
   gap: 10px;

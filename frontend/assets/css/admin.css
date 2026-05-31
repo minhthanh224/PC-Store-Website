@@ -3031,6 +3031,14 @@
   vertical-align: top;
 }
 
+.admin-order-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .user-guard-note {
   margin: 12px 0 0;
   border: 1px solid rgba(245, 158, 11, 0.28);
@@ -3081,5 +3089,31 @@
 @media (max-width: 720px) {
   .admin-user-filter-bar {
     grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .admin-sidebar,
+  .admin-topbar,
+  .admin-page-heading,
+  .print-hidden,
+  .admin-status-actions,
+  .admin-note-form,
+  .admin-drawer-backdrop {
+    display: none !important;
+  }
+
+  .admin-shell,
+  .admin-main,
+  .admin-content {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .admin-panel {
+    box-shadow: none !important;
+    break-inside: avoid;
   }
 }

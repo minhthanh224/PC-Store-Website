@@ -44,7 +44,10 @@ function renderAdminOrderDetail(data) {
           <h2>${escapeHtml(order.order_code)}</h2>
           <p>${escapeHtml(formatDateTime(order.created_at))}</p>
         </div>
-        <span class="status-badge ${escapeAttribute(order.status)}">${escapeHtml(getOrderStatusLabel(order.status))}</span>
+        <div class="admin-order-actions print-hidden">
+          <span class="status-badge ${escapeAttribute(order.status)}">${escapeHtml(getOrderStatusLabel(order.status))}</span>
+          <button id="adminPrintOrderBtn" class="btn btn-light" type="button">In đơn hàng</button>
+        </div>
       </div>
       ${renderAdminOrderTimeline(order.status)}
       ${renderOrderStatusActions(order, workflow)}
@@ -351,6 +354,13 @@ function renderSerialCell(item, order) {
 }
 
 function bindAdminOrderDetailActions() {
+  const printButton = document.getElementById("adminPrintOrderBtn");
+  if (printButton) {
+    printButton.addEventListener("click", function () {
+      window.print();
+    });
+  }
+
   document.querySelectorAll(".js-detail-status").forEach(function (button) {
     button.addEventListener("click", function () {
       updateOrderStatusFromDetail(button.dataset.status);
