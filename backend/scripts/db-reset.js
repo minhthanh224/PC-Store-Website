@@ -18,6 +18,7 @@ async function main() {
   }
 
   const database = process.env.DB_NAME || "se104_pc_store";
+  assertSafeDatabaseName(database);
   const config = {
     host: process.env.DB_HOST || "127.0.0.1",
     port: Number(process.env.DB_PORT || 3306),
@@ -27,12 +28,22 @@ async function main() {
     multipleStatements: true
   };
 
-  const schemaSql = rewriteDatabaseName(await fs.readFile(SCHEMA_PATH, "utf8"), database);
-  const seedSql = rewriteDatabaseName(await fs.readFile(SEED_PATH, "utf8"), database);
+  const schemaSql = stripDatabaseDirectives(await fs.readFile(SCHEMA_PATH, "utf8"));
+  const seedSql = stripDatabaseDirectives(await fs.readFile(SEED_PATH, "utf8"));
   const connection = await mysql.createConnection(config);
 
   try {
+    if (database === "se104_pc_store") {
+      console.warn("[db:reset] Warning: DB_NAME is se104_pc_store. This will reset your main local demo database.");
+    }
+
     console.log(`[db:reset] Resetting database ${database}...`);
+    await connection.query(`
+      CREATE DATABASE IF NOT EXISTS \`${database}\`
+      CHARACTER SET utf8mb4
+      COLLATE utf8mb4_unicode_ci
+    `);
+    await connection.query(`USE \`${database}\``);
     await connection.query(schemaSql);
     await connection.query(seedSql);
     console.log("[db:reset] Done.");
@@ -41,12 +52,16 @@ async function main() {
   }
 }
 
-function rewriteDatabaseName(sql, database) {
-  if (database === "se104_pc_store") {
-    return sql;
+function assertSafeDatabaseName(database) {
+  if (!/^[A-Za-z0-9_]+$/.test(database)) {
+    throw new Error("DB_NAME must contain only letters, numbers, and underscores.");
   }
+}
 
-  return sql.replace(/\bse104_pc_store\b/g, database);
+function stripDatabaseDirectives(sql) {
+  return sql
+    .replace(/CREATE\s+DATABASE\s+IF\s+NOT\s+EXISTS\s+`?[A-Za-z0-9_]+`?\s+CHARACTER\s+SET\s+utf8mb4\s+COLLATE\s+utf8mb4_unicode_ci\s*;/gi, "")
+    .replace(/USE\s+`?[A-Za-z0-9_]+`?\s*;/gi, "");
 }
 
 main().catch(function (error) {

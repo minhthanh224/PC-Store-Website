@@ -735,7 +735,7 @@ async function createOrder(user, body) {
               total_amount,
               note
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'unpaid', 'pending', ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'unpaid', 'pending', ?, ?, ?, ?, ?, ?, ?, ?)
           `,
           [
             orderCode,
