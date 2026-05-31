@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý người dùng - AeroTech</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <aside id="adminSidebar" class="admin-sidebar"></aside>
+    <main class="admin-main">
+      <header id="adminTopbar" class="admin-topbar"></header>
+      <section class="admin-content">
+        <div class="admin-page-heading">
+          <p class="eyebrow">Accounts</p>
+          <h1>Quản lý người dùng</h1>
+          <p class="page-subtitle">Tạo tài khoản nhân sự, khóa/mở khóa và kiểm soát vai trò truy cập AeroTech.</p>
+        </div>
+
+        <div class="admin-user-layout">
+          <section class="admin-panel admin-user-form-panel">
+            <div class="admin-section-heading-inline">
+              <div>
+                <h2 id="userFormTitle">Tạo tài khoản</h2>
+                <p id="userFormHint">Email chỉ nhập khi tạo mới. Khi cập nhật, email được giữ nguyên để tránh nhầm tài khoản.</p>
+              </div>
+            </div>
+
+            <form id="userForm" class="admin-form">
+              <input id="userId" type="hidden">
+              <div class="admin-form-grid admin-user-form-grid">
+                <label>
+                  Họ tên
+                  <input id="userFullName" type="text" autocomplete="name" required>
+                </label>
+                <label>
+                  Email
+                  <input id="userEmail" type="email" autocomplete="email" required>
+                </label>
+                <label>
+                  Số điện thoại
+                  <input id="userPhone" type="tel" autocomplete="tel">
+                </label>
+                <label>
+                  Vai trò
+                  <select id="userRole" required>
+                    <option value="customer">Khách hàng</option>
+                    <option value="sales">Nhân viên bán hàng</option>
+                    <option value="technician">Kỹ thuật viên</option>
+                    <option value="admin">Quản trị viên</option>
+                  </select>
+                </label>
+                <label>
+                  Trạng thái
+                  <select id="userStatus" required>
+                    <option value="active">Đang hoạt động</option>
+                    <option value="inactive">Đã khóa</option>
+                  </select>
+                </label>
+                <label id="userPasswordField">
+                  Mật khẩu tạm thời
+                  <input id="userPassword" type="password" minlength="6" autocomplete="new-password">
+                </label>
+              </div>
+              <p id="currentUserGuardNote" class="user-guard-note" hidden>Tài khoản hiện tại: không thể tự khóa hoặc tự hạ quyền.</p>
+              <div class="form-actions">
+                <button class="btn btn-primary" type="submit">Lưu tài khoản</button>
+                <button id="resetUserFormBtn" class="btn btn-light" type="button">Tạo mới</button>
+              </div>
+              <div id="userFormMessage"></div>
+            </form>
+
+            <section id="userPasswordResetPanel" class="admin-subpanel user-password-reset-panel" hidden>
+              <h3>Đặt mật khẩu tạm thời</h3>
+              <p id="passwordResetTarget">Chọn một tài khoản trong danh sách để đặt mật khẩu tạm thời.</p>
+              <form id="userPasswordResetForm" class="stack-form">
+                <input id="passwordResetUserId" type="hidden">
+                <label>
+                  Mật khẩu tạm thời mới
+                  <input id="passwordResetValue" type="password" minlength="6" autocomplete="new-password" required>
+                </label>
+                <div class="form-actions">
+                  <button class="btn btn-primary" type="submit">Đặt mật khẩu</button>
+                  <button id="cancelPasswordResetBtn" class="btn btn-light" type="button">Hủy</button>
+                </div>
+              </form>
+            </section>
+          </section>
+
+          <section class="admin-panel admin-user-list-panel">
+            <div class="admin-section-heading-inline">
+              <div>
+                <h2>Danh sách người dùng</h2>
+                <p>Tìm kiếm theo tên, email, số điện thoại và lọc theo quyền truy cập.</p>
+              </div>
+            </div>
+
+            <form id="userFilterForm" class="admin-filter-bar admin-user-filter-bar">
+              <input id="userKeyword" type="search" placeholder="Tìm tên, email, số điện thoại">
+              <select id="userRoleFilter" aria-label="Lọc vai trò">
+                <option value="">Tất cả vai trò</option>
+                <option value="admin">Quản trị viên</option>
+                <option value="sales">Nhân viên bán hàng</option>
+                <option value="technician">Kỹ thuật viên</option>
+                <option value="customer">Khách hàng</option>
+              </select>
+              <select id="userStatusFilter" aria-label="Lọc trạng thái">
+                <option value="">Tất cả trạng thái</option>
+                <option value="active">Đang hoạt động</option>
+                <option value="inactive">Đã khóa</option>
+              </select>
+              <button class="btn btn-dark" type="submit">Lọc</button>
+              <button id="resetUserFilterBtn" class="btn btn-light" type="button">Làm mới</button>
+            </form>
+
+            <div id="userListMessage"></div>
+            <div id="userTable" class="admin-table-wrap loading-box">Đang tải người dùng...</div>
+            <div id="userPagination" class="pagination"></div>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/api.js"></script>
+  <script src="../assets/js/utils.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/admin/admin-api.js"></script>
+  <script src="../assets/js/admin/admin-layout.js"></script>
+  <script src="../assets/js/admin/users.js"></script>
+</body>
+</html>
