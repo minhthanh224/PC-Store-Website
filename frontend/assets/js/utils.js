@@ -411,6 +411,12 @@ function getBannerKeyFromSlug(slug) {
 }
 
 function getCategoryBannerImage(category) {
+  const categorySlug = String((category && category.slug) || "").toLowerCase();
+
+  if (categorySlug === "gaming-gear") {
+    return "/assets/images/banners/banner-component.webp";
+  }
+
   return getBannerImageByKey(getBannerKeyFromSlug(category && category.slug));
 }
 

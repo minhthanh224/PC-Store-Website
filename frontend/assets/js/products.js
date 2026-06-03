@@ -12,6 +12,8 @@ const SPEC_FILTER_PARAM_KEYS = [
   "panel"
 ];
 
+const SERVICE_CATEGORY_SLUGS = ["dich-vu", "dich-vu-ky-thuat", "technical-service", "trade-in"];
+
 const CATEGORY_LABELS = {
   "laptop-gaming": "Laptop Gaming",
   "laptop-van-phong": "Laptop văn phòng",
@@ -93,9 +95,8 @@ function redirectLegacyServiceCatalogUrl() {
   const params = new URLSearchParams(window.location.search);
   const productType = params.get("productType") || "";
   const category = params.get("category") || "";
-  const serviceCategories = ["dich-vu", "dich-vu-ky-thuat", "technical-service", "trade-in"];
 
-  if (productType === "service" || serviceCategories.includes(category)) {
+  if (productType === "service" || SERVICE_CATEGORY_SLUGS.includes(category)) {
     window.location.replace("services.html");
     return true;
   }
@@ -124,7 +125,9 @@ async function loadFilterData() {
 
 function renderCategoryOptions() {
   const select = document.getElementById("filterCategory");
-  const options = flattenCategories(catalogCategories).map(function (category) {
+  const options = flattenCategories(catalogCategories).filter(function (category) {
+    return !SERVICE_CATEGORY_SLUGS.includes(category.slug);
+  }).map(function (category) {
     const prefix = category.level === 1 ? "-- " : "";
     return `<option value="${escapeAttribute(category.slug)}">${prefix}${escapeHtml(category.name)}</option>`;
   }).join("");
