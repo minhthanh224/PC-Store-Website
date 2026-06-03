@@ -99,7 +99,9 @@ copy .env.example backend\.env
 
 Chỉnh `backend/.env` theo MySQL local. Không commit file `.env`.
 
-4. Reset và import database clean demo:
+4. Reset database về đúng dữ liệu demo đã chuẩn bị:
+
+Lệnh này chạy `database/schema.sql` và `database/seed.sql`. File `seed.sql` hiện đã được đồng bộ từ database local demo cuối cùng, bao gồm catalog sản phẩm, ảnh, specs, khuyến mãi, bundle, gói bảo hành, tài khoản, đơn hàng, serial, phiếu bảo hành, đánh giá và báo cáo.
 
 PowerShell:
 
@@ -107,19 +109,9 @@ PowerShell:
 $env:CONFIRM_DB_RESET="YES"; npm run db:reset; Remove-Item Env:CONFIRM_DB_RESET
 ```
 
-5. Nếu cần thêm serial demo cho sản phẩm serialized:
+Nếu clone từ GitHub và muốn database giống bản demo local hiện tại, chỉ cần chạy bước reset này. Không chạy thêm script seed phụ bên dưới, vì chúng sẽ phát sinh thêm dữ liệu mới và làm database lệch khỏi bản demo đã chốt.
 
-```powershell
-$env:CONFIRM_DEMO_SERIALS="YES"; npm run seed:demo-serials; Remove-Item Env:CONFIRM_DEMO_SERIALS
-```
-
-6. Nếu cần dữ liệu vận hành demo như đơn hàng, review, ticket bảo hành:
-
-```powershell
-$env:CONFIRM_DEMO_BUSINESS_DATA="YES"; npm run seed:demo-business; Remove-Item Env:CONFIRM_DEMO_BUSINESS_DATA
-```
-
-7. Chạy server:
+5. Chạy server:
 
 ```bash
 npm run dev
@@ -140,7 +132,7 @@ Các tài khoản có sẵn trong `database/seed.sql` dùng mật khẩu `123456
 - `sales@example.com` - Nhân viên bán hàng
 - `technician@example.com` - Kỹ thuật viên
 
-Script `seed:demo-business` có thể tạo thêm các tài khoản demo khác với mật khẩu riêng được in ra khi chạy script.
+Các dữ liệu demo khác như sản phẩm, serial, đơn hàng, bảo hành, đánh giá và báo cáo đã nằm sẵn trong `database/seed.sql`.
 
 ## Hướng dẫn test nhanh
 
