@@ -10956,3 +10956,861 @@ body.has-compare-bar {
     padding: 16px;
   }
 }
+
+.services-page {
+  background: #f7fafc;
+}
+
+.services-hero {
+  background:
+    linear-gradient(135deg, rgba(4, 21, 38, 0.92), rgba(8, 78, 103, 0.82)),
+    url("../images/banners/banner-components.webp") center/cover;
+  color: #ffffff;
+  padding: 56px 0;
+}
+
+.services-hero-inner {
+  max-width: 880px;
+}
+
+.services-hero h1 {
+  margin: 8px 0 12px;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  letter-spacing: 0;
+}
+
+.services-hero p {
+  max-width: 680px;
+  color: rgba(255, 255, 255, 0.86);
+  line-height: 1.7;
+}
+
+.services-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.services-content {
+  padding-block: 36px 54px;
+}
+
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+  align-items: stretch;
+}
+
+.service-card {
+  display: grid;
+  grid-template-rows: 170px 1fr;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: var(--shadow-soft);
+}
+
+.service-card-image {
+  display: block;
+  min-width: 0;
+  background: linear-gradient(135deg, #e0f7ff, #f8fafc);
+}
+
+.service-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 18px;
+}
+
+.service-card-body {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  min-width: 0;
+}
+
+.service-card-meta,
+.service-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--color-muted);
+  font-size: 0.88rem;
+}
+
+.service-card-meta span,
+.service-card-footer span {
+  border-radius: 999px;
+  background: #ecfeff;
+  color: #075985;
+  padding: 5px 10px;
+  font-weight: 700;
+}
+
+.service-card h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.08rem;
+  line-height: 1.35;
+}
+
+.service-card h2 a {
+  color: inherit;
+}
+
+.service-card p {
+  margin: 0;
+  color: var(--color-muted);
+  line-height: 1.58;
+}
+
+.service-feature-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--color-text);
+}
+
+.service-card-footer {
+  align-items: center;
+  border-top: 1px solid var(--color-border);
+  padding-top: 10px;
+}
+
+.service-card-footer strong {
+  color: var(--color-primary);
+  font-size: 1.05rem;
+}
+
+.service-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.service-actions .btn {
+  width: 100%;
+  min-width: 0;
+  white-space: normal;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .services-hero {
+    padding: 34px 0;
+  }
+
+  .service-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .service-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+.product-policy-card > .policy-icon {
+  background: #ecfeff;
+  border: 1px solid #bae6fd;
+}
+
+.product-policy-card > .policy-icon img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.warranty-portal-page {
+  padding-bottom: 48px;
+}
+
+.warranty-login-callout {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  border: 1px solid #bae6fd;
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: #f0f9ff;
+  color: #0f172a;
+}
+
+.warranty-login-callout[hidden],
+.warranty-tab-panel[hidden],
+.warranty-request-inline[hidden] {
+  display: none !important;
+}
+
+.warranty-login-callout span {
+  flex: 1 1 260px;
+  color: var(--color-muted);
+}
+
+.warranty-portal-tabs {
+  margin-bottom: 18px;
+}
+
+.warranty-tab-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.warranty-items-list {
+  display: grid;
+  gap: 16px;
+}
+
+.warranty-item-card {
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr);
+  gap: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 16px;
+  background: #ffffff;
+  box-shadow: var(--shadow-soft);
+}
+
+.warranty-item-image {
+  display: grid;
+  place-items: center;
+  min-height: 150px;
+  border-radius: 14px;
+  background: #f8fafc;
+  overflow: hidden;
+}
+
+.warranty-item-image img {
+  width: 100%;
+  height: 150px;
+  object-fit: contain;
+  padding: 14px;
+}
+
+.warranty-item-body {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.warranty-item-head,
+.warranty-item-actions,
+.warranty-request-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.warranty-item-head h2 {
+  margin: 4px 0 0;
+  color: var(--color-text);
+  font-size: 1.12rem;
+  line-height: 1.35;
+}
+
+.warranty-item-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.warranty-item-meta div {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 10px;
+  background: #f8fafc;
+}
+
+.warranty-item-meta dt {
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.warranty-item-meta dd {
+  margin: 4px 0 0;
+  color: var(--color-text);
+  font-weight: 800;
+  word-break: break-word;
+}
+
+.warranty-ticket-inline,
+.warranty-request-inline {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  padding: 12px;
+  background: #f8fbff;
+}
+
+.warranty-ticket-inline p {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.warranty-request-blocked {
+  color: var(--color-muted);
+  font-weight: 700;
+}
+
+.warranty-request-inline label {
+  display: grid;
+  gap: 8px;
+  color: var(--color-text);
+  font-weight: 800;
+}
+
+.warranty-request-inline textarea {
+  width: 100%;
+  resize: vertical;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 12px;
+  color: var(--color-text);
+  font: inherit;
+}
+
+.warranty-search-card-light {
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr) auto;
+  border: 1px solid var(--color-border);
+  background: #ffffff;
+}
+
+.warranty-search-card-light input {
+  border-color: var(--color-border);
+  color: var(--color-text);
+  background: #ffffff;
+}
+
+.warranty-lookup-card {
+  display: grid;
+  gap: 14px;
+}
+
+@media (max-width: 860px) {
+  .warranty-item-card {
+    grid-template-columns: 1fr;
+  }
+
+  .warranty-item-image img {
+    height: 180px;
+  }
+
+  .warranty-item-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .warranty-login-callout,
+  .warranty-item-actions,
+  .warranty-request-actions,
+  .warranty-search-card-light {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .warranty-item-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .warranty-item-card {
+    padding: 14px;
+  }
+}
+
+.warranty-portal-page .page-heading {
+  margin-bottom: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  padding: clamp(20px, 3vw, 28px);
+  background:
+    linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(37, 99, 235, 0.06)),
+    #ffffff;
+  box-shadow: var(--shadow-soft);
+}
+
+.warranty-portal-page .page-heading h1 {
+  margin-bottom: 8px;
+}
+
+.warranty-viewer-line {
+  display: inline-flex;
+  width: fit-content;
+  margin: 12px 0 0;
+  border: 1px solid #bae6fd;
+  border-radius: 999px;
+  padding: 7px 12px;
+  color: #075985;
+  background: #ecfeff;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.warranty-viewer-line[hidden] {
+  display: none !important;
+}
+
+.warranty-portal-page .warranty-login-callout {
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+}
+
+.warranty-portal-page .warranty-login-callout strong {
+  color: var(--color-text);
+}
+
+.warranty-portal-page .warranty-login-callout .btn {
+  min-height: 36px;
+  padding-inline: 14px;
+}
+
+.warranty-portal-tabs {
+  width: fit-content;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 4px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.warranty-portal-tabs button {
+  border-color: transparent;
+  min-height: 38px;
+  background: transparent;
+}
+
+.warranty-portal-tabs button.active,
+.warranty-portal-tabs button:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+}
+
+.warranty-section-heading {
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 16px;
+  background: #ffffff;
+  box-shadow: var(--shadow-soft);
+}
+
+.warranty-section-heading p:not(.eyebrow) {
+  margin: 5px 0 0;
+  color: var(--color-muted);
+}
+
+.warranty-section-heading .btn {
+  white-space: nowrap;
+}
+
+.warranty-access-state {
+  border: 1px dashed #bae6fd;
+  border-radius: 16px;
+  padding: 22px;
+  background: #f8fbff;
+}
+
+.warranty-access-state h3 {
+  margin: 0 0 8px;
+  color: var(--color-text);
+}
+
+.warranty-item-card {
+  grid-template-columns: 180px minmax(0, 1fr);
+  align-items: start;
+  padding: 18px;
+}
+
+.warranty-item-image {
+  min-height: 172px;
+  border: 1px solid var(--color-border);
+}
+
+.warranty-item-image img {
+  height: 172px;
+}
+
+.warranty-item-head {
+  align-items: flex-start;
+}
+
+.warranty-item-head > div {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.warranty-item-head .status-badge {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.warranty-item-head h2 {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.warranty-item-meta {
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.warranty-serial-code {
+  color: var(--color-primary-dark);
+  font-family: Consolas, "Liberation Mono", monospace;
+  letter-spacing: 0;
+}
+
+.warranty-ticket-inline {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.warranty-ticket-inline p {
+  grid-column: 1 / -1;
+}
+
+.warranty-item-actions {
+  justify-content: flex-end;
+}
+
+.warranty-item-actions .warranty-request-blocked {
+  margin-right: auto;
+}
+
+.warranty-item-actions .btn {
+  min-width: 132px;
+}
+
+.warranty-request-inline {
+  margin-top: 2px;
+}
+
+@media (max-width: 860px) {
+  .warranty-portal-tabs {
+    width: 100%;
+  }
+
+  .warranty-portal-tabs button {
+    flex: 1 1 180px;
+  }
+
+  .warranty-section-heading {
+    align-items: flex-start;
+  }
+
+  .warranty-section-heading .btn {
+    width: 100%;
+  }
+
+  .warranty-item-card {
+    grid-template-columns: 1fr;
+  }
+
+  .warranty-item-head .status-badge {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .warranty-portal-page .page-heading {
+    padding: 18px;
+  }
+
+  .warranty-portal-tabs {
+    border-radius: 16px;
+  }
+
+  .warranty-portal-tabs button,
+  .warranty-item-actions .btn {
+    width: 100%;
+  }
+
+  .warranty-ticket-inline {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Compact storefront account pill */
+#siteHeader .account-greeting {
+  gap: 6px;
+  padding-inline: 10px;
+}
+
+#siteHeader .account-greeting-icon {
+  width: 17px;
+  height: 17px;
+  display: inline-flex;
+  flex: 0 0 17px;
+  align-items: center;
+  justify-content: center;
+  color: currentColor;
+}
+
+#siteHeader .account-greeting-icon svg {
+  width: 17px;
+  height: 17px;
+  display: block;
+}
+
+#siteHeader .account-greeting-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#siteHeader .header-actions-customer .account-greeting {
+  max-width: 108px;
+}
+
+#siteHeader .header-actions-staff .account-greeting {
+  max-width: 158px;
+}
+
+@media (min-width: 1366px) {
+  #siteHeader .header-actions-customer .account-greeting {
+    max-width: 112px;
+  }
+
+  #siteHeader .header-actions-staff .account-greeting {
+    max-width: 166px;
+  }
+}
+
+/* Final storefront polish: staff account, home category cards, product images */
+#siteHeader .account-greeting {
+  text-decoration: none;
+}
+
+#siteHeader .account-greeting:hover,
+#siteHeader .account-greeting:focus-visible {
+  border-color: rgba(37, 99, 235, 0.32);
+  background: #eef6ff;
+  color: #1d4ed8;
+}
+
+#siteHeader .header-actions-staff .account-greeting {
+  flex: 0 1 166px;
+}
+
+.home-category-section .category-tile-grid {
+  align-items: stretch;
+}
+
+.home-category-section .need-card {
+  min-height: 190px;
+  height: 100%;
+}
+
+.home-category-section .need-card::before {
+  background-size: cover;
+  background-position: center;
+}
+
+.home-category-section .need-card-content {
+  min-height: 100%;
+}
+
+.home-category-section .need-card-title,
+.home-category-section .need-card-list li {
+  overflow-wrap: anywhere;
+}
+
+.catalog-hero .image-card-content {
+  max-width: min(680px, 100%);
+}
+
+.catalog-hero p {
+  max-width: 620px;
+}
+
+.product-grid .product-card {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100%;
+}
+
+.product-grid .product-card-body {
+  min-height: 0;
+  align-content: start;
+}
+
+.product-grid .product-image-link {
+  height: clamp(198px, 17vw, 226px);
+  padding: 6px;
+  overflow: hidden;
+}
+
+.product-grid .product-image-link img {
+  width: 96%;
+  height: 96%;
+  max-width: 96%;
+  max-height: 96%;
+  object-fit: contain;
+  object-position: center;
+  transform: scale(1.04);
+  transform-origin: center;
+}
+
+.product-grid .product-card-visual-chair .product-image-link img,
+.product-grid .product-card-visual-mouse .product-image-link img,
+.product-grid .product-card-visual-headset .product-image-link img,
+.product-grid .product-card-visual-keyboard .product-image-link img,
+.product-grid .product-card-visual-accessory .product-image-link img {
+  width: 98%;
+  height: 98%;
+  max-width: 98%;
+  max-height: 98%;
+  transform: scale(1.09);
+}
+
+.product-grid .product-card-visual-monitor .product-image-link img,
+.product-grid .product-card-visual-laptop .product-image-link img,
+.product-grid .product-card-visual-pc-build .product-image-link img {
+  transform: scale(1.03);
+}
+
+.product-grid .product-card-service .product-image-link {
+  height: 172px;
+  padding: 8px;
+}
+
+.product-grid .product-card-service .product-image-link img {
+  transform: scale(1);
+}
+
+.product-grid .product-card .product-actions {
+  margin-top: auto;
+}
+
+.product-grid .product-card-footer {
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+@media (max-width: 760px) {
+  .home-category-section .need-card {
+    min-height: 176px;
+  }
+
+  .product-grid .product-image-link {
+    height: 186px;
+  }
+
+  .product-grid .product-card-service .product-image-link {
+    height: 164px;
+  }
+}
+
+@media (max-width: 480px) {
+  #siteHeader .header-actions-staff .account-greeting {
+    max-width: 150px;
+  }
+
+  .product-grid .product-image-link {
+    height: 176px;
+  }
+
+  .product-grid .product-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Final homepage category balance */
+.home-category-section .category-tile-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.home-category-section .need-card {
+  min-height: 154px;
+}
+
+.home-category-section .need-card-content {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  min-height: auto;
+  padding: 16px;
+  gap: 6px;
+}
+
+.home-category-section .need-card-title {
+  margin-bottom: 4px !important;
+  max-width: 100%;
+  font-size: 1rem !important;
+  line-height: 1.18 !important;
+}
+
+.home-category-section .need-card-list {
+  gap: 5px;
+}
+
+.home-category-section .need-card-list li {
+  align-items: flex-start;
+  min-height: 18px;
+  gap: 7px;
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.home-category-section .need-card-list li::before {
+  margin-top: 0.5em;
+  width: 5px;
+  height: 5px;
+  flex-basis: 5px;
+}
+
+@media (max-width: 1180px) {
+  .home-category-section .category-tile-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .home-category-section .need-card {
+    min-height: 178px;
+  }
+
+  .home-category-section .need-card-title {
+    font-size: 1.12rem !important;
+  }
+
+  .home-category-section .need-card-list li {
+    font-size: 0.88rem;
+  }
+}
+
+@media (max-width: 760px) {
+  .home-category-section .category-tile-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .home-category-section .need-card {
+    min-height: 184px;
+  }
+
+  .home-category-section .need-card-content {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 460px) {
+  .home-category-section .category-tile-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

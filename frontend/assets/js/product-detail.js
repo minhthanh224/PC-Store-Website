@@ -87,13 +87,17 @@ async function loadProductDetail() {
 function renderBreadcrumb(product) {
   const breadcrumb = document.getElementById("breadcrumb");
   const category = product.category || {};
+  const isService = isServiceProduct(product);
+  const listingHref = isService ? "services.html" : "products.html";
+  const listingLabel = isService ? "Dịch vụ" : "Sản phẩm";
+  const categoryHref = isService ? "services.html" : `products.html?category=${encodeURIComponent(category.slug || "")}`;
 
   breadcrumb.innerHTML = `
     <a href="index.html">Trang chủ</a>
     <span>/</span>
-    <a href="products.html">Sản phẩm</a>
+    <a href="${listingHref}">${listingLabel}</a>
     <span>/</span>
-    <a href="products.html?category=${encodeURIComponent(category.slug || "")}">${escapeHtml(category.name || "Danh mục")}</a>
+    <a href="${categoryHref}">${escapeHtml(category.name || "Danh mục")}</a>
     <span>/</span>
     <strong>${escapeHtml(product.name)}</strong>
   `;
@@ -286,7 +290,16 @@ function renderPurchaseMeta(product, isService) {
 
 function renderDetailActions(product, cartPayload, comparePayload, isService, isAvailable) {
   if (isService) {
+    const canOrderService = getEffectivePrice(product) > 0 && Number(product.available_stock || 0) > 0;
+
     return `
+      ${canOrderService ? `
+        <button
+          class="btn btn-primary js-add-cart"
+          type="button"
+          data-product="${cartPayload}"
+        >Đặt dịch vụ</button>
+      ` : ""}
       <a class="btn btn-primary" href="contact.html">Liên hệ tư vấn</a>
       <a class="btn btn-dark" href="stores.html">Đặt lịch tại showroom</a>
       <button
@@ -294,7 +307,7 @@ function renderDetailActions(product, cartPayload, comparePayload, isService, is
         type="button"
         data-product-id="${escapeAttribute(product.id)}"
       >Yêu thích</button>
-      <a class="btn btn-light" href="products.html?productType=service">Dịch vụ khác</a>
+      <a class="btn btn-light" href="services.html">Dịch vụ khác</a>
     `;
   }
 
@@ -756,15 +769,45 @@ function renderWarrantyPriceSummary(productPayload, selectedPackage) {
 }
 
 function renderPolicyItem(item) {
+  const iconUrl = getCommitmentIconUrl(item);
+
   return `
     <article class="product-policy-card">
-      <span>${escapeHtml(item.code)}</span>
+      <span class="policy-icon" aria-hidden="true">
+        <img src="${escapeAttribute(iconUrl)}" alt="" loading="lazy">
+      </span>
       <div>
         <h3>${escapeHtml(item.title)}</h3>
         <p>${escapeHtml(item.description)}</p>
       </div>
     </article>
   `;
+}
+
+function getCommitmentIconUrl(item) {
+  const value = normalizeSpecKey(`${item.code || ""} ${item.title || ""} ${item.description || ""}`);
+
+  if (value.includes("giao_hang") || value.includes("delivery") || value.includes("truck")) {
+    return getFrontendAssetPath("assets/icons/product-types/truck.svg");
+  }
+
+  if (value.includes("tu_van") || value.includes("ho_tro") || value.includes("support") || value.includes("headset")) {
+    return getFrontendAssetPath("assets/icons/product-types/headset.svg");
+  }
+
+  if (value.includes("ky_thuat") || value.includes("lap_dat") || value.includes("cai_dat") || value.includes("wrench")) {
+    return getFrontendAssetPath("assets/icons/product-types/wrench.svg");
+  }
+
+  if (value.includes("vat") || value.includes("hoa_don") || value.includes("invoice") || value.includes("receipt")) {
+    return getFrontendAssetPath("assets/icons/product-types/receipt.svg");
+  }
+
+  if (value.includes("bao_hanh") || value.includes("chinh_hang") || value.includes("official") || value.includes("shield")) {
+    return getFrontendAssetPath("assets/icons/product-types/shield.svg");
+  }
+
+  return getFrontendAssetPath("assets/icons/product-types/check.svg");
 }
 
 function normalizeImportedHighlights(highlights) {

@@ -28,6 +28,15 @@ async function getMyWarrantyTickets(req, res) {
   });
 }
 
+async function getMyWarrantyItems(req, res) {
+  const items = await warrantyService.getMyWarrantyItems(req.user);
+
+  res.json({
+    success: true,
+    data: items
+  });
+}
+
 async function getMyWarrantyTicketDetail(req, res) {
   const ticket = await warrantyService.getMyWarrantyTicketDetail(req.user, req.params.ticketCode);
 
@@ -40,6 +49,7 @@ async function getMyWarrantyTicketDetail(req, res) {
 module.exports = {
   lookupWarranty,
   createCustomerWarrantyRequest,
+  getMyWarrantyItems,
   getMyWarrantyTickets,
   getMyWarrantyTicketDetail
 };

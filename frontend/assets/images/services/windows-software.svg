@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" role="img" aria-labelledby="title desc">
+  <title id="title">Windows and software setup</title>
+  <desc id="desc">Laptop screen with software windows and a gear icon.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#e0f7ff"/>
+      <stop offset="1" stop-color="#eef2ff"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#164e63"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="420" rx="36" fill="url(#bg)"/>
+  <circle cx="526" cy="88" r="72" fill="#22d3ee" opacity=".18"/>
+  <circle cx="112" cy="330" r="88" fill="#2563eb" opacity=".12"/>
+  <rect x="142" y="88" width="356" height="224" rx="24" fill="url(#screen)"/>
+  <rect x="166" y="116" width="138" height="78" rx="16" fill="#38bdf8"/>
+  <rect x="322" y="116" width="126" height="28" rx="14" fill="#a5f3fc" opacity=".88"/>
+  <rect x="322" y="158" width="94" height="28" rx="14" fill="#67e8f9" opacity=".76"/>
+  <rect x="166" y="214" width="282" height="58" rx="18" fill="#1e293b" stroke="#38bdf8" stroke-width="3"/>
+  <path d="M260 312h120l18 34H242l18-34Z" fill="#334155"/>
+  <rect x="222" y="344" width="196" height="22" rx="11" fill="#475569"/>
+  <g transform="translate(450 225)">
+    <circle cx="42" cy="42" r="42" fill="#ffffff"/>
+    <path d="M42 20v10m0 24v10M20 42h10m24 0h10M27 27l7 7m16 16 7 7m0-30-7 7M34 50l-7 7" stroke="#0284c7" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="42" cy="42" r="13" fill="#0ea5e9"/>
+  </g>
+</svg>

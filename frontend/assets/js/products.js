@@ -79,10 +79,28 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 async function initProductsPage() {
+  if (redirectLegacyServiceCatalogUrl()) {
+    return;
+  }
+
   await loadSiteLayout();
   await loadFilterData();
   bindCatalogEvents();
   await loadProductsFromUrl();
+}
+
+function redirectLegacyServiceCatalogUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const productType = params.get("productType") || "";
+  const category = params.get("category") || "";
+  const serviceCategories = ["dich-vu", "dich-vu-ky-thuat", "technical-service", "trade-in"];
+
+  if (productType === "service" || serviceCategories.includes(category)) {
+    window.location.replace("services.html");
+    return true;
+  }
+
+  return false;
 }
 
 async function loadFilterData() {
@@ -328,7 +346,7 @@ function updateCatalogHero(params) {
 
   eyebrow.textContent = "Catalog";
   title.textContent = "Sản phẩm AeroTech";
-  text.textContent = "Tìm PC build, laptop, linh kiện, màn hình, phụ kiện và dịch vụ kỹ thuật.";
+  text.textContent = "Tìm PC build, laptop, linh kiện, màn hình và phụ kiện công nghệ tại AeroTech.";
 }
 
 function getSearchKeywordFromParams(params) {

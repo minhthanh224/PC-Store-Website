@@ -197,9 +197,30 @@ async function lookupWarranty(serialCode) {
       INNER JOIN products p ON p.id = sn.product_id
       LEFT JOIN brands b ON b.id = p.brand_id
       LEFT JOIN categories c ON c.id = p.category_id
-      LEFT JOIN order_items oi ON oi.serial_number_id = sn.id
+      LEFT JOIN (
+        SELECT oi_latest.*
+        FROM order_items oi_latest
+        INNER JOIN (
+          SELECT serial_number_id, MAX(id) AS order_item_id
+          FROM order_items
+          WHERE serial_number_id IS NOT NULL
+          GROUP BY serial_number_id
+        ) latest_order_item ON latest_order_item.order_item_id = oi_latest.id
+      ) oi_direct ON oi_direct.serial_number_id = sn.id
+      LEFT JOIN (
+        SELECT wt_latest.serial_number_id, wt_latest.order_item_id
+        FROM warranty_tickets wt_latest
+        INNER JOIN (
+          SELECT serial_number_id, MAX(id) AS ticket_id
+          FROM warranty_tickets
+          WHERE order_item_id IS NOT NULL
+          GROUP BY serial_number_id
+        ) latest_ticket ON latest_ticket.ticket_id = wt_latest.id
+      ) wt_order_link ON wt_order_link.serial_number_id = sn.id
+      LEFT JOIN order_items oi_ticket ON oi_ticket.id = wt_order_link.order_item_id
+      LEFT JOIN order_items oi ON oi.id = COALESCE(oi_direct.id, oi_ticket.id)
       LEFT JOIN orders o ON o.id = oi.order_id
-      WHERE sn.serial_code = ?
+      WHERE LOWER(sn.serial_code) = LOWER(?)
       ORDER BY o.created_at DESC, oi.id DESC
       LIMIT 1
     `,
@@ -428,6 +449,140 @@ async function createCustomerWarrantyRequest(user, body) {
   }
 }
 
+function getWarrantyRequestBlockReason(item, coverage, activeTicket) {
+  if (item.order_status !== "completed") {
+    return "Đơn hàng chưa hoàn thành.";
+  }
+
+  if (!item.serial_id || !item.serial_code) {
+    return "Sản phẩm này chưa có Serial để gửi yêu cầu online.";
+  }
+
+  if (item.serial_status === "returned") {
+    return "Serial không còn hợp lệ.";
+  }
+
+  if (activeTicket) {
+    return "Sản phẩm đang có phiếu bảo hành mở.";
+  }
+
+  if (coverage.isExpired) {
+    return "Sản phẩm đã hết hạn bảo hành.";
+  }
+
+  return "";
+}
+
+async function getMyWarrantyItems(user) {
+  const [rows] = await pool.execute(
+    `
+      SELECT
+        oi.id AS order_item_id,
+        oi.quantity,
+        oi.serial_number_id,
+        oi.warranty_months_snapshot,
+        oi.warranty_package_title,
+        oi.warranty_package_duration_months,
+        p.id AS product_id,
+        p.name AS product_name,
+        p.sku,
+        p.slug,
+        p.requires_serial,
+        p.warranty_months,
+        (
+          SELECT pi.image_url
+          FROM product_images pi
+          WHERE pi.product_id = p.id
+          ORDER BY pi.is_primary DESC, pi.sort_order ASC, pi.id ASC
+          LIMIT 1
+        ) AS primary_image,
+        b.name AS brand_name,
+        c.name AS category_name,
+        sn.id AS serial_id,
+        sn.serial_code,
+        sn.status AS serial_status,
+        sn.sold_date,
+        o.order_code,
+        o.status AS order_status,
+        o.created_at AS order_created_at,
+        o.updated_at AS order_updated_at,
+        wt.ticket_code AS latest_ticket_code,
+        wt.status AS latest_ticket_status,
+        wt.issue_description AS latest_ticket_issue,
+        wt.received_date AS latest_ticket_received_date,
+        wt.completed_date AS latest_ticket_completed_date,
+        wt.created_at AS latest_ticket_created_at
+      FROM order_items oi
+      INNER JOIN orders o ON o.id = oi.order_id
+      INNER JOIN products p ON p.id = oi.product_id
+      LEFT JOIN brands b ON b.id = p.brand_id
+      LEFT JOIN categories c ON c.id = p.category_id
+      LEFT JOIN serial_numbers sn ON sn.id = oi.serial_number_id
+      LEFT JOIN (
+        SELECT wt_inner.*
+        FROM warranty_tickets wt_inner
+        INNER JOIN (
+          SELECT serial_number_id, MAX(id) AS ticket_id
+          FROM warranty_tickets
+          GROUP BY serial_number_id
+        ) latest_ticket ON latest_ticket.ticket_id = wt_inner.id
+      ) wt ON wt.serial_number_id = sn.id
+      WHERE o.user_id = ? AND o.status = 'completed'
+      ORDER BY o.updated_at DESC, o.created_at DESC, oi.id DESC
+    `,
+    [user.id]
+  );
+
+  return rows.map(function (row) {
+    const coverage = getWarrantyCoverage({
+      ...row,
+      purchase_date: row.order_created_at
+    });
+    const statusInfo = getWarrantyStatus(row.serial_status, row.order_status, coverage.warrantyEndDate);
+    const latestTicket = row.latest_ticket_code ? {
+      ticket_code: row.latest_ticket_code,
+      status: row.latest_ticket_status,
+      issue_description: row.latest_ticket_issue,
+      received_date: row.latest_ticket_received_date,
+      completed_date: row.latest_ticket_completed_date,
+      created_at: row.latest_ticket_created_at
+    } : null;
+    const hasActiveTicket = Boolean(latestTicket && ACTIVE_TICKET_STATUSES.includes(latestTicket.status));
+    const requestBlockReason = getWarrantyRequestBlockReason(row, coverage, hasActiveTicket);
+
+    return {
+      order_item_id: row.order_item_id,
+      order_code: row.order_code,
+      product_id: row.product_id,
+      product_name: row.product_name,
+      sku: row.sku,
+      slug: row.slug,
+      product_image: row.primary_image,
+      brand_name: row.brand_name,
+      category_name: row.category_name,
+      quantity: Number(row.quantity || 0),
+      requires_serial: Boolean(row.requires_serial),
+      serial_id: row.serial_id,
+      serial_code: row.serial_code,
+      serial_status: row.serial_status,
+      purchase_date: toIsoDate(row.order_created_at),
+      completed_date: toIsoDate(row.order_updated_at),
+      warranty_months: coverage.warrantyMonths,
+      base_warranty_months: coverage.baseWarrantyMonths,
+      extended_warranty_months: coverage.extendedWarrantyMonths,
+      warranty_package_title: row.warranty_package_title,
+      warranty_start_date: coverage.warrantyStartDateIso,
+      warranty_end_date: coverage.warrantyEndDateIso,
+      is_expired: coverage.isExpired,
+      warranty_status: statusInfo.status,
+      warranty_status_label: statusInfo.label,
+      latest_ticket: latestTicket,
+      can_request_warranty: !requestBlockReason,
+      request_block_reason: requestBlockReason
+    };
+  });
+}
+
 async function getMyWarrantyTickets(user, query) {
   const allowedStatuses = ["received", "repairing", "waiting_parts", "done", "returned", "rejected"];
   const params = [user.id];
@@ -527,6 +682,7 @@ module.exports = {
   lookupWarranty,
   getWarrantyCoverage,
   createCustomerWarrantyRequest,
+  getMyWarrantyItems,
   getMyWarrantyTickets,
   getMyWarrantyTicketDetail
 };

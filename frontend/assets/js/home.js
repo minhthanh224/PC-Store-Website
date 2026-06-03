@@ -53,7 +53,7 @@ const HOME_HERO_SLIDES = [
     image: "/assets/images/banners/banner-pc-build.webp",
     primaryCta: {
       label: "Xem dịch vụ",
-      href: "products.html?productType=service"
+      href: "services.html"
     },
     secondaryCta: {
       label: "Liên hệ tư vấn",
@@ -214,9 +214,10 @@ async function loadHomeCategories() {
 
       const bannerImage = getCategoryBannerImage(category);
       const style = bannerImage ? ` style="--card-bg: url('${escapeAttribute(bannerImage)}')"` : "";
+      const href = getHomeCategoryHref(category);
 
       return `
-        <a class="category-tile need-card image-card"${style} href="products.html?category=${encodeURIComponent(category.slug)}">
+        <a class="category-tile need-card image-card"${style} href="${escapeAttribute(href)}">
           <div class="need-card-content">
             <h3 class="need-card-title">${escapeHtml(category.name)}</h3>
             <ul class="need-card-list">${firstChildren}</ul>
@@ -227,6 +228,26 @@ async function loadHomeCategories() {
   } catch (error) {
     container.innerHTML = renderError(error.message);
   }
+}
+
+function getHomeCategoryHref(category) {
+  if (isServiceHomeCategory(category)) {
+    return "services.html";
+  }
+
+  return `products.html?category=${encodeURIComponent(category.slug)}`;
+}
+
+function isServiceHomeCategory(category) {
+  const text = `${category.name || ""} ${category.slug || ""}`.toLowerCase();
+
+  return (
+    text.includes("dich-vu") ||
+    text.includes("dịch vụ") ||
+    text.includes("service") ||
+    text.includes("technical") ||
+    text.includes("trade-in")
+  );
 }
 
 function isDisplayableHomeCategory(category) {
@@ -240,6 +261,10 @@ function isDisplayableHomeCategory(category) {
     ["nexa", "core"].join(""),
     ["m", "ẫu"].join("")
   ];
+
+  if (isServiceHomeCategory(category)) {
+    return false;
+  }
 
   return !hiddenTerms.some(function (term) {
     return text.includes(term);
@@ -279,6 +304,7 @@ async function loadFeaturedProducts() {
       const text = `${product.name || ""} ${product.category_name || ""}`.toLowerCase();
       return text.includes("gaming");
     });
+    const gamingLaptopSectionProducts = await getGamingLaptopSectionProducts(gamingLaptops);
     const officeLaptops = laptopProducts.filter(function (product) {
       const text = `${product.name || ""} ${product.category_name || ""}`.toLowerCase();
       return !text.includes("gaming") || text.includes("văn phòng") || text.includes("ultrabook");
@@ -287,7 +313,7 @@ async function loadFeaturedProducts() {
     renderFeaturedSection("featuredPcBuilds", products.filter(function (product) {
       return product.product_type === "pc_build";
     }));
-    renderFeaturedSection("featuredGamingLaptops", gamingLaptops.length ? gamingLaptops : laptopProducts.slice(0, 4));
+    renderFeaturedSection("featuredGamingLaptops", gamingLaptopSectionProducts.length ? gamingLaptopSectionProducts : laptopProducts.slice(0, 4));
     renderFeaturedSection("featuredOfficeLaptops", officeLaptops.length ? officeLaptops : laptopProducts.slice(0, 4));
     renderFeaturedSection("featuredComponents", products.filter(function (product) {
       return product.product_type === "component";
@@ -306,6 +332,39 @@ async function loadFeaturedProducts() {
       }
     });
   }
+}
+
+async function getGamingLaptopSectionProducts(featuredGamingLaptops) {
+  const selected = mergeUniqueProducts([], featuredGamingLaptops || []);
+
+  if (selected.length >= 4) {
+    return selected;
+  }
+
+  try {
+    const response = await apiGet("/products?productType=laptop&category=laptop-gaming&limit=4");
+    return mergeUniqueProducts(selected, response.data || []);
+  } catch (error) {
+    return selected;
+  }
+}
+
+function mergeUniqueProducts(baseProducts, nextProducts) {
+  const seen = new Set();
+  const result = [];
+
+  (baseProducts || []).concat(nextProducts || []).forEach(function (product) {
+    const key = product.id || product.product_id || product.sku || product.slug;
+
+    if (!key || seen.has(key)) {
+      return;
+    }
+
+    seen.add(key);
+    result.push(product);
+  });
+
+  return result;
 }
 
 function renderFeaturedSection(elementId, products) {

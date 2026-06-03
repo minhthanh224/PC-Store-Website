@@ -1,73 +1,165 @@
-# AeroTech PC Store
+# AeroTech - Website bán PC, laptop, linh kiện và dịch vụ kỹ thuật
 
-AeroTech PC Store là website bán PC, laptop, linh kiện và dịch vụ kỹ thuật cho đồ án SE104.
-Project dùng frontend HTML/CSS/JavaScript thuần, backend Node.js + Express và MySQL.
+AeroTech là website thương mại điện tử mô phỏng cửa hàng máy tính, phục vụ đồ án môn SE104 - Nhập môn Công nghệ phần mềm. Hệ thống hỗ trợ khách hàng mua PC build, laptop, linh kiện, màn hình, phụ kiện, gaming gear và sử dụng dịch vụ kỹ thuật. Phần quản trị hỗ trợ vận hành đơn hàng, kho serial, bảo hành, đánh giá, báo cáo và import sản phẩm hàng loạt.
 
-## Chạy local
+## Thành viên nhóm
 
-1. Cài dependency:
+- Trần Lê Minh Thành
+- Trần Bình Minh
+- Nguyễn Công Thành
+- Nguyễn Ngọc Thiên Phú
+
+## Công nghệ sử dụng
+
+- Frontend: HTML, CSS, JavaScript thuần
+- Backend: Node.js, Express.js
+- Database: MySQL
+- Xác thực: JWT, bcryptjs, localStorage phía frontend
+- Thư viện chính: mysql2, multer, adm-zip, csv-parse, helmet, express-rate-limit, cors
+
+## Tính năng chính
+
+### Khách vãng lai
+
+- Xem trang chủ, danh mục, danh sách sản phẩm và dịch vụ kỹ thuật.
+- Tìm kiếm, lọc, sắp xếp sản phẩm.
+- Xem chi tiết sản phẩm, thông số kỹ thuật, ảnh và đánh giá đang hiển thị.
+- So sánh sản phẩm bằng danh sách so sánh lưu ở trình duyệt.
+- Đăng ký, đăng nhập.
+- Tra cứu bảo hành bằng serial nếu có dữ liệu phù hợp.
+
+### Khách hàng
+
+- Quản lý tài khoản cá nhân.
+- Thêm sản phẩm yêu thích.
+- Quản lý giỏ hàng và checkout.
+- Xem lịch sử đơn hàng và chi tiết đơn hàng.
+- Đánh giá sản phẩm đã mua trong đơn hoàn thành.
+- Xem sản phẩm đã mua để yêu cầu bảo hành.
+- Theo dõi trạng thái phiếu bảo hành.
+
+### Nhân viên bán hàng
+
+- Xem, duyệt và cập nhật trạng thái đơn hàng.
+- Theo dõi đơn cần gán serial.
+- Chuyển trạng thái đơn theo quy trình xử lý bán hàng.
+
+### Kỹ thuật viên
+
+- Quản lý kho serial.
+- Thêm và import serial demo nếu cần.
+- Tạo, xem và cập nhật phiếu bảo hành.
+- Tra cứu serial và tình trạng bảo hành.
+
+### Quản trị viên
+
+- Quản lý sản phẩm, danh mục, thương hiệu.
+- Import sản phẩm hàng loạt bằng file zip CSV.
+- Quản lý người dùng, đánh giá, đơn hàng, kho serial và bảo hành.
+- Xem dashboard, báo cáo và nhật ký hệ thống.
+
+## Luồng nghiệp vụ nổi bật
+
+Hệ thống phân biệt sản phẩm có serial và không có serial:
+
+- Sản phẩm không serial được giữ tồn khi đơn ở trạng thái pending, approved, shipping và trừ tồn thật khi đơn completed.
+- Sản phẩm có serial cần được gán serial trước khi hoàn tất đơn hàng.
+- Serial đã bán liên kết với đơn hàng và dùng làm cơ sở tra cứu bảo hành.
+- Khách hàng có thể tạo yêu cầu bảo hành từ sản phẩm đã mua hợp lệ.
+- Admin hoặc kỹ thuật viên tiếp nhận, cập nhật và theo dõi phiếu bảo hành.
+
+Luồng chính: `Order -> Order Item -> Serial -> Warranty Ticket -> Report`.
+
+## Cấu trúc thư mục
+
+```text
+backend/      Backend Express, routes, controllers, services, middleware, scripts
+frontend/     Giao diện HTML/CSS/JavaScript và assets
+database/     schema.sql và seed.sql
+package.json  Script chạy project từ root
+```
+
+## Hướng dẫn cài đặt
+
+1. Cài Node.js, npm và MySQL.
+
+2. Cài dependency:
 
 ```bash
 npm install
 ```
 
-2. Tạo `backend/.env` từ `.env.example` hoặc `backend/.env.example`, sau đó chỉnh thông tin MySQL và `JWT_SECRET`.
+Root `postinstall` sẽ cài dependency cho thư mục `backend/`.
 
-3. Reset database local:
+3. Tạo database MySQL và cấu hình môi trường:
 
 ```bash
-CONFIRM_DB_RESET=YES npm run db:reset
+copy .env.example backend\.env
 ```
 
-Trên PowerShell:
+Chỉnh `backend/.env` theo MySQL local. Không commit file `.env`.
+
+4. Reset và import database clean demo:
+
+PowerShell:
 
 ```powershell
-$env:CONFIRM_DB_RESET="YES"; npm run db:reset
+$env:CONFIRM_DB_RESET="YES"; npm run db:reset; Remove-Item Env:CONFIRM_DB_RESET
 ```
 
-Sau reset, database ở trạng thái clean demo base: có tài khoản demo, brand/category nền và không có product/order/serial/warranty/review/wishlist cũ. Catalog đầy đủ được import riêng bằng Product Import V2, không nằm trong `seed.sql`.
+5. Nếu cần thêm serial demo cho sản phẩm serialized:
 
-Để import catalog mới:
+```powershell
+$env:CONFIRM_DEMO_SERIALS="YES"; npm run seed:demo-serials; Remove-Item Env:CONFIRM_DEMO_SERIALS
+```
 
-1. Login admin.
-2. Vào Admin -> Sản phẩm -> tab Thêm sản phẩm.
-3. Chọn `aerotech-product-import-final-real-images.zip`.
-4. Chọn `Reset catalog`, nhập `RESET CATALOG`, preview rồi confirm khi errors = 0.
-5. Import `serial_demo.csv` riêng trong Kho Serial nếu cần dữ liệu serial demo.
+6. Nếu cần dữ liệu vận hành demo như đơn hàng, review, ticket bảo hành:
 
-4. Chạy server:
+```powershell
+$env:CONFIRM_DEMO_BUSINESS_DATA="YES"; npm run seed:demo-business; Remove-Item Env:CONFIRM_DEMO_BUSINESS_DATA
+```
+
+7. Chạy server:
 
 ```bash
 npm run dev
 ```
 
-Mặc định app chạy tại `http://localhost:5000`.
+Mở website tại:
 
-## CORS khi demo qua Cloudflare Tunnel
-
-Backend luôn ưu tiên whitelist trong `CORS_ORIGIN`. Khi chạy local/demo với `NODE_ENV=development`, có thể bật wildcard tunnel để các URL `https://*.trycloudflare.com` đổi liên tục vẫn gọi API được:
-
-```env
-CORS_ORIGIN=http://localhost:5000,http://127.0.0.1:5500,https://scoop-fell-soap-weed.trycloudflare.com
-CORS_ALLOW_TUNNELS=true
+```text
+http://localhost:5000
 ```
 
-Ở production, không dùng wildcard tunnel. Hãy thêm domain chính thức vào `CORS_ORIGIN` và giữ Cloudflare Tunnel wildcard tắt.
+## Tài khoản demo
 
-## Demo accounts
+Các tài khoản có sẵn trong `database/seed.sql` dùng mật khẩu `123456`:
 
-Tài khoản seed dùng mật khẩu `123456`:
+- `customer@example.com` - Khách hàng
+- `admin@example.com` - Quản trị viên
+- `sales@example.com` - Nhân viên bán hàng
+- `technician@example.com` - Kỹ thuật viên
 
-- `customer@example.com`
-- `admin@example.com`
-- `sales@example.com`
-- `technician@example.com`
+Script `seed:demo-business` có thể tạo thêm các tài khoản demo khác với mật khẩu riêng được in ra khi chạy script.
 
-## Tài liệu bàn giao
+## Hướng dẫn test nhanh
 
-- [docs/HANDOFF.md](docs/HANDOFF.md)
-- [docs/TESTING_GUIDE.md](docs/TESTING_GUIDE.md)
-- [docs/KNOWN_LIMITATIONS.md](docs/KNOWN_LIMITATIONS.md)
-- [docs/FEATURE_MAP.md](docs/FEATURE_MAP.md)
+1. Login bằng `customer@example.com`.
+2. Mở danh sách sản phẩm, lọc/tìm kiếm sản phẩm.
+3. Thêm sản phẩm vào giỏ hàng và checkout.
+4. Login bằng `sales@example.com` hoặc `admin@example.com` để duyệt đơn.
+5. Với sản phẩm cần serial, login technician/admin để gán serial trước khi hoàn tất đơn.
+6. Chuyển đơn sang shipping và completed.
+7. Customer mở lịch sử đơn hàng, xem chi tiết đơn và gửi đánh giá.
+8. Admin quản lý trạng thái hiển thị đánh giá trong trang quản lý đánh giá.
+9. Customer mở trang bảo hành, tạo yêu cầu bảo hành cho sản phẩm hợp lệ.
+10. Technician cập nhật trạng thái phiếu bảo hành.
+11. Admin xem dashboard và báo cáo.
 
-Không commit `.env`, `node_modules`, file zip test, log hoặc dữ liệu tạm.
+## Ghi chú và giới hạn
+
+- Website chưa tích hợp thanh toán thật.
+- Website chưa tích hợp đơn vị vận chuyển thật.
+- Dữ liệu sản phẩm và đơn hàng phục vụ mục đích học tập, demo và kiểm thử.
+- Một số dịch vụ kỹ thuật cần tư vấn thủ công trước khi tiếp nhận.
+- Khi nộp hoặc triển khai, không đưa `.env`, `node_modules/`, file log, file zip import hoặc dữ liệu tạm vào source.

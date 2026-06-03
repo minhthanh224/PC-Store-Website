@@ -248,6 +248,8 @@ async function buildProductFilters(query) {
   if (query.productType && PRODUCT_TYPES.includes(query.productType)) {
     where.push("p.product_type = ?");
     params.push(query.productType);
+  } else {
+    where.push("p.product_type <> 'service'");
   }
 
   const minPrice = normalizePrice(query.minPrice);
@@ -311,6 +313,7 @@ async function getProductFilterOptions() {
       FROM product_specs ps
       INNER JOIN products p ON p.id = ps.product_id
       WHERE p.status = 'active'
+        AND p.product_type <> 'service'
         AND ps.spec_value IS NOT NULL
         AND ps.spec_value <> ''
         AND (

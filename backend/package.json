@@ -8,7 +8,8 @@
     "start": "node server.js",
     "db:reset": "node scripts/db-reset.js",
     "db:seed-demo-serials": "node scripts/seed-demo-serials.js",
-    "seed:demo-serials": "node scripts/seed-demo-serials.js"
+    "seed:demo-serials": "node scripts/seed-demo-serials.js",
+    "seed:demo-business": "node scripts/seed-demo-business-data.js"
   },
   "keywords": [
     "pc-store",

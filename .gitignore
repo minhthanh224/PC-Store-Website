@@ -23,6 +23,12 @@ pids
 *.pid
 *.seed
 *.pid.lock
+tmp/
+temp/
+.cache/
+.nyc_output/
+*.zip
+frontend/assets/images/import-temp/
 
 # IDE files
 .vscode/

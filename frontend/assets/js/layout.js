@@ -35,9 +35,10 @@ function renderHeader(categories) {
   const currentKeyword = searchParams.get("keyword") || searchParams.get("q") || searchParams.get("search") || "";
   const currentUser = getCurrentUser();
   const displayName = currentUser ? getSafeDisplayName(currentUser) : "";
+  const displayTitle = currentUser ? getFullDisplayName(currentUser) : "";
   const isStaff = isStaffUser(currentUser);
   const headerActionState = currentUser ? (isStaff ? "staff" : "customer") : "guest";
-  const greetingHref = isStaff ? getAdminHomeUrl(currentUser) : "account.html";
+  const greetingHref = isStaff ? "admin/profile.html" : "account.html";
   const aeroNavItems = getAeroNavItems(categories);
   const navItems = aeroNavItems.map(function (item) {
     const childLinks = (item.children || []).slice(0, 8).map(function (child) {
@@ -74,7 +75,10 @@ function renderHeader(categories) {
   if (currentUser && isStaff) {
     headerActions = `
       ${cartAction}
-      <span class="account-greeting account-greeting-static" title="${escapeAttribute(displayName)}">${escapeHtml(displayName)}</span>
+      <a class="account-greeting" href="${escapeAttribute(greetingHref)}" title="${escapeAttribute(displayTitle)}" aria-label="${escapeAttribute(`Hồ sơ nhân sự: ${displayTitle}`)}">
+        ${renderAccountIcon()}
+        <span class="account-greeting-text">${escapeHtml(displayName)}</span>
+      </a>
       <a class="header-action-btn header-admin-btn" href="${escapeAttribute(getAdminHomeUrl(currentUser))}">Quản trị</a>
       <button id="logoutBtn" class="header-action-btn header-logout-btn js-logout-btn" type="button">Đăng xuất</button>
     `;
@@ -82,7 +86,10 @@ function renderHeader(categories) {
     headerActions = `
       ${wishlistAction}
       ${cartAction}
-      <a class="account-greeting" href="${escapeAttribute(greetingHref)}" title="${escapeAttribute(displayName)}">${escapeHtml(displayName)}</a>
+      <a class="account-greeting" href="${escapeAttribute(greetingHref)}" title="${escapeAttribute(displayTitle)}" aria-label="${escapeAttribute(`Tài khoản: ${displayTitle}`)}">
+        ${renderAccountIcon()}
+        <span class="account-greeting-text">${escapeHtml(displayName)}</span>
+      </a>
       <button id="logoutBtn" class="header-action-btn header-logout-btn js-logout-btn" type="button">Đăng xuất</button>
     `;
   }
@@ -110,7 +117,7 @@ function renderHeader(categories) {
           <a href="contact.html">Dành cho doanh nghiệp</a>
           <a href="products.html?productType=pc_build">Xây dựng cấu hình</a>
           <a href="products.html?sort=newest">Khuyến mãi</a>
-          <a href="warranty-lookup.html">Bảo hành</a>
+          <a href="my-warranty.html">Bảo hành</a>
           <a href="products.html?sort=newest">Tin mới</a>
         </div>
         <a class="utility-hotline" href="contact.html">Hotline 1900 1040</a>
@@ -158,7 +165,7 @@ function renderHeader(categories) {
             <a href="contact.html">Dành cho doanh nghiệp</a>
             <a href="products.html?productType=pc_build">Xây dựng cấu hình</a>
             <a href="products.html?sort=newest">Khuyến mãi</a>
-            <a href="warranty-lookup.html">Bảo hành</a>
+            <a href="my-warranty.html">Bảo hành</a>
             <a href="products.html?sort=newest">Tin mới</a>
           </div>
         </div>
@@ -178,6 +185,29 @@ function renderHeader(categories) {
 }
 
 function getSafeDisplayName(user) {
+  if (isStaffUser(user)) {
+    return getHeaderRoleLabel(user.role);
+  }
+
+  const rawName = String(user.full_name || "").trim().replace(/\s+/g, " ");
+
+  if (!rawName) {
+    return "Tài khoản";
+  }
+
+  const parts = rawName.split(" ").filter(Boolean);
+  return parts[parts.length - 1] || "Tài khoản";
+}
+
+function getFullDisplayName(user) {
+  if (isStaffUser(user)) {
+    return getHeaderRoleLabel(user.role);
+  }
+
+  return String(user.full_name || "").trim().replace(/\s+/g, " ") || "Tài khoản";
+}
+
+function getHeaderRoleLabel(role) {
   const roleLabels = {
     admin: "Quản trị viên",
     sales: "Nhân viên bán hàng",
@@ -185,18 +215,17 @@ function getSafeDisplayName(user) {
     customer: "Khách hàng"
   };
 
-  if (isStaffUser(user)) {
-    return roleLabels[user.role] || "Nhân viên";
-  }
+  return roleLabels[role] || "Nhân viên";
+}
 
-  const rawName = String(user.full_name || "").trim();
-  const normalized = rawName.toLowerCase();
-
-  if (!rawName || normalized.includes(["de", "mo"].join(""))) {
-    return roleLabels[user.role] || "Khách hàng";
-  }
-
-  return rawName;
+function renderAccountIcon() {
+  return `
+    <span class="account-greeting-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" focusable="false">
+        <path d="M12 12.2c2.4 0 4.35-1.95 4.35-4.35S14.4 3.5 12 3.5 7.65 5.45 7.65 7.85 9.6 12.2 12 12.2Zm0 1.8c-3.35 0-6.25 1.84-6.25 4.1 0 .83.67 1.4 1.48 1.4h9.54c.81 0 1.48-.57 1.48-1.4 0-2.26-2.9-4.1-6.25-4.1Z" fill="currentColor"/>
+      </svg>
+    </span>
+  `;
 }
 
 function getAeroNavItems(categories) {
@@ -286,13 +315,13 @@ function getAeroNavItems(categories) {
     },
     {
       label: "Dịch vụ",
-      href: "products.html?productType=service",
+      href: "services.html",
       slug: "dich-vu",
       children: [
-        { name: "Tư vấn build PC", href: "products.html?productType=service&category=build-pc-theo-yeu-cau" },
-        { name: "Tra cứu bảo hành", href: "warranty-lookup.html" },
-        { name: "Dịch vụ kỹ thuật", slug: "dich-vu-ky-thuat", href: "products.html?productType=service&category=dich-vu-ky-thuat" },
-        { name: "Thu cũ đổi mới", href: "products.html?productType=service&category=trade-in" }
+        { name: "Tư vấn build PC", href: "services.html#service-list" },
+        { name: "Tra cứu bảo hành", href: "my-warranty.html" },
+        { name: "Dịch vụ kỹ thuật", slug: "dich-vu-ky-thuat", href: "services.html#service-list" },
+        { name: "Thu cũ đổi mới", href: "services.html#service-list" }
       ]
     }
   ];
@@ -302,7 +331,7 @@ function getAeroNavItems(categories) {
 
     return {
       label: item.label,
-      href: category ? `products.html?category=${encodeURIComponent(category.slug)}` : item.href,
+      href: item.slug === "dich-vu" ? "services.html" : (category ? `products.html?category=${encodeURIComponent(category.slug)}` : item.href),
       children: (item.children || (category && category.children ? category.children : [])).map(function (child) {
         return resolveAeroNavChild(child, bySlug);
       })
@@ -311,6 +340,10 @@ function getAeroNavItems(categories) {
 }
 
 function resolveAeroNavChild(child, bySlug) {
+  if (child.href && child.href.startsWith("services.html")) {
+    return child;
+  }
+
   const category = child.slug ? bySlug[child.slug] : null;
 
   if (!category) {
@@ -343,12 +376,13 @@ function renderFooter() {
           <a href="products.html?productType=component">Linh kiện PC</a>
           <a href="products.html?productType=monitor">Màn hình</a>
           <a href="products.html?productType=accessory">Phụ kiện</a>
+          <a href="services.html">Dịch vụ</a>
         </div>
         <div>
           <h3>Hỗ trợ</h3>
           <a href="policy-warranty.html">Chính sách bảo hành</a>
           <a href="policy-shipping.html">Chính sách giao hàng</a>
-          <a href="warranty-lookup.html">Tra cứu bảo hành</a>
+          <a href="my-warranty.html">Bảo hành & tra cứu Serial</a>
           <a href="contact.html">Liên hệ</a>
           <a href="stores.html">Hệ thống cửa hàng</a>
         </div>

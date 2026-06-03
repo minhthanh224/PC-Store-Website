@@ -1,32 +1,57 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Phiếu bảo hành của tôi - AeroTech</title>
+  <title>Bảo hành & tra cứu Serial - AeroTech</title>
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
   <header id="siteHeader"></header>
 
-  <main class="container my-warranty-page">
+  <main class="container my-warranty-page warranty-portal-page">
     <div class="page-heading">
       <p class="eyebrow">Bảo hành</p>
-      <h1>Phiếu bảo hành của tôi</h1>
-      <p class="page-subtitle">Theo dõi các yêu cầu bảo hành đã gửi từ đơn hàng của bạn.</p>
+      <h1>Bảo hành & tra cứu Serial</h1>
+      <p class="page-subtitle">Xem sản phẩm đã mua, gửi yêu cầu bảo hành hoặc tra cứu Serial thủ công.</p>
+      <p id="warrantyViewerLine" class="warranty-viewer-line" hidden></p>
     </div>
 
-    <div id="warrantyTabs" class="order-tabs warranty-tabs">
-      <button class="active" type="button" data-status="">Tất cả</button>
-      <button type="button" data-status="received">Đã tiếp nhận</button>
-      <button type="button" data-status="repairing">Đang sửa</button>
-      <button type="button" data-status="waiting_parts">Chờ linh kiện</button>
-      <button type="button" data-status="done">Hoàn tất sửa chữa</button>
-      <button type="button" data-status="returned">Đã trả khách</button>
-      <button type="button" data-status="rejected">Từ chối</button>
+    <div id="customerWarrantyPrompt" class="warranty-login-callout" hidden></div>
+
+    <div id="warrantyPortalTabs" class="order-tabs warranty-tabs warranty-portal-tabs">
+      <button class="active" type="button" data-tab="items">Sản phẩm đã mua</button>
+      <button type="button" data-tab="lookup">Tra cứu Serial</button>
     </div>
 
-    <div id="myWarrantyList" class="warranty-ticket-list loading-box">Đang tải phiếu bảo hành...</div>
+    <section id="warrantyItemsPanel" class="warranty-tab-panel">
+      <div class="section-heading compact-heading warranty-section-heading">
+        <div>
+          <p class="eyebrow">Tài sản bảo hành</p>
+          <h2>Sản phẩm đã mua</h2>
+          <p>Thiết bị thuộc đơn hàng đã hoàn thành, kèm Serial và thời hạn bảo hành.</p>
+        </div>
+        <a class="btn btn-light" href="my-orders.html">Xem đơn hàng</a>
+      </div>
+      <div id="warrantyItemsList" class="warranty-items-list loading-box">Đang tải sản phẩm bảo hành...</div>
+    </section>
+
+    <section id="warrantyLookupPanel" class="warranty-tab-panel" hidden>
+      <div class="warranty-result-card warranty-lookup-card">
+        <div class="section-heading compact-heading">
+          <div>
+            <p class="eyebrow">Tra cứu thủ công</p>
+            <h2>Nhập Serial sản phẩm</h2>
+          </div>
+        </div>
+        <form id="warrantyLookupForm" class="warranty-search-card warranty-search-card-light">
+          <input id="warrantySerialInput" type="text" name="serial" placeholder="Ví dụ: SN-AERO-2026-001" autocomplete="off" required>
+          <button class="btn btn-primary" type="submit">Tra cứu</button>
+        </form>
+      </div>
+      <section id="warrantyLookupResult" class="warranty-result-section"></section>
+    </section>
+
     <section id="myWarrantyDetail" class="warranty-detail-section" hidden></section>
   </main>
 

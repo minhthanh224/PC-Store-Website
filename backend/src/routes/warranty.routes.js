@@ -2,6 +2,7 @@ const express = require("express");
 const {
   lookupWarranty,
   createCustomerWarrantyRequest,
+  getMyWarrantyItems,
   getMyWarrantyTickets,
   getMyWarrantyTicketDetail
 } = require("../controllers/warranty.controller");
@@ -16,6 +17,7 @@ router.get("/lookup", asyncHandler(lookupWarranty));
 router.use(requireAuth);
 router.use(requireRoles(["customer"]));
 
+router.get("/my-items", asyncHandler(getMyWarrantyItems));
 router.get("/my", asyncHandler(getMyWarrantyTickets));
 router.get("/my/:ticketCode", asyncHandler(getMyWarrantyTicketDetail));
 router.post("/requests", asyncHandler(createCustomerWarrantyRequest));

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" role="img" aria-labelledby="title desc">
+  <title id="title">Laptop and PC cleaning</title>
+  <desc id="desc">Cleaning brush and cooling fan for laptop and PC service.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop stop-color="#f8fafc"/>
+      <stop offset="1" stop-color="#e0f2fe"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="420" rx="36" fill="url(#bg)"/>
+  <rect x="116" y="160" width="250" height="140" rx="24" fill="#0f172a"/>
+  <rect x="142" y="184" width="198" height="82" rx="16" fill="#38bdf8"/>
+  <rect x="96" y="306" width="290" height="24" rx="12" fill="#334155"/>
+  <circle cx="440" cy="184" r="70" fill="#ffffff" stroke="#bae6fd" stroke-width="8"/>
+  <circle cx="440" cy="184" r="18" fill="#0ea5e9"/>
+  <path d="M440 118c36 24 31 53 0 66m66 66c-36-24-31-53 0-66M374 250c24-36 53-31 66 0m66-132c-24 36-53 31-66 0" fill="none" stroke="#94a3b8" stroke-width="16" stroke-linecap="round"/>
+  <g transform="translate(370 260) rotate(-28)">
+    <rect x="0" y="42" width="164" height="26" rx="13" fill="#075985"/>
+    <rect x="132" y="18" width="72" height="72" rx="18" fill="#f59e0b"/>
+    <path d="M196 18c30 10 48 22 60 44-20 14-42 22-72 28" fill="#fbbf24"/>
+    <path d="M210 26c20 10 34 20 42 34M202 42c20 10 34 20 42 34M194 58c18 9 31 18 38 30" stroke="#92400e" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <circle cx="150" cy="112" r="16" fill="#67e8f9"/>
+  <circle cx="186" cy="86" r="10" fill="#93c5fd"/>
+  <circle cx="500" cy="96" r="12" fill="#67e8f9"/>
+</svg>

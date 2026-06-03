@@ -53,6 +53,14 @@ const BANNER_IMAGES = {
   accessory: "/assets/images/banners/banner-accessories.webp",
   service: PRODUCT_FALLBACK_IMAGES.service
 };
+const SERVICE_ILLUSTRATION_IMAGES = {
+  windows: "assets/images/services/windows-software.svg",
+  cable: "assets/images/services/cable-setup.svg",
+  upgrade: "assets/images/services/ram-ssd-upgrade.svg",
+  build: "assets/images/services/custom-pc-build.svg",
+  cleaning: "assets/images/services/cleaning-service.svg",
+  default: "assets/images/services/custom-pc-build.svg"
+};
 
 function escapeHtml(value) {
   return String(value === null || value === undefined ? "" : value)
@@ -209,6 +217,10 @@ function getProductFallbackKey(product) {
 }
 
 function getProductImageFallback(product) {
+  if (isServiceProduct(product)) {
+    return getServiceIllustrationImage(product);
+  }
+
   return PRODUCT_FALLBACK_IMAGES[getProductFallbackKey(product)] || PRODUCT_PLACEHOLDER_IMAGE;
 }
 
@@ -282,7 +294,52 @@ function normalizeIconText(value) {
 }
 
 function getImageUrl(imageUrl, product) {
+  if (shouldUseServiceIllustration(imageUrl, product)) {
+    return getServiceIllustrationImage(product);
+  }
+
   return imageUrl && String(imageUrl).trim() ? imageUrl : getProductImageFallback(product);
+}
+
+function shouldUseServiceIllustration(imageUrl, product) {
+  if (!isServiceProduct(product)) {
+    return false;
+  }
+
+  const value = String(imageUrl || "").trim().toLowerCase();
+
+  return !value || value.includes("assets/images/products/svc-");
+}
+
+function getServiceIllustrationImage(product) {
+  const text = [
+    product && product.sku,
+    product && product.slug,
+    product && product.name,
+    product && product.category_name
+  ].filter(Boolean).join(" ").toLowerCase();
+
+  if (text.includes("install") || text.includes("windows") || text.includes("phan-mem") || text.includes("phần mềm")) {
+    return getFrontendAssetPath(SERVICE_ILLUSTRATION_IMAGES.windows);
+  }
+
+  if (text.includes("cable") || text.includes("di-day") || text.includes("đi dây") || text.includes("setup")) {
+    return getFrontendAssetPath(SERVICE_ILLUSTRATION_IMAGES.cable);
+  }
+
+  if (text.includes("upgrade") || text.includes("nang-cap") || text.includes("nâng cấp") || text.includes("ram") || text.includes("ssd")) {
+    return getFrontendAssetPath(SERVICE_ILLUSTRATION_IMAGES.upgrade);
+  }
+
+  if (text.includes("clean") || text.includes("ve-sinh") || text.includes("vệ sinh")) {
+    return getFrontendAssetPath(SERVICE_ILLUSTRATION_IMAGES.cleaning);
+  }
+
+  if (text.includes("build") || text.includes("tu-van") || text.includes("tư vấn") || text.includes("custom")) {
+    return getFrontendAssetPath(SERVICE_ILLUSTRATION_IMAGES.build);
+  }
+
+  return getFrontendAssetPath(SERVICE_ILLUSTRATION_IMAGES.default);
 }
 
 function getBannerImageByKey(key) {
@@ -322,7 +379,18 @@ function getBannerKeyFromSlug(slug) {
   }
 
   if (
+    normalizedSlug.includes("dich-vu") ||
+    normalizedSlug.includes("service") ||
+    normalizedSlug.includes("ky-thuat") ||
+    normalizedSlug.includes("technical") ||
+    normalizedSlug.includes("trade-in")
+  ) {
+    return "service";
+  }
+
+  if (
     normalizedSlug.includes("phu-kien") ||
+    normalizedSlug.includes("gaming-gear") ||
     normalizedSlug.includes("ban-phim") ||
     normalizedSlug.includes("keyboard") ||
     normalizedSlug.includes("chuot") ||
@@ -437,6 +505,9 @@ function renderProductCard(product) {
   const comparePayload = escapeAttribute(JSON.stringify(getCompareProductPayload(product)));
   const imageFallback = getProductImageFallback(product);
   const isService = isServiceProduct(product);
+  const visualKey = getProductTypeIconKey(product);
+  const productTypeClass = product.product_type ? `product-card-type-${product.product_type}` : "";
+  const visualClass = visualKey ? `product-card-visual-${visualKey}` : "";
   const specs = (product.short_specs || []).slice(0, 3).map(function (spec) {
     return `<li>${escapeHtml(spec)}</li>`;
   }).join("");
@@ -483,7 +554,7 @@ function renderProductCard(product) {
         `;
 
   return `
-    <article class="product-card ${isService ? "product-card-service" : ""}">
+    <article class="product-card ${productTypeClass} ${visualClass} ${isService ? "product-card-service" : ""}">
       <a class="product-image-link" href="${detailsUrl}" aria-label="${escapeAttribute(product.name)}">
         <img
           src="${escapeAttribute(getImageUrl(product.primary_image, product))}"

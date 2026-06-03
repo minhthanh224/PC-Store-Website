@@ -347,10 +347,10 @@ function addToCart(product, quantity) {
     };
   }
 
-  if (isServiceProduct(itemToAdd)) {
+  if (isServiceProduct(itemToAdd) && (!itemToAdd.price || itemToAdd.available_stock <= 0)) {
     return {
       success: false,
-      message: "Dịch vụ kỹ thuật cần được tư vấn trước khi đặt lịch."
+      message: "Dịch vụ này cần được tư vấn trước khi đặt lịch."
     };
   }
 
